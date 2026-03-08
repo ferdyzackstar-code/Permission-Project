@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Arr;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Yajra\DataTables\Facades\DataTables;
 
 class UserController extends Controller
 {
@@ -19,12 +20,61 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request): View
+    public function index(Request $request)
     {
-        $data = User::latest()->paginate(5);
-        $roles = \Spatie\Permission\Models\Role::pluck('name', 'name')->all(); // Sesuaikan namespace Spatie
+        if ($request->ajax()) {
+            $users = User::with('roles')->select('users.*');
 
-        return view('dashboard.users.index', compact('data', 'roles'))->with('i', ($request->input('page', 1) - 1) * 5);
+            return DataTables::eloquent($users)
+                ->addIndexColumn()
+                ->addColumn('roles', function (User $user) {
+                    if ($user->roles->isEmpty()) {
+                        return '<span class="badge badge-secondary">No Role</span>';
+                    }
+
+                    return $user->roles
+                        ->map(function ($role) {
+                            return '<span class="badge badge-success mr-1">' . e($role->name) . '</span>';
+                        })
+                        ->implode(' ');
+                })
+                ->addColumn('action', function (User $user) {
+                    return '<button type="button" class="btn btn-info btn-sm mr-1" data-toggle="modal" data-target="#modalShowUser' .
+                        $user->id .
+                        '">
+                            <i class="fa fa-eye"></i> Show
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm mr-1" data-toggle="modal" data-target="#modalEditUser' .
+                        $user->id .
+                        '">
+                            <i class="fa fa-edit"></i> Edit
+                        </button>
+                        <form method="POST" action="' .
+                        route('dashboard.users.destroy', $user->id) .
+                        '" class="delete-form" style="display:inline;">
+                            ' . csrf_field() . '
+                            <input name="_method" type="hidden" value="DELETE">
+                            <button type="button" class="btn btn-danger btn-sm show_confirm">
+                                <i class="fa fa-trash"></i> Delete
+                            </button>
+                        </form>';
+                })
+                ->rawColumns(['roles', 'action'])
+                ->make(true);
+        }
+
+        return view('dashboard.users.index', $this->getIndexData());
+    }
+
+    /**
+     * Data kebutuhan view index user berbasis modal.
+     */
+    protected function getIndexData(): array
+    {
+        return [
+            'data' => User::with('roles')->latest()->get(),
+            'roles' => Role::pluck('name', 'name')->all(),
+        ];
     }
 
     /**
@@ -34,9 +84,7 @@ class UserController extends Controller
      */
     public function create(): View
     {
-        $roles = Role::pluck('name', 'name')->all();
-
-        return view('dashboard.users.create', compact('roles'));
+        return view('dashboard.users.index', $this->getIndexData());
     }
 
     /**
@@ -71,9 +119,7 @@ class UserController extends Controller
      */
     public function show($id): View
     {
-        $user = User::find($id);
-
-        return view('dashboard.users.show', compact('user'));
+        return view('dashboard.users.index', $this->getIndexData());
     }
 
     /**
@@ -84,13 +130,7 @@ class UserController extends Controller
      */
     public function edit($id): View
     {
-        $user = User::find($id);
-        $roles = Role::pluck('name', 'name')->all();
-        // $userRole = $user->roles->pluck('name', 'name')->all();
-
-        // dd($userRole);
-
-        return view('dashboard.users.edit', compact('user', 'roles'));
+        return view('dashboard.users.index', $this->getIndexData());
     }
 
     /**
@@ -135,6 +175,7 @@ class UserController extends Controller
     public function destroy($id): RedirectResponse
     {
         User::find($id)->delete();
+
         return redirect()->route('dashboard.users.index')->with('success', 'User deleted successfully');
     }
 }

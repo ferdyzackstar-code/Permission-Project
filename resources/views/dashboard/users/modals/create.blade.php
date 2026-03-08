@@ -1,5 +1,5 @@
 <div class="modal fade" id="modalCreateUser" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Create New User</h5>
@@ -27,12 +27,18 @@
                     </div>
                     <div class="form-group">
                         <strong>Role:</strong>
-                        <select name="roles[]" class="form-control" multiple required>
+                        <div class="border rounded p-3 mt-2" style="max-height: 180px; overflow-y: auto;">
                             @foreach ($roles as $value => $label)
-                                <option value="{{ $value }}">{{ $label }}</option>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="roles[]"
+                                        id="createRole{{ \Illuminate\Support\Str::slug($value, '-') }}" value="{{ $value }}">
+                                    <label class="form-check-label" for="createRole{{ \Illuminate\Support\Str::slug($value, '-') }}">
+                                        {{ $label }}
+                                    </label>
+                                </div>
                             @endforeach
-                        </select>
-                        <small class="text-muted text-italic">*Tahan Ctrl untuk memilih lebih dari satu</small>
+                        </div>
+                        <small class="text-muted text-italic">*Pilih minimal satu role</small>
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -1,5 +1,5 @@
 <div class="modal fade" id="modalEditUser{{ $user->id }}" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Edit User: {{ $user->name }}</h5>
@@ -29,14 +29,20 @@
                     </div>
                     <div class="form-group">
                         <strong>Role:</strong>
-                        <select name="roles[]" class="form-control" multiple required>
+                        <div class="border rounded p-3 mt-2" style="max-height: 180px; overflow-y: auto;">
                             @foreach ($roles as $value => $label)
-                                <option value="{{ $value }}"
-                                    {{ in_array($value, $user->roles->pluck('name')->toArray()) ? 'selected' : '' }}>
-                                    {{ $label }}
-                                </option>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="roles[]"
+                                        id="editUser{{ $user->id }}Role{{ \Illuminate\Support\Str::slug($value, '-') }}" value="{{ $value }}"
+                                        {{ in_array($value, $user->roles->pluck('name')->toArray()) ? 'checked' : '' }}>
+                                    <label class="form-check-label"
+                                        for="editUser{{ $user->id }}Role{{ \Illuminate\Support\Str::slug($value, '-') }}">
+                                        {{ $label }}
+                                    </label>
+                                </div>
                             @endforeach
-                        </select>
+                        </div>
+                        <small class="text-muted text-italic">*Pilih minimal satu role</small>
                     </div>
                 </div>
                 <div class="modal-footer">

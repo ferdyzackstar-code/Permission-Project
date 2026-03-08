@@ -6,6 +6,8 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -30,25 +32,66 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $categories = Category::with('children')->whereNull('parent_id')->get();
         if ($request->ajax()) {
-            $data = Product::with('category')->get();
-            // Tambahkan ini agar modal create/edit punya data kategori
+            $products = Product::with('category');
 
-            return DataTables::of($data)
-                ->addIndexColumn() // Menambah kolom indeks secara otomatis
-                ->addColumn('nomor', function ($data) {
-                    static $counter = 0; // Variabel untuk menghitung nomor urut
-                    return ++$counter; // Kembalikan nomor urut yang ditingkatkan
+            return DataTables::eloquent($products)
+                ->addIndexColumn()
+                ->addColumn('category', function (Product $product) {
+                    return $product->category->name ?? 'Tanpa Kategori';
                 })
-                ->addColumn('category', function ($data) {
-                    return $data->category->name ?? 'N/A'; // Kembalikan nama atau 'N/A' jika kosong
+                ->editColumn('branch_name', function (Product $product) {
+                    return 'Anda Petshop ' . $product->branch_name;
                 })
-                ->rawColumns(['category', 'nomor']) // Biarkan HTML dalam kolom 'name' dan 'action'
-                ->make(true); // Kembalikan data dalam format DataTables
+                ->editColumn('detail', function (Product $product) {
+                    return Str::limit($product->detail, 50);
+                })
+                ->addColumn('action', function (Product $product) {
+                    $buttons =
+                        '<button type="button" class="btn btn-info btn-sm mr-1" data-toggle="modal" data-target="#modalShowProduct' .
+                        $product->id .
+                        '">
+                                    <i class="fa fa-eye"></i> Show
+                                </button>';
+
+                    if (Gate::allows('product-edit')) {
+                        $buttons .=
+                            '<button type="button" class="btn btn-primary btn-sm mr-1" data-toggle="modal" data-target="#modalEditProduct' .
+                            $product->id .
+                            '">
+                                        <i class="fa fa-edit"></i> Edit
+                                    </button>';
+                    }
+
+                    if (Gate::allows('product-delete')) {
+                        $buttons .=
+                            '<form method="POST" action="' .
+                            route('dashboard.products.destroy', $product->id) .
+                            '" class="delete-form" style="display:inline;">
+                                ' .
+                            csrf_field() .
+                            '
+                                <input name="_method" type="hidden" value="DELETE">
+                                <button type="button" class="btn btn-icon btn-danger btn-sm show_confirm" data-id="' .
+                            $product->id .
+                            '" data-bs-toggle="tooltip" title="Delete">
+                                        <i class="fa fa-trash"></i> Delete
+                                </button>
+                            </form>';
+                    }
+
+                    return $buttons;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
         }
+
+        $categories = Category::with('children')->whereNull('parent_id')->get();
+        $products = Product::with('category')->get();
+
         return view('dashboard.products.index', [
             'categories' => $categories,
+            'products' => $products,
         ]);
     }
 
@@ -59,10 +102,10 @@ class ProductController extends Controller
      */
     public function create(): View
     {
-        // Mengambil kategori yang tidak punya parent (Utama) beserta anak-anaknya
-        $categories = \App\Models\Category::with('children')->whereNull('parent_id')->get();
-
-        return view('dashboard.products.create', compact('categories'));
+        return view('dashboard.products.index', [
+            'categories' => Category::with('children')->whereNull('parent_id')->get(),
+            'products' => Product::with('category')->get(),
+        ]);
     }
 
     /**
@@ -93,7 +136,10 @@ class ProductController extends Controller
      */
     public function show(Product $product): View
     {
-        return view('dashboard.products.show', compact('product'));
+        return view('dashboard.products.index', [
+            'categories' => Category::with('children')->whereNull('parent_id')->get(),
+            'products' => Product::with('category')->get(),
+        ]);
     }
 
     /**
@@ -104,7 +150,10 @@ class ProductController extends Controller
      */
     public function edit(Product $product): View
     {
-        return view('dashboard.products.edit', compact('product'));
+        return view('dashboard.products.index', [
+            'categories' => Category::with('children')->whereNull('parent_id')->get(),
+            'products' => Product::with('category')->get(),
+        ]);
     }
 
     /**
@@ -116,7 +165,7 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product): RedirectResponse
     {
-        request()->validate([
+        $request->validate([
             'name' => 'required',
             'detail' => 'required',
             'branch_name' => 'required',

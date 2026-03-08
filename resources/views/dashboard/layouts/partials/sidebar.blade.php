@@ -21,13 +21,13 @@
         Petshop Management
     </div>
 
-    <li class="nav-item {{ request()->is('categories*') ? 'active' : '' }}">
+    <li class="nav-item {{ request()->is('dashboard/categories*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('dashboard.categories.index') }}">
             <i class="fas fa-fw fa-list"></i>
             <span>Kategori Produk</span></a>
     </li>
 
-    <li class="nav-item {{ request()->is('products*') ? 'active' : '' }}">
+    <li class="nav-item {{ request()->is('dashboard/products*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('dashboard.products.index') }}">
             <i class="fas fa-fw fa-box"></i>
             <span>Daftar Produk</span></a>
@@ -39,13 +39,13 @@
         System Settings
     </div>
 
-    <li class="nav-item {{ request()->is('users*') ? 'active' : '' }}">
+    <li class="nav-item {{ request()->is('dashboard/users*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('dashboard.users.index') }}">
             <i class="fas fa-fw fa-users"></i>
             <span>User Management</span></a>
     </li>
 
-    <li class="nav-item {{ request()->is('roles*') ? 'active' : '' }}">
+    <li class="nav-item {{ request()->is('dashboard/roles*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('dashboard.roles.index') }}">
             <i class="fas fa-fw fa-user-shield"></i>
             <span>Role & Permissions</span></a>
