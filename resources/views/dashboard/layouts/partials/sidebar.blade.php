@@ -19,23 +19,35 @@
 
     @canany(['report-summary', 'report-outlet', 'report-employee'])
         <div class="sidebar-heading">Penjualan</div>
-        <li class="nav-item">
-            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePenjualan"
-                aria-expanded="true" aria-controls="collapsePenjualan">
+
+        <li class="nav-item {{ request()->is('dashboard/reports*') ? 'active' : '' }}">
+
+            <a class="nav-link {{ request()->is('dashboard/reports*') ? '' : 'collapsed' }}" href="#"
+                data-toggle="collapse" data-target="#collapsePenjualan"
+                aria-expanded="{{ request()->is('dashboard/reports*') ? 'true' : 'false' }}"
+                aria-controls="collapsePenjualan">
                 <i class="fas fa-fw fa-file-invoice-dollar"></i>
                 <span>Daftar Laporan</span>
-            </a>
-            <div id="collapsePenjualan" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+            </a>    
+
+            <div id="collapsePenjualan" class="collapse {{ request()->is('dashboard/reports*') ? 'show' : '' }}"
+                aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
                     <h6 class="collapse-header">Laporan Outlet:</h6>
+
                     @can('report-summary')
-                        <a class="collapse-item" href="{{ route('dashboard.reports.summary') }}">Ringkasan Penjualan</a>
+                        <a class="collapse-item {{ request()->is('dashboard/reports/summary*') ? 'active' : '' }}"
+                            href="{{ route('dashboard.reports.summary') }}">Ringkasan Penjualan</a>
                     @endcan
+
                     @can('report-outlet')
-                        <a class="collapse-item" href="{{ route('dashboard.reports.outlet') }}">Penjualan Per Outlet</a>
+                        <a class="collapse-item {{ request()->is('dashboard/reports/outlet*') ? 'active' : '' }}"
+                            href="{{ route('dashboard.reports.outlet') }}">Penjualan Per Outlet</a>
                     @endcan
+
                     @can('report-employee')
-                        <a class="collapse-item" href="{{ route('dashboard.reports.employee') }}">Laporan Karyawan</a>
+                        <a class="collapse-item {{ request()->is('dashboard/reports/employee*') ? 'active' : '' }}"
+                            href="{{ route('dashboard.reports.employee') }}">Laporan Karyawan</a>
                     @endcan
                 </div>
             </div>

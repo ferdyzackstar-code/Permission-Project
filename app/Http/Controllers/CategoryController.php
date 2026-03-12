@@ -9,7 +9,7 @@ class CategoryController extends Controller
     public function index()
     {
         // Ambil kategori yang tidak punya parent (Kategori Utama)
-        $categories = \App\Models\Category::with('children')->whereNull('parent_id')->get();
+        // $categories = \App\Models\Category::with('children')->whereNull('parent_id')->get();
         return view('dashboard.categories.index', compact('categories'));
     }
 

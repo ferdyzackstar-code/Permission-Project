@@ -233,6 +233,12 @@
         </div>
 
         <div class="form-container sign-in">
+            @if (session('success'))
+                <div
+                    style="background: #d4edda; color: #155724; padding: 10px; border-radius: 8px; font-size: 12px; margin-bottom: 10px; width: 100%; text-align: center;">
+                    {{ session('success') }}
+                </div>
+            @endif
             <form method="POST" action="{{ route('login') }}">
                 @csrf
                 <h1>Sign In</h1>

@@ -15,7 +15,7 @@
         <h1 class="display-1 font-weight-bold">500</h1>
         <p class="lead">Ada masalah teknis di dalam mesin Anda PetShop.</p>
         <p class="small text-white-50">Sabar ya, tim lagi benerin kabel yang putus.</p>
-        <a href="{{ url('/') }}" class="btn btn-outline-light mt-3">Coba Muat Ulang</a>
+        <a href="{{ url('/dashboard') }}" class="btn btn-outline-light mt-3">Coba Muat Ulang</a>
     </div>
 </body>
 </html>

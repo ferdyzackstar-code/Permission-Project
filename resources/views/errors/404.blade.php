@@ -16,7 +16,7 @@
     <div class="text-center">
         <div class="error-code">404</div>
         <p class="error-msg">Aduh! Halamannya nggak ada di Anda PetSHop.</p>
-        <a href="{{ url('/') }}" class="btn btn-primary btn-lg shadow">Kembali ke Beranda</a>
+        <a href="{{ url('/dashboard') }}" class="btn btn-primary btn-lg shadow">Kembali ke Beranda</a>
     </div>
 </body>
 </html>
