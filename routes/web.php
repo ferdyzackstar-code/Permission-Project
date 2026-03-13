@@ -30,6 +30,7 @@ Route::group(['middleware' => ['auth'], 'prefix' => 'dashboard', 'as' => 'dashbo
     Route::resource('permissions', PermissionController::class);
 
     Route::get('/reports/transactions', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/product', [ReportController::class, 'productReport'])->name('reports.product');
     Route::get('/reports/summary', [ReportController::class, 'summary'])->name('reports.summary');
     Route::get('/reports/outlet', [ReportController::class, 'outlet'])->name('reports.outlet');
     Route::get('/reports/employee', [ReportController::class, 'employee'])->name('reports.employee');

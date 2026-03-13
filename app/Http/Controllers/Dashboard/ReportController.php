@@ -220,4 +220,49 @@ class ReportController extends Controller
 
         return view('dashboard.reports.employee');
     }
+
+    public function productReport(Request $request)
+    {
+        if ($request->ajax()) {
+            $query = \App\Models\Product::withSum(
+                [
+                    'transaction_details as jumlah_terjual' => function ($q) use ($request) {
+                        if ($request->start_date && $request->end_date) {
+                            $q->whereHas('transaction', function ($t) use ($request) {
+                                $t->whereBetween('created_at', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
+                            });
+                        }
+                    },
+                ],
+                'quantity',
+            )->withSum(
+                [
+                    'transaction_details as total_omzet' => function ($q) use ($request) {
+                        if ($request->start_date && $request->end_date) {
+                            $q->whereHas('transaction', function ($t) use ($request) {
+                                $t->whereBetween('created_at', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
+                            });
+                        }
+                    },
+                ],
+                'subtotal',
+            );
+
+            return DataTables::of($query) // Masukkan $query di sini
+                ->addIndexColumn()
+                ->editColumn('price', fn($row) => 'Rp ' . number_format($row->price, 0, ',', '.'))
+                // Pastikan menggunakan alias 'jumlah_terjual' dan 'total_omzet'
+                ->addColumn('terjual', fn($row) => ($row->jumlah_terjual ?? 0) . ' Pcs')
+                ->addColumn('omzet', fn($row) => 'Rp ' . number_format($row->total_omzet ?? 0, 0, ',', '.'))
+                ->addColumn('rata_rata', function ($row) {
+                    $terjual = (int) $row->jumlah_terjual;
+                    $omzet = (float) $row->total_omzet;
+                    $avg = $terjual > 0 ? $omzet / $terjual : 0;
+                    return 'Rp ' . number_format($avg, 0, ',', '.');
+                })
+                ->make(true);
+        }
+
+        return view('dashboard.reports.product');
+    }
 }

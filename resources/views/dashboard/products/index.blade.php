@@ -89,8 +89,7 @@
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
                         orderable: false,
-                        searchable: false,
-                        className: 'text-center'
+                        searchable: false
                     },
                     {
                         data: 'name',
@@ -98,11 +97,11 @@
                     },
                     {
                         data: 'category',
-                        name: 'category_id'
-                    }, 
+                        name: 'category'
+                    },
                     {
-                        data: 'outlet',
-                        name: 'outlet.name'
+                        data: 'outlet_name',
+                        name: 'outlet_name'
                     }, 
                     {
                         data: 'price',
@@ -110,17 +109,16 @@
                     },
                     {
                         data: 'stock',
-                        name: 'stock',
-                        className: 'text-center'
+                        name: 'stock'
                     },
                     {
                         data: 'action',
                         name: 'action',
                         orderable: false,
-                        searchable: false,
-                        className: 'text-center'
-                    }
+                        searchable: false
+                    },
                 ],
+                order: [[1, 'asc']]
             });
         });
 

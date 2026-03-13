@@ -32,11 +32,12 @@ class ProductController extends Controller
                 ->addColumn('category', function (Product $product) {
                     return $product->category->name ?? '-';
                 })
-                ->addColumn('outlet', function (Product $product) {
+                ->addColumn('outlet_name', function (Product $product) {
+                    // Ubah jadi outlet_name agar tidak bentrok
                     return $product->outlet->name ?? '-';
                 })
-                // Agar pencarian di kolom outlet tidak error SQL
-                ->filterColumn('outlet', function ($query, $keyword) {
+                ->filterColumn('outlet_name', function ($query, $keyword) {
+                    // Samakan namanya
                     $query->whereHas('outlet', function ($q) use ($keyword) {
                         $q->where('name', 'like', "%{$keyword}%");
                     });
@@ -59,7 +60,7 @@ class ProductController extends Controller
 
         $outlets = Outlet::all();
         $categories = Category::with('children')->whereNull('parent_id')->get();
-        $products = Product::all(); 
+        $products = Product::all();
 
         return view('dashboard.products.index', compact('categories', 'products', 'outlets'));
     }

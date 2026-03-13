@@ -52,6 +52,11 @@
                             href="{{ route('dashboard.reports.outlet') }}">Penjualan Per Outlet</a>
                     @endcan
 
+                    @can('report-product')
+                        <a class="collapse-item {{ request()->is('dashboard/reports/product*') ? 'active' : '' }}"
+                            href="{{ route('dashboard.reports.product') }}">Penjualan Per Produk</a>
+                    @endcan
+
                     @can('report-employee')
                         <a class="collapse-item {{ request()->is('dashboard/reports/employee*') ? 'active' : '' }}"
                             href="{{ route('dashboard.reports.employee') }}">Laporan Karyawan</a>
