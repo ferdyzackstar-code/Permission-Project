@@ -67,7 +67,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="small font-weight-bold">Tipe Penempatan</label>
+                            <label class="small font-weight-bold">Kategori</label>
                             <select name="parent_id" id="parentCategory" class="form-control border-primary-50">
                                 <option value="">-- Set Sebagai Kategori Utama --</option>
                                 @foreach ($parentCategories as $parent)

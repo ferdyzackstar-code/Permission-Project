@@ -36,7 +36,6 @@
                 <div class="bg-white py-2 collapse-inner rounded">
                     <h6 class="collapse-header">Laporan & Transaksi:</h6>
 
-                    {{-- MENU BARU: DAFTAR TRANSAKSI --}}
                     @can('report-list')
                         <a class="collapse-item {{ request()->routeIs('dashboard.reports.index') ? 'active' : '' }}"
                             href="{{ route('dashboard.reports.index') }}">Daftar Transaksi</a>
@@ -70,14 +69,16 @@
     {{-- GRUP LOGISTIK --}}
     <div class="sidebar-heading">Logistik & Stok</div>
     <li
-        class="nav-item {{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/outlets*') ? 'active' : '' }}">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseLogistik"
-            aria-expanded="true" aria-controls="collapseLogistik">
+        class="nav-item {{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/outlets*', 'dashboard/suppliers*') ? 'active' : '' }}">
+        <a class="nav-link {{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/outlets*', 'dashboard/suppliers*') ? '' : 'collapsed' }}"
+            href="#" data-toggle="collapse" data-target="#collapseLogistik"
+            aria-expanded="{{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/outlets*', 'dashboard/suppliers*') ? 'true' : 'false' }}"
+            aria-controls="collapseLogistik">
             <i class="fas fa-fw fa-box"></i>
             <span>Inventori</span>
         </a>
         <div id="collapseLogistik"
-            class="collapse {{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/outlets*') ? 'show' : '' }}"
+            class="collapse {{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/outlets*', 'dashboard/suppliers*') ? 'show' : '' }}"
             data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
                 @can('category-list')
@@ -88,6 +89,11 @@
                 @can('product-list')
                     <a class="collapse-item {{ request()->is('dashboard/products*') ? 'active' : '' }}"
                         href="{{ route('dashboard.products.index') }}">Daftar Produk</a>
+                @endcan
+                
+                @can('supplier-list')
+                    <a class="collapse-item {{ request()->is('dashboard/suppliers*') ? 'active' : '' }}"
+                        href="{{ route('dashboard.suppliers.index') }}">Daftar Supplier</a>
                 @endcan
 
                 @can('outlet-list')
