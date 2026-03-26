@@ -38,9 +38,14 @@
                     </div>
 
                     <div class="form-group">
-                        <strong>Product Image:</strong>
-                        <input type="file" name="image" class="form-control">
-                        <small class="text-muted">Format: JPG, PNG. Max: 2MB</small>
+                        <label>Foto Produk</label>
+                        <input type="file" name="image" class="form-control" id="imageCreate"
+                            onchange="previewImage('imageCreate', 'previewCreate')">
+
+                        <div class="mt-2">
+                            <img id="previewCreate" src="" width="150"
+                                class="img-thumbnail shadow-sm d-none">
+                        </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6">

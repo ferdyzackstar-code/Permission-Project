@@ -202,6 +202,29 @@
                 let updateUrl = "{{ route('dashboard.categories.update', ':id') }}".replace(':id', id);
                 $('#categoryForm').attr('action', updateUrl);
                 $('#formMethod').val('PUT');
+
+                $('#categoryForm').on('submit', function(e) {
+                    // Cek apakah form sedang dalam mode PUT (Edit)
+                    if ($('#formMethod').val() === 'PUT') {
+                        e.preventDefault(); // Berhenti! Jangan submit dulu.
+                        let form = this;
+
+                        Swal.fire({
+                            title: "Simpan Perubahan Kategori?",
+                            text: "Data kategori akan diperbarui.",
+                            icon: "question",
+                            showCancelButton: true,
+                            confirmButtonText: "Ya, Update!",
+                            cancelButtonText: "Batal",
+                            confirmButtonColor: "#f6c23e", // Warna kuning warning
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                form.submit(); // Baru jalankan submit asli
+                            }
+                        });
+                    }
+                    // Jika mode POST (Tambah), biarkan langsung submit tanpa konfirmasi (opsional)
+                });
             });
 
             $('#resetBtn').click(function() {

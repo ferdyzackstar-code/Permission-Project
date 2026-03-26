@@ -14,7 +14,7 @@
                         <th class="bg-light">FOTO PRODUK</th>
                         <td>
                             @if ($product->image)
-                                <img src="{{ asset('storage/' . $product->image) }}" width="150"
+                                <img src="{{ asset('storage/uploads/products/' . $product->image) }}" width="150"
                                     class="img-thumbnail shadow-sm">
                             @else
                                 <span class="text-muted small italic text-danger">Belum ada foto</span>

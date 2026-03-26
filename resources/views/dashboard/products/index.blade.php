@@ -105,7 +105,7 @@
                     },
                     {
                         data: 'supplier_name',
-                        name: 'supplier.name'
+                        name: 'supplier_name'
                     },
                     {
                         data: 'category',
@@ -157,35 +157,6 @@
             });
         });
 
-        $(document).on('click', '.show_confirm', function(e) {
-            e.preventDefault();
-            const form = $(this).closest('form');
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    title: 'Yakin hapus data?',
-                    text: 'Data yang dihapus tidak bisa dikembalikan.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Ya, hapus!',
-                    cancelButtonText: 'Batal',
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#6c757d',
-                    customClass: {
-                        confirmButton: 'swal2-confirm btn btn-danger mr-2',
-                        cancelButton: 'swal2-cancel btn btn-secondary'
-                    },
-                    buttonsStyling: false,
-                    allowOutsideClick: false,
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        form[0].submit();
-                    }
-                });
-            } else {
-                form[0].submit();
-            }
-        });
-
         // Fungsi Format Rupiah saat Mengetik
         $(document).on('keyup', '.input-rupiah', function() {
             $(this).val(formatRupiah($(this).val()));
@@ -214,5 +185,22 @@
                 $(this).val(cleanValue);
             });
         });
+    </script>
+    <script>
+        function previewImage(inputId, previewId) {
+            const image = document.getElementById(inputId);
+            const imgPreview = document.getElementById(previewId);
+
+            // Tampilkan elemen image
+            imgPreview.classList.remove('d-none');
+            imgPreview.style.display = 'block';
+
+            const oFReader = new FileReader();
+            oFReader.readAsDataURL(image.files[0]);
+
+            oFReader.onload = function(oFREvent) {
+                imgPreview.src = oFREvent.target.result;
+            }
+        }
     </script>
 @endpush

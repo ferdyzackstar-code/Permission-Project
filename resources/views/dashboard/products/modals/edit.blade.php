@@ -45,11 +45,20 @@
                     </div>
 
                     <div class="form-group">
-                        <strong>Ganti Foto (Opsional):</strong>
-                        <input type="file" name="image" class="form-control mb-2">
-                        @if ($product->image)
-                            <img src="{{ asset('storage/' . $product->image) }}" width="80" class="img-thumbnail">
-                        @endif
+                        <label>Foto Produk</label>
+                        <input type="file" name="image" class="form-control" id="imageEdit{{ $product->id }}"
+                            onchange="previewImage('imageEdit{{ $product->id }}', 'previewEdit{{ $product->id }}')">
+
+                        <div class="mt-2">
+                            @if ($product->image)
+                                <img id="previewEdit{{ $product->id }}"
+                                    src="{{ asset('storage/uploads/products/' . $product->image) }}" width="150"
+                                    class="img-thumbnail shadow-sm">
+                            @else
+                                <img id="previewEdit{{ $product->id }}" src="" width="150"
+                                    class="img-thumbnail shadow-sm d-none">
+                            @endif
+                        </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
@@ -102,7 +111,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Changes</button>
+                    <button type="button" class="btn btn-primary btn-update-confirm">Update Changes</button>
                 </div>
             </form>
         </div>
