@@ -16,6 +16,44 @@
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css" rel="stylesheet">
 
     @stack('styles')
+
+    <style>
+        #accordionSidebar {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 1030;
+        }
+
+        .topbar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 6.5rem;
+            width: auto;
+            z-index: 1020;
+            transition: left 0.3s ease;
+        }
+
+        #content {
+            padding-top: 5.375rem;
+        }
+
+        body:not(.sidebar-toggled) .topbar {
+            left: 14rem;
+        }
+
+        @media (max-width: 768px) {
+            .topbar {
+                left: 0;
+            }
+
+            #content {
+                padding-top: 4.375rem;
+            }
+        }
+    </style>
+
 </head>
 
 <body id="page-top">
