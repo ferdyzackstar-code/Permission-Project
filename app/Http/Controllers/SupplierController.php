@@ -11,11 +11,13 @@ class SupplierController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Supplier::latest()->get();
+
+            $data = Supplier::withCount('products')->latest();
+
             return DataTables::of($data)
                 ->addIndexColumn()
-                ->addColumn('purchase_price', function ($row) {
-                    return 'Rp ' . number_format($row->purchase_price, 0, ',', '.');
+                ->addColumn('product_qty', function ($row) {
+                    return '<span class="badge badge-info shadow-sm">' . $row->products_count . ' Produk</span>';
                 })
                 ->addColumn('status', function ($row) {
                     $color = $row->status == 'active' ? 'success' : 'danger';
@@ -25,10 +27,14 @@ class SupplierController extends Controller
                     return '
                         <button class="btn btn-info btn-sm btn-show" data-id="' .
                         $row->id .
-                        '"><i class="fa fa-eye"></i></button>
+                        '">
+                            <i class="fa fa-eye"></i>
+                        </button>
                         <button class="btn btn-primary btn-sm btn-edit" data-id="' .
                         $row->id .
-                        '"><i class="fa fa-edit"></i></button>
+                        '">
+                            <i class="fa fa-edit"></i>
+                        </button>
                         <form action="' .
                         route('dashboard.suppliers.destroy', $row->id) .
                         '" method="POST" style="display:inline">
@@ -36,13 +42,18 @@ class SupplierController extends Controller
                         csrf_field() .
                         method_field('DELETE') .
                         '
-                            <button type="submit" class="btn btn-danger btn-sm show_confirm"><i class="fa fa-trash"></i></button>
+                            <button type="submit" class="btn btn-danger btn-sm show_confirm">
+                                <i class="fa fa-trash"></i>
+                            </button>
                         </form>';
                 })
-                ->rawColumns(['status', 'action'])
+                ->rawColumns(['product_qty', 'status', 'action'])
                 ->make(true);
         }
-        return view('dashboard.suppliers.index');
+
+        $suppliers = Supplier::withCount('products')->get();
+
+        return view('dashboard.suppliers.index', compact('suppliers'));
     }
 
     public function store(Request $request)

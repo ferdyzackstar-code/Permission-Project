@@ -13,7 +13,19 @@ return new class extends Migration {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->text('detail'); 
+            $table->text('detail')->nullable();
+
+            // Relasi Foreign Keys
+            $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('set null');
+            $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->onDelete('set null');
+
+            // Kolom Tambahan sesuai gambar
+            $table->bigInteger('outlet_id')->nullable(); // Jika ada table outlets, gunakan foreignId
+            $table->decimal('price', 15, 2)->nullable();
+            $table->integer('stock')->nullable();
+            $table->string('image')->nullable();
+            $table->enum('status', ['available', 'out_of_stock', 'discontinued'])->default('available');
+
             $table->timestamps();
         });
     }

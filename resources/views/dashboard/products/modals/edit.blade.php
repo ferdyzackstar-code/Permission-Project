@@ -77,20 +77,34 @@
                             </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <strong>Kategori:</strong>
-                        <select name="category_id" class="form-control" required>
-                            @foreach ($categories as $cat)
-                                <optgroup label="{{ $cat->name }}">
-                                    @foreach ($cat->children as $sub)
-                                        <option value="{{ $sub->id }}"
-                                            {{ $product->category_id == $sub->id ? 'selected' : '' }}>
-                                            {{ $sub->name }}
-                                        </option>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <strong>Species:</strong>
+                                <select class="form-control species-edit" data-product-id="{{ $product->id }}"
+                                    required>
+                                    <option value="">-- Pilih Species --</option>
+                                    @foreach ($categories as $cat)
+                                        @if (empty($cat->parent_id))
+                                            <option value="{{ $cat->id }}"
+                                                {{ (isset($product->category->parent_id) && $product->category->parent_id == $cat->id) || $product->category_id == $cat->id ? 'selected' : '' }}>
+                                                {{ $cat->name }}
+                                            </option>
+                                        @endif
                                     @endforeach
-                                </optgroup>
-                            @endforeach
-                        </select>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <strong>Kategori:</strong>
+                                <select name="category_id" id="category_edit{{ $product->id }}"
+                                    class="form-control category-edit" required>
+                                    <option value="{{ $product->category_id }}">
+                                        {{ $product->category->name ?? '-- Pilih Kategori --' }}</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <strong>Cabang:</strong>
@@ -117,3 +131,5 @@
         </div>
     </div>
 </div>
+
+

@@ -146,9 +146,8 @@
                         showCancelButton: true,
                         confirmButtonText: "Ya, Update!",
                         cancelButtonText: "Batal",
-                        confirmButtonColor: "#f6c23e", // Warna kuning/warning agar eye-catching
+                        confirmButtonColor: "#f6c23e", 
                         cancelButtonColor: "#858796",
-                        reverseButtons: true // Opsional: tombol 'Batal' di kiri, 'Update' di kanan
                     }).then((result) => {
                         if (result.isConfirmed) {
                             // Submit form asli
@@ -170,7 +169,7 @@
                     });
                 } else if (msg.includes('update') || msg.includes('edit') || msg.includes('diperbarui')) {
                     Toast.fire({
-                        icon: 'success',
+                        icon: 'success',    
                         title: 'Diperbarui!',
                         text: msg
                     });

@@ -5,26 +5,29 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Str;
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Yajra\DataTables\DataTables;
+use Yajra\DataTables\Facades\DataTables;
 
 class CategoryController extends Controller
 {
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            // Logika pengurutan: Urutkan berdasarkan ID jika Utama, atau urutkan berdasarkan parent_id
-            // agar anak selalu berada di bawah bapaknya.
-            $data = Category::with('parent')->orderByRaw('COALESCE(parent_id, id), parent_id IS NOT NULL, id');
+            $data = Category::with('parent')
+                ->withCount(['products', 'childrenProducts'])
+                ->orderByRaw('COALESCE(parent_id, id), parent_id IS NOT NULL, id');
 
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('name_display', function ($row) {
                     if ($row->parent_id) {
-                        // Berikan ikon panah dan margin agar menjorok ke dalam
                         return '<div style="margin-left: 30px;"><i class="fas fa-level-up-alt fa-rotate-90 text-muted mr-2"></i>' . $row->name . '</div>';
                     }
-                    // Kategori Utama dibuat tebal
                     return '<strong><i class="fas fa-folder-open text-primary mr-2"></i>' . $row->name . '</strong>';
+                })
+                ->addColumn('product_qty', function ($row) {
+                    $count = $row->parent_id ? $row->products_count : $row->children_products_count;
+                    $badgeClass = $row->parent_id ? 'badge-info' : 'badge-primary';
+                    return '<span class="badge ' . $badgeClass . '">' . $count . ' Items</span>';
                 })
                 ->addColumn('type_badge', function ($row) {
                     if ($row->parent_id) {
@@ -41,21 +44,17 @@ class CategoryController extends Controller
                     <button class="btn btn-outline-primary btn-sm editCategory"
                         data-id="' .
                         $row->id .
-                        '"
-                        data-name="' .
+                        '" data-name="' .
                         $row->name .
                         '"
                         data-parent="' .
                         $row->parent_id .
-                        '"
-                        data-description="' .
+                        '" data-description="' .
                         $row->description .
                         '"
-
                         data-status="' .
                         $row->status .
                         '">
-
                         <i class="fa fa-edit"></i> Edit
                     </button>
                     <form action="' .
@@ -70,7 +69,8 @@ class CategoryController extends Controller
                         </button>
                     </form>';
                 })
-                ->rawColumns(['name_display', 'type_badge', 'status_badge', 'action'])
+
+                ->rawColumns(['name_display', 'product_qty', 'type_badge', 'status_badge', 'action'])
                 ->make(true);
         }
 

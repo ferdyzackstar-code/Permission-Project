@@ -25,13 +25,13 @@ class Product extends Model
         return $this->belongsTo(Outlet::class, 'outlet_id');
     }
 
-    public function transaction_details()
-    {
-        return $this->hasMany(TransactionDetail::class);
-    }
-
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
+
+    public function order_items()
+    {
+        return $this->hasMany(OrderItem::class);
     }
 }

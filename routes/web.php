@@ -11,6 +11,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\OrderController;
 
 Route::get('/', function () {
     return view('auth.login');
@@ -32,10 +33,21 @@ Route::group(['middleware' => ['auth'], 'prefix' => 'dashboard', 'as' => 'dashbo
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('permissions', PermissionController::class);
-    
+
     Route::resource('products', ProductController::class);
+    Route::get('/get-subcategories/{parentId}', [ProductController::class, 'getSubCategories'])->name('products.getSubCategories');
     Route::resource('categories', CategoryController::class);
     Route::resource('suppliers', SupplierController::class);
+
+    // POS & Orders Routes
+    Route::get('/orders/pos', [OrderController::class, 'pos'])->name('orders.pos');
+    Route::post('/orders/add-to-cart', [OrderController::class, 'addToCart'])->name('orders.addToCart');
+    Route::post('/orders/remove-from-cart', [OrderController::class, 'removeFromCart'])->name('orders.removeFromCart');
+    Route::post('/orders/store', [OrderController::class, 'store'])->name('orders.store');
+
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{id}/receipt', [OrderController::class, 'receipt'])->name('orders.receipt');
+    Route::put('/orders/{order}/confirm-payment', [OrderController::class, 'confirmPayment'])->name('orders.confirmPayment');
 
     // Cukup satu rute ini untuk melayani semua jenis export PDF
     Route::get('/dashboard/report/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export');
@@ -44,7 +56,12 @@ Route::group(['middleware' => ['auth'], 'prefix' => 'dashboard', 'as' => 'dashbo
 });
 
 // Route sementara untuk cek desain error
-Route::get('/preview-error-419', function () { return view('errors.419'); });
-Route::get('/preview-error-429', function () { return view('errors.429'); });
-Route::get('/preview-error-503', function () { return view('errors.503'); });
-
+Route::get('/preview-error-419', function () {
+    return view('errors.419');
+});
+Route::get('/preview-error-429', function () {
+    return view('errors.429');
+});
+Route::get('/preview-error-503', function () {
+    return view('errors.503');
+});

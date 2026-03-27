@@ -8,7 +8,7 @@ use App\Models\Product;
 use App\Models\Supplier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File; 
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Yajra\DataTables\Facades\DataTables;
@@ -41,6 +41,9 @@ class ProductController extends Controller
                 ->addColumn('status', function (Product $product) {
                     $badge = $product->status == 'active' ? 'success' : 'danger';
                     return '<span class="badge badge-' . $badge . '">' . ucfirst($product->status) . '</span>';
+                })
+                ->addColumn('species', function (Product $product) {
+                    return $product->category->parent->name ?? '-';
                 })
                 ->addColumn('category', function (Product $product) {
                     return $product->category->name ?? '-';
@@ -155,5 +158,14 @@ class ProductController extends Controller
 
         $product->delete();
         return redirect()->route('dashboard.products.index')->with('success', 'Product deleted successfully');
+    }
+
+    public function getSubCategories($parentId)
+    {
+        $subCategories = \App\Models\Category::where('parent_id', $parentId)
+            ->where('status', 'active')
+            ->get(['id', 'name']);
+
+        return response()->json($subCategories);
     }
 }

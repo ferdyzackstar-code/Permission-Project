@@ -62,18 +62,28 @@
                             </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <strong>Kategori:</strong>
-                        <select name="category_id" class="form-control" required>
-                            <option value="">-- Pilih Kategori --</option>
-                            @foreach ($categories as $cat)
-                                <optgroup label="{{ $cat->name }}">
-                                    @foreach ($cat->children as $sub)
-                                        <option value="{{ $sub->id }}">{{ $sub->name }}</option>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <strong>Species (Induk):</strong>
+                                <select id="species_select" class="form-control" required>
+                                    <option value="">-- Pilih Species --</option>
+                                    @foreach ($categories as $cat)
+                                        @if (empty($cat->parent_id))
+                                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                        @endif
                                     @endforeach
-                                </optgroup>
-                            @endforeach
-                        </select>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <strong>Kategori Produk:</strong>
+                                <select name="category_id" id="category_select" class="form-control" required disabled>
+                                    <option value="">-- Pilih Species Dulu --</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <strong>Cabang:</strong>

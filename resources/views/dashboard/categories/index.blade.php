@@ -114,6 +114,7 @@
                             <th width="5%">No</th>
                             <th>Struktur Nama Kategori</th>
                             <th>Predikat</th>
+                            <th>Jumlah Produk</th>
                             <th width="10%">Status</th>
                             <th width="15%" class="text-center">Aksi</th>
                         </tr>
@@ -155,6 +156,13 @@
                         name: 'type_badge',
                         orderable: false,
                         searchable: false
+                    },
+                    {
+                        data: 'product_qty', 
+                        name: 'product_qty',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center'
                     },
                     {
                         data: 'status_badge',
@@ -204,9 +212,8 @@
                 $('#formMethod').val('PUT');
 
                 $('#categoryForm').on('submit', function(e) {
-                    // Cek apakah form sedang dalam mode PUT (Edit)
                     if ($('#formMethod').val() === 'PUT') {
-                        e.preventDefault(); // Berhenti! Jangan submit dulu.
+                        e.preventDefault(); 
                         let form = this;
 
                         Swal.fire({
@@ -216,14 +223,13 @@
                             showCancelButton: true,
                             confirmButtonText: "Ya, Update!",
                             cancelButtonText: "Batal",
-                            confirmButtonColor: "#f6c23e", // Warna kuning warning
+                            confirmButtonColor: "#f6c23e",
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                form.submit(); // Baru jalankan submit asli
+                                form.submit(); 
                             }
                         });
                     }
-                    // Jika mode POST (Tambah), biarkan langsung submit tanpa konfirmasi (opsional)
                 });
             });
 

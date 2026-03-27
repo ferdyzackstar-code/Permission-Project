@@ -13,38 +13,53 @@ class Category extends Model
     {
         parent::boot();
 
-        // 1. Logika Auto-Slug: Dijalankan saat data akan disimpan (create/update)
         static::saving(function ($category) {
             if ($category->isDirty('name')) {
                 $category->slug = Str::slug($category->name);
             }
         });
 
-        // 2. Logika Cascading Delete: Dijalankan sebelum data dihapus
         static::deleting(function ($category) {
-            // Kita ambil semua anak (sub-kategori) dan hapus satu per satu
-            // Ini akan memicu event 'deleting' di level anak juga (rekursif)
+            // 1. Hapus sub-kategori (rekursif)
             $category->children()->each(function ($child) {
                 $child->delete();
             });
+
+            // 2. TAMBAHKAN INI: Set category_id di produk menjadi null atau hapus produknya
+            // Agar database tidak error jika ada produk yang masih memakai kategori ini
+            $category->products()->delete(); 
         });
     }
 
-    // Scope untuk filter kategori aktif saja
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
     }
 
-    // Relasi untuk mengambil Sub-Kategori
     public function children()
     {
         return $this->hasMany(Category::class, 'parent_id');
     }
 
-    // Relasi untuk mengambil Kategori Induk
     public function parent()
     {
         return $this->belongsTo(Category::class, 'parent_id');
+    }
+
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'category_id');
+    }
+
+    public function childrenProducts()
+    {
+        return $this->hasManyThrough(
+            Product::class,     // Model Akhir (Product)
+            Category::class,    // Model Perantara (Sub-Category)
+            'parent_id',        // FK di model perantara (categories.parent_id)
+            'category_id',      // FK di model akhir (products.category_id)
+            'id',               // Local key di model ini (categories.id)
+            'id'                // Local key di model perantara (sub_categories.id)
+        );
     }
 }

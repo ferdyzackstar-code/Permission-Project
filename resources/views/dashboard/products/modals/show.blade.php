@@ -39,7 +39,11 @@
                     </tr>
                     <tr>
                         <th class="bg-light">KATEGORI</th>
-                        <td>{{ $product->category->name ?? '-' }}</td>
+                        <td>
+                            {{ $product->category->parent->name ?? '' }}
+                            <i class="fa fa-angle-right mx-1"></i>
+                            {{ $product->category->name ?? '-' }}
+                        </td>
                     </tr>
                     <tr>
                         <th class="bg-light">CABANG</th>

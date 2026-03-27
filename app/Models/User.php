@@ -38,9 +38,8 @@ class User extends Authenticatable
         ];
     }
 
-    // Tambahkan ini di dalam class User
-    public function transactions()
+    public function orders()
     {
-        return $this->hasMany(Transaction::class);
+        return $this->hasMany(Order::class);
     }
 }
