@@ -52,22 +52,22 @@
             class="collapse {{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/outlets*', 'dashboard/suppliers*') ? 'show' : '' }}"
             data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                @can('category-list')
+                @can('category-index')
                     <a class="collapse-item {{ request()->is('dashboard/categories*') ? 'active' : '' }}"
                         href="{{ route('dashboard.categories.index') }}">Kategori Produk</a>
                 @endcan
 
-                @can('product-list')
+                @can('product-index')
                     <a class="collapse-item {{ request()->is('dashboard/products*') ? 'active' : '' }}"
                         href="{{ route('dashboard.products.index') }}">Daftar Produk</a>
                 @endcan
 
-                @can('supplier-list')
+                @can('supplier-index')
                     <a class="collapse-item {{ request()->is('dashboard/suppliers*') ? 'active' : '' }}"
                         href="{{ route('dashboard.suppliers.index') }}">Daftar Supplier</a>
                 @endcan
 
-                @can('outlet-list')
+                @can('outlet-index')
                     <a class="collapse-item {{ request()->is('dashboard/outlets*') ? 'active' : '' }}"
                         href="{{ route('dashboard.outlets.index') }}">Manajemen Outlet</a>
                 @endcan

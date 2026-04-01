@@ -61,10 +61,17 @@
     @include('dashboard.users.modals.create', ['roles' => $roles])
 
     <div class="button-action" style="margin-bottom: 20px">
+        <a href="{{ route('dashboard.users.downloadImportTemplate') }}" class="btn btn-warning btn-md">
+            <i class="fas fa-file-download"></i> IMPORT TEMPLATE
+        </a>
+
         <button type="button" class="btn btn-success" data-toggle="modal" data-target="#import">
-            IMPORT
+            <i class="fas fa-upload"></i> IMPORT
         </button>
-        <a href="{{ route('dashboard.users.export') }}" class="btn btn-primary btn-md">EXPORT</a>
+
+        <a href="{{ route('dashboard.users.export') }}" class="btn btn-primary btn-md">
+            <i class="fas fa-file-export"></i> EXPORT
+        </a>
     </div>
 
     <div class="card">

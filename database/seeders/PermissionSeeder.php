@@ -9,10 +9,7 @@ class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        // Daftar entitas yang kamu minta
         $entities = ['supplier', 'product', 'category', 'role', 'user', 'outlet', 'permission'];
-        
-        // Daftar aksi yang kamu minta
         $actions = ['index', 'show', 'edit', 'delete'];
 
         foreach ($entities as $entity) {

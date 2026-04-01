@@ -14,16 +14,15 @@ class CategorySeeder extends Seeder
         $subCategories = ['Makanan', 'Obat', 'Kandang'];
 
         foreach ($mainCategories as $main) {
-            // Buat Parent Category
+
             $parent = Category::create([
                 'name' => $main,
                 'parent_id' => null,
                 'slug' => Str::slug($main),
                 'description' => 'Kategori utama untuk ' . $main,
-                'status' => 'active', // Sesuaikan dengan enum di databasemu
+                'status' => 'active', 
             ]);
 
-            // Buat Sub Category untuk parent ini
             foreach ($subCategories as $sub) {
                 Category::create([
                     'name' => $sub,

@@ -2,20 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Exports\UsersExport;
+use App\Exports\UsersImportTemplateExport;
 use App\Http\Controllers\Controller;
+use App\Imports\UsersImport;
 use App\Models\User;
-use Spatie\Permission\Models\Role;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Arr;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
-use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\UsersImport;
-use App\Exports\UsersExport;
+use Spatie\Permission\Models\Role;
+use Yajra\DataTables\Facades\DataTables;
 
 class UserController extends Controller
 {
@@ -205,7 +206,7 @@ class UserController extends Controller
         $file = $request->file('file');
         $import = new \App\Imports\UsersImport();
 
-        $import->import($file); 
+        $import->import($file);
 
         if ($import->failures()->isNotEmpty()) {
             return back()->with('import_failures', $import->failures());
@@ -216,6 +217,14 @@ class UserController extends Controller
 
     public function export()
     {
-        return Excel::download(new UsersExport(), 'data_users_anda_petshop.xlsx');
+        $users = User::with('roles')->get();
+        $roles = \Spatie\Permission\Models\Role::all();
+
+        return Excel::download(new UsersExport($users, $roles), 'data_users_anda_petshop.xlsx');
+    }
+
+    public function downloadImportTemplate()
+    {
+        return Excel::download(new UsersImportTemplateExport(), 'template_import_data_users.xlsx');
     }
 }

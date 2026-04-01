@@ -23,7 +23,7 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFai
             'password' => Hash::make($row['password']),
         ]);
 
-        $user->assignRole('user');
+        $user->assignRole('User');
         return $user;
     }
 
