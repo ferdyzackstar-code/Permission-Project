@@ -14,13 +14,9 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->text('detail')->nullable();
-
-            // Relasi Foreign Keys
             $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('set null');
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->onDelete('set null');
-
-    // Kolom Tambahan sesuai gambar
-            $table->bigInteger('outlet_id')->nullable(); // Jika ada table outlets, gunakan foreignId
+            $table->bigInteger('outlet_id')->nullable(); 
             $table->decimal('price', 15, 2)->nullable();
             $table->integer('stock')->nullable();
             $table->string('image')->nullable();

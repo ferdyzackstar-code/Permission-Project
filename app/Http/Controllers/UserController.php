@@ -17,6 +17,8 @@ use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -35,6 +37,12 @@ class UserController extends Controller
 
             return DataTables::eloquent($users)
                 ->addIndexColumn()
+                ->addColumn('image', function (User $user) {
+                    $path = 'storage/uploads/users/' . $user->image;
+                    $url = $user->image && file_exists(public_path($path)) ? asset($path) : asset('storage/uploads/users/default-user.jpg');
+
+                    return '<img src="' . $url . '" width="50" class="img-thumbnail shadow-sm">';
+                })
                 ->addColumn('roles', function (User $user) {
                     if ($user->roles->isEmpty()) {
                         return '<span class="badge badge-secondary">No Role</span>';
@@ -69,16 +77,13 @@ class UserController extends Controller
                             </button>
                         </form>';
                 })
-                ->rawColumns(['roles', 'action'])
+                ->rawColumns(['roles', 'action', 'image'])
                 ->make(true);
         }
 
         return view('dashboard.users.index', $this->getIndexData());
     }
 
-    /**
-     * Data kebutuhan view index user berbasis modal.
-     */
     protected function getIndexData(): array
     {
         return [
@@ -87,129 +92,122 @@ class UserController extends Controller
         ];
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function create(): View
     {
         return view('dashboard.users.index', $this->getIndexData());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request): RedirectResponse
     {
         $this->validate($request, [
             'name' => 'required',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|same:confirm-password',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'roles' => 'required',
         ]);
 
-        // Ambil semua input
         $input = $request->all();
 
-        // Hash passwordnya
-        $input['password'] = Hash::make($input['password']);
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = time() . '-' . Str::slug($request->name) . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('storage/uploads/users');
 
-        // --- PERBAIKAN DI SINI ---
-        // Hapus field yang bukan bagian dari kolom tabel users
+            if (!File::isDirectory($destinationPath)) {
+                File::makeDirectory($destinationPath, 0755, true, true);
+            }
+
+            $file->move($destinationPath, $filename);
+            $input['image'] = $filename;
+        }
+
+        $input['password'] = Hash::make($input['password']);
         $input = Arr::except($input, ['confirm-password', 'roles']);
 
-        // Sekarang aman untuk dicreate
         $user = User::create($input);
-
-        // Role diberikan lewat Spatie, bukan lewat create() tadi
         $user->assignRole($request->input('roles'));
 
-        return redirect()->route('dashboard.users.index')->with('success', 'User created successfully');
+        return redirect()->route('dashboard.users.index')->with('success', 'User Berhasil Ditambahkan.');
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function show($id): View
     {
         return view('dashboard.users.index', $this->getIndexData());
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function edit($id): View
     {
         return view('dashboard.users.index', $this->getIndexData());
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id): RedirectResponse
     {
         $this->validate($request, [
             'name' => 'required',
             'email' => 'required|email|unique:users,email,' . $id,
-            'password' => 'same:confirm-password', // Password opsional saat update
+            'password' => 'nullable|same:confirm-password',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'roles' => 'required',
         ]);
 
+        $user = User::find($id);
         $input = $request->all();
 
-        // Logika jika password diisi (ingin ganti password)
+        if ($request->hasFile('image')) {
+            $destinationPath = public_path('storage/uploads/users');
+
+            if ($user->image && $user->image !== 'default-user.jpg' && File::exists($destinationPath . '/' . $user->image)) {
+                File::delete($destinationPath . '/' . $user->image);
+            }
+
+            $file = $request->file('image');
+            $filename = time() . '-' . Str::slug($request->name) . '.' . $file->getClientOriginalExtension();
+
+            if (!File::isDirectory($destinationPath)) {
+                File::makeDirectory($destinationPath, 0755, true, true);
+            }
+
+            $file->move($destinationPath, $filename);
+            $input['image'] = $filename;
+        }
+
         if (!empty($input['password'])) {
             $input['password'] = Hash::make($input['password']);
         } else {
-            // Jika password kosong, hapus dari array agar tidak menimpa password lama dengan null
             $input = Arr::except($input, ['password']);
         }
 
-        // --- PERBAIKAN: Buang field yang bukan kolom tabel users ---
         $input = Arr::except($input, ['confirm-password', 'roles', '_token', '_method']);
-
-        $user = User::find($id);
         $user->update($input);
 
-        // Update Role (Hapus role lama, lalu masukkan yang baru)
         DB::table('model_has_roles')->where('model_id', $id)->delete();
         $user->assignRole($request->input('roles'));
 
-        return redirect()->route('dashboard.users.index')->with('success', 'User updated successfully');
+        return redirect()->route('dashboard.users.index')->with('success', 'User Berhasil Diupdate.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id): RedirectResponse
     {
-        User::find($id)->delete();
+        $user = User::find($id);
 
-        return redirect()->route('dashboard.users.index')->with('success', 'User deleted successfully');
+        if ($user->image && $user->image !== 'default-user.jpg') {
+            $oldFilePath = public_path('storage/uploads/users/' . $user->image);
+            if (File::exists($oldFilePath)) {
+                File::delete($oldFilePath);
+            }
+        }
+
+        $user->delete();
+
+        return redirect()->route('dashboard.users.index')->with('success', 'User Berhasil Dihapus');
     }
 
     public function downloadImportTemplate()
     {
         return Excel::download(new UsersImportTemplateExport(), 'template_import_data_users.xlsx');
     }
-    
+
     public function import(Request $request)
     {
         $request->validate([
@@ -233,7 +231,7 @@ class UserController extends Controller
         $users = User::with('roles')->get();
         $roles = \Spatie\Permission\Models\Role::all();
 
-        $fileName = 'data_products_anda_petshop_' . date('Y-m-d_H-i-s') . '.xlsx';
+        $fileName = 'data_users_anda_petshop_' . date('Y-m-d_H-i-s') . '.xlsx';
         return Excel::download(new \App\Exports\UsersExport($users, $roles), $fileName);
     }
 }

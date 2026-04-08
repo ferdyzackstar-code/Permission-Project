@@ -49,7 +49,8 @@
                         <input type="file" name="image" class="form-control" id="imageEdit{{ $product->id }}"
                             onchange="previewImage('imageEdit{{ $product->id }}', 'previewEdit{{ $product->id }}')">
 
-                        <div class="mt-2 text-center">
+                        <div
+                            class="mt-3 d-flex flex-column align-items-center justify-content-center border rounded p-3 bg-light">
                             @php
                                 $editPath = 'storage/uploads/products/' . $product->image;
                                 $previewUrl =
@@ -59,9 +60,9 @@
                             @endphp
 
                             <img id="previewEdit{{ $product->id }}" src="{{ $previewUrl }}" width="150"
-                                class="img-thumbnail shadow-sm border-primary">
-
-                            <small class="d-block text-muted mt-1">Pratinjau Foto</small>
+                                height="150" class="img-thumbnail shadow-sm mb-2"
+                                style="object-fit: cover; display: block;"> <small class="text-muted italic">Pratinjau
+                                Foto</small>
                         </div>
                     </div>
                     <div class="row">

@@ -8,8 +8,15 @@
             </div>
             <div class="modal-body">
                 <div class="text-center mb-3">
-                    <div class="avatar bg-info text-white rounded-circle d-inline-block p-4 mb-2">
-                        <i class="fa fa-user fa-3x"></i>
+                    <div class="text-white d-inline-block p-4 mb-2">
+                        @php
+                            $imagePath = 'storage/uploads/users/' . $user->image;
+                            $url =
+                                $user->image && file_exists(public_path($imagePath))
+                                    ? asset($imagePath)
+                                    : asset('storage/uploads/users/default-user.jpg');
+                        @endphp
+                        <img src="{{ $url }}" width="150" class="img-thumbnail shadow-sm">
                     </div>
                     <h4>{{ $user->name }}</h4>
                     <span class="text-muted">{{ $user->email }}</span>

@@ -81,6 +81,7 @@
                     <thead>
                         <tr class="bg-primary">
                             <th width="1px" class="text-center text-white">No</th>
+                            <th class="text-center text-white">Image</th>
                             <th class="text-center text-white">Name</th>
                             <th class="text-center text-white">Email</th>
                             <th class="text-center text-white">Roles</th>
@@ -148,6 +149,14 @@
                         className: 'text-center'
                     },
                     {
+                        data: 'image',
+                        name: 'image',
+                        orderable: false,
+                        searchable: false,
+                        width: '7%',
+                        className: 'text-center align-middle'
+                    },
+                    {
                         data: 'name',
                         name: 'name'
                     },
@@ -202,5 +211,21 @@
                 form[0].submit();
             }
         });
+    </script>
+    <script>
+        function previewImage(input, id) {
+            const preview = document.getElementById('previewEdit' + id);
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
     </script>
 @endpush
