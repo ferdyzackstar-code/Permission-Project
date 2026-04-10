@@ -169,6 +169,32 @@ function calculateChange() {
     document.getElementById("change_amount").innerText = "Rp" + displayChange;
 }
 
+    document.addEventListener('DOMContentLoaded', function() {
+        const payment_method = document.getElementById("payment_method");
+        const cash_input_group = document.getElementById('cash-input-group');
+
+        // Fungsi untuk toggle visibility
+        function togglePaymentFields() {
+            if (payment_method.value === 'transfer') {
+                // Sembunyikan jika transfer
+                cash_input_group.style.display = 'none';
+                
+                // Opsional: Kosongkan nilai input saat disembunyikan
+                document.getElementById("paid_amount_format").value = ""; 
+            } else {
+                // Tampilkan jika cash
+                cash_input_group.style.display = 'block';
+            }
+        }
+
+        // Jalankan fungsi saat ada perubahan di select
+        payment_method.addEventListener('change', togglePaymentFields);
+
+        // Jalankan sekali saat halaman pertama kali dimuat 
+        // (untuk memastikan kondisi awal benar jika ada old value)
+        togglePaymentFields();
+    });
+
 // --- 4. SUBMIT TRANSAKSI (PERBAIKAN ERROR CSRF) ---
 async function submitTransaction() {
     if (cart.length === 0) return alert("Keranjang masih kosong!");

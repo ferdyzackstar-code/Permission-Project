@@ -68,7 +68,8 @@
                             <p class="tiny text-muted">Kasir: {{ $order->user->name }}</p>
                             <button onclick="window.print()" class="btn btn-outline-dark btn-sm mt-3 d-print-none">
                                 <i class="fa fa-print me-1"></i> Cetak Struk
-                            </button>
+                            </button> <br>
+                            <a href="{{ route('dashboard.orders.index') }}" class="btn btn-secondary btn-sm mt-2">Kembali</a>
                         </div>
                     </div>
                 </div>

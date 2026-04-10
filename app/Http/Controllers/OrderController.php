@@ -14,6 +14,13 @@ use Exception;
 
 class OrderController extends Controller
 {
+    function __construct()
+    {
+        $this->middleware('permission:order.index|order.create|order.pos', ['only' => ['index', 'show']]);
+        $this->middleware('permission:order.pos', ['only' => ['create', 'store']]);
+        $this->middleware('permission:order.create', ['only' => ['create', 'store']]);
+    }
+
     public function pos()
     {
         $categories = Category::where('status', 'active')->whereNull('parent_id')->get();

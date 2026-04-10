@@ -7,6 +7,13 @@
 @endpush
 
 @section('content')
+
+    <div class="container-fluid mt-3">
+        <div class="row mb-3 px-3">
+            <h4 class="text-dark font-weight-bold"><i class="fa fa-shopping-basket text-primary" aria-hidden="true"></i> Mesin Kasir</h4>
+        </div>
+    </div>
+
     <div class="container-fluid mt-3 pos-main-wrapper">
         <div class="row h-100">
             <div class="col-md-8 h-100">

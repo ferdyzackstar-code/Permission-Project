@@ -18,9 +18,11 @@
     <hr class="sidebar-divider">
 
     {{-- GRUP TRANSAKSI KASIR --}}
+    @canany(['order.pos', 'order.index'])
+        
     <div class="sidebar-heading">Transaksi</div>
-
-    @can('pos.index')
+    
+    @can('order.pos')
         <li class="nav-item {{ request()->routeIs('dashboard.orders.pos') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('dashboard.orders.pos') }}">
                 <i class="fas fa-fw fa-cash-register"></i>
@@ -28,11 +30,14 @@
         </li>
     @endcan
 
+    @can('order.index')
     <li class="nav-item {{ request()->routeIs('dashboard.orders.index*') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('dashboard.orders.index') }}">
             <i class="fas fa-fw fa-history"></i>
             <span>Riwayat Pesanan</span></a>
     </li>
+    @endcan
+    @endcanany
 
     <hr class="sidebar-divider">
 
