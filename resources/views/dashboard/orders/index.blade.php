@@ -11,19 +11,21 @@
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle w-100" id="orders-table">
-                        <thead class="table-light">
-                            <tr>
-                                <th>No</th>
-                                <th>Invoice</th>
-                                <th>Kasir</th>
-                                <th>Tanggal</th>
-                                <th>Total Bayar</th>
-                                <th>Status</th>
-                                <th width="100px">Aksi</th>
-                            </tr>
-                        </thead>
-                    </table>
+                    <table class="table table-hover table-bordered" id="orders-table">
+                    <thead>
+                        <tr class="bg-primary">
+                            <th width='1px' class="text-center text-white">No</th>
+                            <th class="text-center text-white">Invoice</th>
+                            <th class="text-center text-white">Kasir</th>
+                            <th class="text-center text-white">Tanggal</th>
+                            <th class="text-center text-white">Total</th>
+                            <th class="text-center text-white">Status</th>
+                            <th class="text-center text-white">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-border-bottom-0">
+                    </tbody>
+                </table>
                 </div>
             </div>
         </div>

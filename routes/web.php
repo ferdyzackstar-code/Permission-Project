@@ -58,7 +58,7 @@ Route::group(['middleware' => ['auth'], 'prefix' => 'dashboard', 'as' => 'dashbo
     Route::get('/orders/pos', [OrderController::class, 'pos'])->name('orders.pos');
     Route::post('/orders/store', [OrderController::class, 'store'])->name('orders.store');
 
-    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
+    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show')->where('id', '[0-9]+');
     Route::get('/orders/{id}/receipt', [OrderController::class, 'receipt'])->name('orders.receipt');
     Route::post('/orders/{order}/approve', [OrderController::class, 'approve'])->name('orders.approve');
 

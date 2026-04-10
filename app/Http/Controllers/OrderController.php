@@ -14,12 +14,6 @@ use Exception;
 
 class OrderController extends Controller
 {
-    function __construct()
-    {
-        $this->middleware('permission:order.index|order.create|order.pos', ['only' => ['index', 'show']]);
-        $this->middleware('permission:order.pos', ['only' => ['create', 'store']]);
-        $this->middleware('permission:order.create', ['only' => ['create', 'store']]);
-    }
 
     public function pos()
     {
@@ -58,7 +52,7 @@ class OrderController extends Controller
                 'user_id' => Auth::id(),
                 'invoice_number' => Order::generateInvoiceNumber(),
                 'total_amount' => $request->total_amount,
-                'status' => '$orderStatus',
+                'status' => $orderStatus,
             ]);
 
             // 2. Loop Cart untuk Simpan ke OrderItems & Update Stok
@@ -126,7 +120,7 @@ class OrderController extends Controller
                 ->editColumn('created_at', function ($row) {
                     return $row->created_at->format('d/m/Y H:i');
                 })
-                // Tambahkan badge status
+                // Tambahkan badge status   
                 ->editColumn('status', function ($row) {
                     if ($row->status == 'completed') {
                         return '<span class="badge bg-success">Completed</span>';
@@ -137,7 +131,7 @@ class OrderController extends Controller
                     }
                 })
                 ->addColumn('action', function ($row) {
-                    $btn = '<button class="btn btn-sm btn-info text-white btn-detail me-1" data-id="' . $row->id . '"><i class="fa fa-eye"></i> Detail</button>';
+                    $btn = '<button class="btn btn-sm btn-info text-white btn-detail mr-1" data-id="' . $row->id . '"><i class="fa fa-eye"></i> Detail</button>';
 
                     // Jika status pending, munculkan tombol Approve
                     if ($row->status == 'pending') {

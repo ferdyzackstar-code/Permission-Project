@@ -155,61 +155,78 @@ function renderCart() {
     calculateChange();
 }
 
-// Listener Input Bayar (Pastikan sinkron)
-inputFormat.addEventListener("keyup", function (e) {
-    this.value = formatRupiah(this.value);
-    inputReal.value = this.value.replace(/\./g, "");
+// ... (Bagian filter, addToCart, renderCart tetap sama) ...
+
+// --- 3. FORMAT RUPIAH & HITUNG KEMBALIAN ---
+// Pastikan listener hanya satu kali (tadi di kode kamu ada double listener keyup & input)
+inputFormat.addEventListener("input", function (e) {
+    let rawValue = this.value.replace(/[^0-9]/g, "");
+    inputReal.value = rawValue;
+    this.value = rawValue ? formatRupiah(rawValue) : "";
     calculateChange();
 });
 
 function calculateChange() {
+    const method = document.getElementById("payment_method").value;
+    
+    // Jika transfer, kembalian selalu 0
+    if (method === 'transfer') {
+        document.getElementById("change_amount").innerText = "Rp0";
+        return;
+    }
+
     const paid = parseInt(inputReal.value) || 0;
     const change = paid - totalAmount;
     const displayChange = change > 0 ? formatRupiah(change) : "0";
     document.getElementById("change_amount").innerText = "Rp" + displayChange;
 }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const payment_method = document.getElementById("payment_method");
-        const cash_input_group = document.getElementById('cash-input-group');
+// Tambahkan trigger hitung ulang saat ganti metode pembayaran
+document.addEventListener('DOMContentLoaded', function() {
+    const payment_method = document.getElementById("payment_method");
+    const cash_input_group = document.getElementById('cash-input-group');
 
-        // Fungsi untuk toggle visibility
-        function togglePaymentFields() {
-            if (payment_method.value === 'transfer') {
-                // Sembunyikan jika transfer
-                cash_input_group.style.display = 'none';
-                
-                // Opsional: Kosongkan nilai input saat disembunyikan
-                document.getElementById("paid_amount_format").value = ""; 
-            } else {
-                // Tampilkan jika cash
-                cash_input_group.style.display = 'block';
-            }
+    function togglePaymentFields() {
+        if (payment_method.value === 'transfer') {
+            cash_input_group.style.display = 'none';
+            inputReal.value = totalAmount; // Isi otomatis dengan total biar validasi lewat
+            inputFormat.value = ""; 
+        } else {
+            cash_input_group.style.display = 'block';
+            inputReal.value = "0"; // Reset jika balik ke cash
+            inputFormat.value = "";
         }
+        calculateChange();
+    }
 
-        // Jalankan fungsi saat ada perubahan di select
-        payment_method.addEventListener('change', togglePaymentFields);
+    payment_method.addEventListener('change', togglePaymentFields);
+    togglePaymentFields();
+});
 
-        // Jalankan sekali saat halaman pertama kali dimuat 
-        // (untuk memastikan kondisi awal benar jika ada old value)
-        togglePaymentFields();
-    });
-
-// --- 4. SUBMIT TRANSAKSI (PERBAIKAN ERROR CSRF) ---
+// --- 4. SUBMIT TRANSAKSI (PERBAIKAN LOGIKA VALIDASI) ---
 async function submitTransaction() {
     if (cart.length === 0) return alert("Keranjang masih kosong!");
-    if (parseInt(inputReal.value) < totalAmount)
+    
+    const method = document.getElementById("payment_method").value;
+    const paidValue = parseInt(inputReal.value) || 0;
+
+    // VALIDASI PERBAIKAN:
+    // Hanya cek "Uang kurang" JIKA metode pembayarannya adalah CASH
+    if (method === 'cash' && paidValue < totalAmount) {
         return alert("Uang bayar kurang!");
+    }
 
     const btn = document.getElementById("btn-submit");
     btn.disabled = true;
     btn.innerText = "MEMPROSES...";
 
+    // Sesuaikan nilai paid_amount yang dikirim ke server
+    // Jika transfer, paid_amount dianggap sama dengan total_amount
     const payload = {
         cart: cart,
-        payment_method: document.getElementById("payment_method").value,
+        payment_method: method,
         total_amount: totalAmount,
-        paid_amount: parseInt(inputReal.value),
+        paid_amount: (method === 'transfer') ? totalAmount : paidValue,
     };
 
     try {
@@ -226,6 +243,7 @@ async function submitTransaction() {
         const result = await response.json();
         if (result.success) {
             alert("Transaksi Berhasil!");
+            // Sesuai request sebelumnya: arahkan ke show modal atau reload
             window.location.reload();
         } else {
             alert("Gagal: " + result.message);
