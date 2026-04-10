@@ -14,7 +14,6 @@ use Exception;
 
 class OrderController extends Controller
 {
-
     public function pos()
     {
         $categories = Category::where('status', 'active')->whereNull('parent_id')->get();
@@ -120,23 +119,17 @@ class OrderController extends Controller
                 ->editColumn('created_at', function ($row) {
                     return $row->created_at->format('d/m/Y H:i');
                 })
-                // Tambahkan badge status   
                 ->editColumn('status', function ($row) {
                     if ($row->status == 'completed') {
-                        return '<span class="badge bg-success">Completed</span>';
+                        return '<span class="badge bg-primary text-white">Completed</span>';
                     } elseif ($row->status == 'pending') {
-                        return '<span class="badge bg-warning text-dark">Pending</span>';
+                        return '<span class="badge bg-warning text-white">Pending</span>';
                     } else {
-                        return '<span class="badge bg-danger">Cancelled</span>';
+                        return '<span class="badge bg-danger text-white">Cancelled</span>';
                     }
                 })
                 ->addColumn('action', function ($row) {
-                    $btn = '<button class="btn btn-sm btn-info text-white btn-detail mr-1" data-id="' . $row->id . '"><i class="fa fa-eye"></i> Detail</button>';
-
-                    // Jika status pending, munculkan tombol Approve
-                    if ($row->status == 'pending') {
-                        $btn .= '<button class="btn btn-sm btn-success btn-approve" data-id="' . $row->id . '"><i class="fa fa-check"></i> Approve</button>';
-                    }
+                    $btn = '<button class="btn btn-sm btn-info text-white btn-detail" data-id="' . $row->id . '"><i class="fa fa-eye"></i> Detail</button>';
 
                     return $btn;
                 })
@@ -213,7 +206,7 @@ class OrderController extends Controller
     {
         $order->update(['status' => 'completed']);
         if ($order->payment) {
-            $order->payment->update(['payment_status' => 'paid']); 
+            $order->payment->update(['payment_status' => 'paid']);
         }
         return response()->json(['success' => true]);
     }

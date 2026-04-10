@@ -12,20 +12,20 @@
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered" id="orders-table">
-                    <thead>
-                        <tr class="bg-primary">
-                            <th width='1px' class="text-center text-white">No</th>
-                            <th class="text-center text-white">Invoice</th>
-                            <th class="text-center text-white">Kasir</th>
-                            <th class="text-center text-white">Tanggal</th>
-                            <th class="text-center text-white">Total</th>
-                            <th class="text-center text-white">Status</th>
-                            <th class="text-center text-white">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="table-border-bottom-0">
-                    </tbody>
-                </table>
+                        <thead>
+                            <tr class="bg-primary">
+                                <th width='1px' class="text-center text-white">No</th>
+                                <th class="text-center text-white">Invoice</th>
+                                <th class="text-center text-white">Kasir</th>
+                                <th class="text-center text-white">Tanggal</th>
+                                <th class="text-center text-white">Total</th>
+                                <th class="text-center text-white">Status</th>
+                                <th class="text-center text-white">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-border-bottom-0">
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -69,10 +69,6 @@
                     {
                         data: 'status',
                         name: 'status',
-                        render: function(data) {
-                            let color = data == 'completed' ? 'success' : 'warning';
-                            return `<span class="badge badge-${color}">${data.toUpperCase()}</span>`;
-                        }
                     },
                     {
                         data: 'action',
@@ -81,6 +77,56 @@
                         searchable: false
                     },
                 ],
+            });
+
+            // 1. Aksi Tombol Detail
+            $(document).on('click', '.btn-detail', function() {
+                let id = $(this).data('id');
+                // Arahkan ke halaman show
+                let url = "{{ route('dashboard.orders.show', ':id') }}".replace(':id', id);
+                window.location.href = url;
+            });
+
+            // 2. Aksi Tombol Approve
+            $(document).on('click', '.btn-approve', function() {
+                let id = $(this).data('id');
+                // Pastikan kamu punya route untuk approve ini (bisa arahkan ke method approve yang sudah kamu buat)
+                let url = "{{ route('dashboard.orders.approve', ':id') }}".replace(':id', id);
+
+                Swal.fire({
+                    title: "Konfirmasi Pembayaran?",
+                    text: "Pastikan dana sudah masuk ke rekening toko.",
+                    icon: "info",
+                    showCancelButton: true,
+                    confirmButtonColor: "#28a745",
+                    cancelButtonColor: "#6c757d",
+                    confirmButtonText: "Ya, Approve!",
+                    cancelButtonText: "Batal"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: url,
+                            type: 'POST', // Ingat, method approve kamu pakai POST
+                            data: {
+                                _token: "{{ csrf_token() }}" // Wajib ada untuk keamanan Laravel
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire("Berhasil!", "Pembayaran disetujui.",
+                                        "success");
+                                    // Reload tabel tanpa memindahkan halaman pagination
+                                    table.ajax.reload(null, false);
+                                }
+                            },
+                            error: function(xhr) {
+                                console.log(xhr.responseText);
+                                Swal.fire("Error!",
+                                    "Terjadi kesalahan saat menyetujui pembayaran.",
+                                    "error");
+                            }
+                        });
+                    }
+                });
             });
         });
     </script>
