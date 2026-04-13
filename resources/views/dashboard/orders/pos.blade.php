@@ -10,7 +10,8 @@
 
     <div class="container-fluid mt-3">
         <div class="row mb-3 px-3">
-            <h4 class="text-dark font-weight-bold"><i class="fa fa-shopping-basket text-primary" aria-hidden="true"></i> Mesin Kasir</h4>
+            <h4 class="text-dark font-weight-bold"><i class="fa fa-shopping-basket text-primary" aria-hidden="true"></i> Mesin
+                Kasir</h4>
         </div>
     </div>
 
@@ -119,11 +120,16 @@
                                     <span id="change_amount" class="fw-bold text-dark">Rp0</span>
                                 </div>
                             </div>
-
+                            
+                            <button type="button" class="btn btn-danger btn-sm w-100 mb-2" onclick="clearCart()">
+                                <i class="fa fa-trash"></i> Kosongkan Keranjang
+                            </button>
+                            
                             <button id="btn-submit" class="btn btn-primary w-100 fw-bold py-3 shadow-sm border-0"
                                 onclick="submitTransaction()">
                                 PROSES TRANSAKSI
                             </button>
+
                         </div>
                     </div>
                 </div>

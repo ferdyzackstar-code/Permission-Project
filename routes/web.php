@@ -61,6 +61,7 @@ Route::group(['middleware' => ['auth'], 'prefix' => 'dashboard', 'as' => 'dashbo
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show')->where('id', '[0-9]+');
     Route::get('/orders/{id}/receipt', [OrderController::class, 'receipt'])->name('orders.receipt');
     Route::post('/orders/{order}/approve', [OrderController::class, 'approve'])->name('orders.approve');
+    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
     Route::get('/dashboard/report/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export');
 

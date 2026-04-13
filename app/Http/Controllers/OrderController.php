@@ -92,6 +92,7 @@ class OrderController extends Controller
                 'success' => true,
                 'message' => 'Transaksi berhasil disimpan!',
                 'order_id' => $order->id,
+                'receipt_url' => route('dashboard.orders.receipt', $order->id),
             ]);
         } catch (Exception $e) {
             DB::rollback();
@@ -133,17 +134,17 @@ class OrderController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['status', 'action']) // Wajib agar HTML badge & tombol ter-render
+                ->rawColumns(['status', 'action'])
                 ->make(true);
         }
         return view('dashboard.orders.index');
     }
 
     // Detail Order & Struk
-    public function show($id)
+    public function receipt($id)
     {
         $order = Order::with(['items.product', 'payment', 'user'])->findOrFail($id);
-        return view('dashboard.orders.show', compact('order'));
+        return view('dashboard.orders.receipt', compact('order'));
     }
 
     public function confirmPayment(Request $request, Order $order)
@@ -186,12 +187,19 @@ class OrderController extends Controller
                 ->addIndexColumn()
                 ->editColumn('total_amount', fn($row) => 'Rp ' . number_format($row->total_amount, 0, ',', '.'))
                 ->addColumn('action', function ($row) {
-                    return '<button class="btn btn-sm btn-success btn-approve" data-id="' .
+                    // Tambahkan tombol Batalkan di sini
+                    return '
+                        <button class="btn btn-sm btn-success btn-approve me-1" data-id="' .
                         $row->id .
                         '">
                             <i class="fa fa-check"></i> Approve
                         </button>
-                        <button class="btn btn-sm btn-info btn-detail" data-id="' .
+                        <button class="btn btn-sm btn-danger btn-cancel me-1" data-id="' .
+                        $row->id .
+                        '">
+                            <i class="fa fa-times"></i> Batalkan
+                        </button>
+                        <button class="btn btn-sm btn-info text-white btn-detail" data-id="' .
                         $row->id .
                         '">
                             <i class="fa fa-eye"></i> Detail
@@ -200,6 +208,31 @@ class OrderController extends Controller
                 ->make(true);
         }
         return view('dashboard.orders.confirmation');
+    }
+
+    // FUNGSI BARU UNTUK MEMBATALKAN DAN MENGEMBALIKAN STOK
+    public function cancel(Order $order)
+    {
+        DB::beginTransaction();
+        try {
+            // 1. Ubah status jadi cancelled
+            $order->update(['status' => 'cancelled']);
+
+            if ($order->payment) {
+                $order->payment->update(['payment_status' => 'failed']);
+            }
+
+            // 2. Kembalikan stok produk (Penting!)
+            foreach ($order->items as $item) {
+                $item->product->increment('stock', $item->qty);
+            }
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Transaksi dibatalkan & stok dikembalikan!']);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['success' => false, 'message' => 'Gagal membatalkan: ' . $e->getMessage()]);
+        }
     }
 
     public function approve(Order $order)

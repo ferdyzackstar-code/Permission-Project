@@ -75,7 +75,34 @@
                         }, function() {
                             Swal.fire("Berhasil!", "Transaksi selesai.", "success");
                             table.ajax
-                        .reload(); // Baris yang di-approve akan hilang dari daftar ini
+                                .reload(); 
+                        });
+                    }
+                });
+            });
+            $(document).on('click', '.btn-cancel', function() {
+                let id = $(this).data('id');
+                let url = "{{ route('dashboard.orders.cancel', ':id') }}".replace(':id', id);
+
+                Swal.fire({
+                    title: "Batalkan Transaksi?",
+                    text: "Transaksi ini akan di-cancel dan stok barang akan dikembalikan.",
+                    icon: "error",
+                    showCancelButton: true,
+                    confirmButtonText: "Ya, Batalkan!",
+                    cancelButtonText: "Kembali",
+                    confirmButtonColor: "#dc3545" // Warna merah
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post(url, {
+                            _token: "{{ csrf_token() }}"
+                        }, function(response) {
+                            if (response.success) {
+                                Swal.fire("Dibatalkan!", response.message, "success");
+                                table.ajax.reload(); // Refresh data
+                            } else {
+                                Swal.fire("Gagal!", response.message, "error");
+                            }
                         });
                     }
                 });
