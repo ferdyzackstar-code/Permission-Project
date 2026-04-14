@@ -89,7 +89,6 @@
     @endcanany
 
     {{-- GRUP LAPORAN --}}
-    {{-- Note: Sembunyikan jika route di web.php masih dikomentari --}}
     @canany(['report.index', 'report.summary'])
         <hr class="sidebar-divider">
         <div class="sidebar-heading">Laporan</div>

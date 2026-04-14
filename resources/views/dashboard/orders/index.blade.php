@@ -1,12 +1,26 @@
 @extends('dashboard.layouts.admin')
 
 @section('content')
+    <style>
+        #orders-table {
+            width: 100% !important;
+        }
+
+        #orders-table th,
+        #orders-table td {
+            white-space: nowrap;
+            vertical-align: middle;
+            padding: 12px 8px !important;
+        }
+    </style>
     <div class="container-fluid">
         <div class="card border-0 shadow-sm pt-2">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold mb-0">Riwayat Transaksi</h5>
-                <a href="{{ route('dashboard.orders.pos') }}" class="btn btn-primary btn-sm">
-                    <i class="fa fa-plus me-1"></i> Transaksi Baru
+                <h5 class="mb-0 text-dark">
+                    <i class="fa-solid fa-clock-rotate-left mr-1"></i> Riwayat Transaksi
+                </h5>
+                <a href="{{ route('dashboard.orders.pos') }}" class="btn btn-primary btn-sm px-5">
+                    <i class="fa fa-plus mr-1"></i> Transaksi Baru
                 </a>
             </div>
             <div class="card-body">
@@ -14,18 +28,17 @@
                     <table class="table table-hover table-bordered table-striped" id="orders-table">
                         <thead>
                             <tr class="bg-primary border-bottom">
-                                <th width='1px' class="text-center text-white border-start border-end">No</th>
-                                <th width='170px' class="text-center text-white border-start border-end">Invoice</th>
+                                <th width='1%' class="text-center text-white border-start border-end">No</th>
+                                <th class="text-center text-white border-start border-end">Invoice</th>
                                 <th class="text-center text-white border-start border-end">Kasir</th>
-                                <th width='150px' class="text-center text-white border-start border-end">Tanggal</th>
+                                <th class="text-center text-white border-start border-end">Tanggal</th>
                                 <th class="text-center text-white border-start border-end">Metode</th>
                                 <th class="text-center text-white border-start border-end">Total</th>
                                 <th class="text-center text-white border-start border-end">Status</th>
                                 <th width='120px' class="text-center text-white border-start border-end">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="table-border-bottom-0">
-                        </tbody>
+                        <tbody class="table-border-bottom-0"></tbody>
                     </table>
                 </div>
             </div>
@@ -42,6 +55,7 @@
     <script>
         $(document).ready(function() {
             let table = $('#orders-table').DataTable({
+                autoWidth: false,
                 processing: true,
                 serverSide: true,
                 ajax: "{{ route('dashboard.orders.index') }}",

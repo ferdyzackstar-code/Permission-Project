@@ -111,16 +111,26 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $orders = Order::with(['user', 'payment'])->latest()->get();
+            $orders = Order::with(['user', 'payment'])
+                ->latest()
+                ->get();
             return datatables()
                 ->of($orders)
                 ->addIndexColumn()
                 ->editColumn('total_amount', function ($row) {
                     return 'Rp ' . number_format($row->total_amount, 0, ',', '.');
                 })
-                ->addColumn('payment_method', function($row) {
-                return $row->payment ? ucfirst($row->payment->payment_method) : '-';
-            })
+                ->addColumn('payment_method', function ($row) {
+                    $method = $row->payment ? $row->payment->payment_method : '';
+
+                    if ($method == 'cash') {
+                        return '<span class="badge bg-success text-white"><i class="fa-solid fa-money-bill-wave me-1"></i> Cash</span>';
+                    } elseif ($method == 'transfer') {
+                        return '<span class="badge bg-info text-white"><i class="fa-solid fa-wallet me-1"></i> Transfer</span>';
+                    } else {
+                        return '-';
+                    }
+                })
                 ->editColumn('created_at', function ($row) {
                     return $row->created_at->format('d/m/Y H:i');
                 })
@@ -138,7 +148,7 @@ class OrderController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['status', 'action'])
+                ->rawColumns(['status', 'action', 'payment_method'])
                 ->make(true);
         }
         return view('dashboard.orders.index');

@@ -2,9 +2,9 @@
 
 @section('content')
     <div class="container-fluid">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm pt-2">
             <div class="card-header bg-white">
-                <h5 class="fw-bold mb-0 text-warning">Menunggu Konfirmasi Pembayaran</h5>
+                <h5 class="mb-0 text-dark"><i class="fa-solid fa-hourglass-half"></i> Menunggu Konfirmasi Pembayaran</h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">

@@ -36,9 +36,6 @@
 @endpush
 
 @section('content')
-    <div class="row mb-3 px-3">
-        <h4 class="text-dark font-weight-bold">📁 Manajemen Struktur Kategori</h4>
-    </div>
 
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">

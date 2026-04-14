@@ -21,10 +21,12 @@
 
                         <button type="button" class="btn btn-primary px-5 shadow-sm" data-toggle="modal"
                             data-target="#editProfileModal" style="border-radius: 10px;">
-                            <i class="fas fa-edit mr-2"></i> Edit Profil
+                            <i class="fas fa-edit mr-1"></i> Edit Profil
                         </button>
+                        <a href="{{ url()->previous() }}" type="button" class="btn btn-secondary px-5 shadow-sm">
+                            <i class="fa-regular fa-circle-left mr-1"></i> Kembali
+                        </a>
                     </div>
-
                 </div>
             </div>
         </div>
