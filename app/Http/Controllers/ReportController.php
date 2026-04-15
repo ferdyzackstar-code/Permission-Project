@@ -234,21 +234,42 @@ class ReportController extends Controller
     public function hourlyReport(Request $request)
     {
         $date = $request->date ?? date('Y-m-d');
+        $statusFilter = $request->status;
+        $methodFilter = $request->payment_method;
 
-        // 1. Ambil data transaksi di tanggal tersebut
-        $hourlyOrders = Order::whereDate('created_at', $date)->where('status', 'completed')->select(DB::raw('HOUR(created_at) as hour'), DB::raw('COUNT(*) as total_transaksi'), DB::raw('SUM(total_amount) as revenue'))->groupBy('hour')->get()->keyBy('hour');
+        // 1. Ambil data mentah dengan filter
+        $query = Order::with('payment')->whereDate('created_at', $date);
 
-        // 2. Siapkan data 24 jam (00:00 - 23:00) agar grafik tidak bolong
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
+        if ($methodFilter) {
+            $query->whereHas('payment', fn($q) => $q->where('payment_method', $methodFilter));
+        }
+
+        $orders = $query->get();
+
+        // 2. Siapkan data 24 jam (00:00 - 23:00)
         $reportData = [];
         for ($i = 0; $i < 24; $i++) {
+            $hourOrders = $orders->filter(fn($o) => $o->created_at->hour == $i);
+
             $reportData[$i] = [
                 'hour_label' => str_pad($i, 2, '0', STR_PAD_LEFT) . ':00',
-                'total_transaksi' => $hourlyOrders->get($i)->total_transaksi ?? 0,
-                'revenue' => $hourlyOrders->get($i)->revenue ?? 0,
+                // Status
+                'count_completed' => $hourOrders->where('status', 'completed')->count(),
+                'count_pending' => $hourOrders->where('status', 'pending')->count(),
+                'count_cancelled' => $hourOrders->where('status', 'cancelled')->count(),
+                // Metode
+                'rev_cash' => $hourOrders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->sum('total_amount'),
+                'rev_transfer' => $hourOrders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->sum('total_amount'),
+                // Total
+                'total_transactions' => $hourOrders->count(),
+                'total_revenue' => $hourOrders->sum('total_amount'),
             ];
         }
 
-        return view('dashboard.reports.hourly', compact('reportData', 'date'));
+        return view('dashboard.reports.hourly', compact('reportData', 'date', 'statusFilter', 'methodFilter'));
     }
 
     public function exportHourlyPdf(Request $request)

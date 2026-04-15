@@ -119,7 +119,7 @@
 
                 <a class="collapse-item {{-- {{ request()->is('dashboard/reports*') ? 'active' : '' }} --}}" href="#">Laporan Pengeluaran</a>
 
-                <a class="collapse-item {{-- {{ request()->is('dashboard/reports*') ? 'active' : '' }} --}}" href="#">Laporan Per-jam</a>
+                <a class="collapse-item {{ request()->is('dashboard/reports/hourly') ? 'active' : '' }}" href="{{ route('dashboard.reports.hourly') }}">Laporan Per-jam</a>
 
                 <a class="collapse-item {{ request()->is('dashboard/reports/daily') ? 'active' : '' }}"
                     href="{{ route('dashboard.reports.daily') }}">Laporan Harian</a>
