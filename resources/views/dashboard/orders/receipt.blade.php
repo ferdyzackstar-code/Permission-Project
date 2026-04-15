@@ -16,7 +16,7 @@
                             <div class="d-flex justify-content-between mb-1">
                                 <span class="text-muted">No. Invoice:</span>
                                 <span class="fw-bold">{{ $order->invoice_number }}</span>
-                            </div>
+                            </div>  
                             <div class="d-flex justify-content-between mb-1">
                                 <span class="text-muted">Tanggal:</span>
                                 <span>{{ $order->created_at->format('d/m/Y H.i.s') }}</span>
@@ -34,20 +34,20 @@
                                 <tr class="text-muted small">
                                     <th style="width: 50%;" class="pb-2">Item</th>
                                     <th style="width: 20%;" class="text-center pb-2">Qty</th>
-                                    <th style="width: 30%;" class="text-end pb-2">Subtotal</th>
+                                    <th style="width: 30%;" class="text-right pb-2">Subtotal</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($order->items as $item)
                                     <tr>
-                                        <td class="py-3">
-                                            <div class="fw-bold text-wrap" style="max-width: 200px;">
+                                        <td>
+                                            <div class="font-weight-bold text-wrap" style="max-width: 200px;">
                                                 {{ $item->product->name }}</div>
                                             <div class="tiny text-muted">Rp{{ number_format($item->price, 0, ',', '.') }}
-                                            </div>
+                                            </div>   
                                         </td>
                                         <td class="text-center align-middle py-3">{{ $item->qty }}</td>
-                                        <td class="text-end align-middle py-3 fw-bold">
+                                        <td class="text-right align-middle py-3 font-weight-bold">
                                             Rp{{ number_format($item->subtotal, 0, ',', '.') }}
                                         </td>
                                     </tr>
@@ -59,15 +59,15 @@
 
                         <div class="receipt-summary">
                             <div class="d-flex justify-content-between mb-1 h5">
-                                <span class="fw-bold">Total</span>
+                                <span class="font-weight-bold">Total</span>
                                 <span
-                                    class="fw-bold text-primary">Rp{{ number_format($order->total_amount, 0, ',', '.') }}</span>
+                                    class="font-weight-bold text-primary">Rp{{ number_format($order->total_amount, 0, ',', '.') }}</span>
                             </div>
                             <div class="d-flex justify-content-between mb-1 text-muted small">
                                 <span>Bayar ({{ ucfirst($order->payment->payment_method) }})</span>
                                 <span>Rp{{ number_format($order->payment->paid_amount, 0, ',', '.') }}</span>
                             </div>
-                            <div class="d-flex justify-content-between text-muted small">
+                            <div class="d-flex justify-content-between text-muted small">   
                                 <span>Kembalian</span>
                                 <span>Rp{{ number_format($order->payment->change_amount, 0, ',', '.') }}</span>
                             </div>

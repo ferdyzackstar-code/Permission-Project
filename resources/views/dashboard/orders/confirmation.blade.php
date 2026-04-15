@@ -36,7 +36,7 @@
                 ajax: "{{ route('dashboard.orders.confirmation') }}",
                 columns: [{
                         data: 'DT_RowIndex',
-                        name: 'DT_RowIndex'
+                        name: 'DT_RowIndex' 
                     },
                     {
                         data: 'invoice_number',
@@ -56,7 +56,11 @@
                         orderable: false,
                         searchable: false
                     },
-                ]
+                ],
+                columnDefs: [{
+                    targets: [0, 4],
+                    className: "text-center align-middle"
+                }, ]
             });
 
             $(document).on('click', '.btn-approve', function() {

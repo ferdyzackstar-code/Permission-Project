@@ -31,7 +31,7 @@ class OrderController extends Controller
     // Proses Simpan Transaksi (Checkout)
     public function store(Request $request)
     {
-        // Pastikan paid_amount dibersihkan dari titik jika masih ada
+        // Pastikan paid_amount dibersihkan dari titik jika masih ada   
         $paidAmount = (int) str_replace('.', '', $request->paid_amount);
 
         $request->merge(['paid_amount' => $paidAmount]); // Paksa jadi angka murni
@@ -76,7 +76,6 @@ class OrderController extends Controller
             }
 
             // 3. Simpan ke Tabel Payments
-            // Sesuaikan dengan migration kita tadi:
             Payment::create([
                 'order_id' => $order->id,
                 'payment_method' => $request->payment_method,
@@ -84,6 +83,7 @@ class OrderController extends Controller
                 'change_amount' => $request->payment_method === 'cash' ? $request->paid_amount - $request->total_amount : 0,
                 'payment_status' => $paymentStatus,
                 'approved_at' => $request->payment_method === 'cash' ? now() : null,
+                'approved_by' => Auth::id(),
             ]);
 
             DB::commit();
@@ -201,17 +201,17 @@ class OrderController extends Controller
                 ->addIndexColumn()
                 ->editColumn('total_amount', fn($row) => 'Rp ' . number_format($row->total_amount, 0, ',', '.'))
                 ->addColumn('action', function ($row) {
-                    // Tambahkan tombol Batalkan di sini
+                    // Tambahkan tombol Batalkan di sini    
                     return '
                         <button class="btn btn-sm btn-success btn-approve mx-1" data-id="' .
                         $row->id .
                         '">
-                            <i class="fa fa-check"></i> Approve
+                            <i class="far fa-check-circle"></i> Appr  ove
                         </button>
                         <button class="btn btn-sm btn-danger btn-cancel mr-1" data-id="' .
                         $row->id .
                         '">
-                            <i class="fa fa-times"></i> Batalkan
+                            <i class="far fa-times-circle"></i> Batalkan
                         </button>
                         <a href="' .
                         route('dashboard.orders.receipt', $row->id) .

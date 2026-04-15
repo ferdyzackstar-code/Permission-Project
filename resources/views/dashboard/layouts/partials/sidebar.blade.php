@@ -66,22 +66,30 @@
                 <div class="bg-white py-2 collapse-inner rounded">
                     @can('category.index')
                         <a class="collapse-item {{ request()->is('dashboard/categories*') ? 'active' : '' }}"
-                            href="{{ route('dashboard.categories.index') }}">Kategori Produk</a>
+                            href="{{ route('dashboard.categories.index') }}">
+                            <i class="fa-solid fa-layer-group"></i> Kategori Produk
+                        </a>
                     @endcan
 
                     @can('product.index')
                         <a class="collapse-item {{ request()->is('dashboard/products*') ? 'active' : '' }}"
-                            href="{{ route('dashboard.products.index') }}">Daftar Produk</a>
+                            href="{{ route('dashboard.products.index') }}">
+                            <i class="fa-solid fa-boxes-stacked"></i> Daftar Produk
+                        </a>
                     @endcan
 
                     @can('supplier.index')
                         <a class="collapse-item {{ request()->is('dashboard/suppliers*') ? 'active' : '' }}"
-                            href="{{ route('dashboard.suppliers.index') }}">Daftar Supplier</a>
+                            href="{{ route('dashboard.suppliers.index') }}">
+                            <i class="fa-solid fa-truck-field"></i> Daftar Supplier
+                        </a>
                     @endcan
 
                     @can('outlet.index')
                         <a class="collapse-item {{ request()->is('dashboard/outlets*') ? 'active' : '' }}"
-                            href="{{ route('dashboard.outlets.index') }}">Manajemen Outlet</a>
+                            href="{{ route('dashboard.outlets.index') }}">
+                            <i class="fa-solid fa-shop"></i> Manajemen Outlet
+                        </a>
                     @endcan
                 </div>
             </div>
@@ -97,15 +105,17 @@
             data-toggle="collapse" data-target="#collapseLaporan"
             aria-expanded="{{ request()->is('dashboard/reports*') ? 'true' : 'false' }}"
             aria-controls="collapseLaporan">
-            <i class="fas fa-fw fa-box"></i>
+            <i class="fa-solid fa-chart-bar"></i>
             <span>Laporan</span>
         </a>
         <div id="collapseLaporan" class="collapse {{ request()->is('dashboard/reports*') ? 'show' : '' }}"
             data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item {{ request()->is('dashboard/reports/index') ? 'active' : '' }}" href="{{ route('dashboard.reports.index') }}">Ringkasan Laporan</a>
+                <a class="collapse-item {{ request()->is('dashboard/reports') ? 'active' : '' }}"
+                    href="{{ route('dashboard.reports.index') }}">Ringkasan Laporan</a>
 
-                <a class="collapse-item {{ request()->is('dashboard/reports/income') ? 'active' : '' }}" href="{{ route('dashboard.reports.income') }}">Laporan Pemasukan</a>
+                <a class="collapse-item {{ request()->is('dashboard/reports/income') ? 'active' : '' }}"
+                    href="{{ route('dashboard.reports.income') }}">Laporan Pemasukan</a>
 
                 <a class="collapse-item {{-- {{ request()->is('dashboard/reports*') ? 'active' : '' }} --}}" href="#">Laporan Pengeluaran</a>
 
@@ -135,17 +145,20 @@
                 <div class="bg-white py-2 collapse-inner rounded">
                     @can('user.index')
                         <a class="collapse-item {{ request()->is('dashboard/users*') ? 'active' : '' }}"
-                            href="{{ route('dashboard.users.index') }}">User Management</a>
+                            href="{{ route('dashboard.users.index') }}"><i class="fa-solid fa-user-shield"></i> User
+                            Management</a>
                     @endcan
 
                     @can('role.index')
                         <a class="collapse-item {{ request()->is('dashboard/roles*') ? 'active' : '' }}"
-                            href="{{ route('dashboard.roles.index') }}">Role & Permissions</a>
+                            href="{{ route('dashboard.roles.index') }}"><i class="fa-solid fa-shield-halved"></i> Role &
+                            Permissions</a>
                     @endcan
 
                     @can('permission.index')
                         <a class="collapse-item {{ request()->is('dashboard/permissions*') ? 'active' : '' }}"
-                            href="{{ route('dashboard.permissions.index') }}">Data Permissions</a>
+                            href="{{ route('dashboard.permissions.index') }}"><i class="fa-solid fa-key"></i> Data
+                            Permissions</a>
                     @endcan
                 </div>
             </div>

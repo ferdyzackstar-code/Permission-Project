@@ -23,7 +23,7 @@
                             </option>
                             <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                             <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled
-                            </option>
+                            </option> 
                         </select>
                     </div>
                     <div class="col-md-2">
