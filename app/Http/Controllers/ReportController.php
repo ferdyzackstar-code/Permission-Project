@@ -233,21 +233,16 @@ class ReportController extends Controller
 
     public function hourlyReport(Request $request)
     {
-        // 1. Tangkap Filter (Default: Hari Ini)
         $startDate = $request->start_date ?? date('Y-m-d');
         $endDate = $request->end_date ?? date('Y-m-d');
         $statusFilter = $request->status;
         $methodFilter = $request->payment_method;
         $kasirFilter = $request->kasir_id;
 
-        // 2. Ambil daftar Kasir untuk dropdown filter
-        // (Asumsi kamu pakai package Spatie Permission. Jika pakai kolom biasa, ganti jadi User::where('role', 'kasir')->get())
         $kasirs = User::role('kasir')->get();
 
-        // 3. Bangun Query Utama
         $query = Order::with(['user', 'payment'])->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
 
-        // 4. Terapkan Filter Jika Ada Pilihan
         if ($statusFilter) {
             $query->where('status', $statusFilter);
         }
@@ -255,23 +250,58 @@ class ReportController extends Controller
             $query->where('user_id', $kasirFilter);
         }
         if ($methodFilter) {
-            $query->whereHas('payment', function ($q) use ($methodFilter) {
-                $q->where('payment_method', $methodFilter);
-            });
+            $query->whereHas('payment', fn($q) => $q->where('payment_method', $methodFilter));
         }
 
         $orders = $query->oldest()->get();
 
-        $peakHourData = $orders
-            ->groupBy(function ($order) {
-                return $order->created_at->format('H:00'); 
+        // --- DATA UNTUK CHART ---
+        $hours = [];
+        $lineStatus = ['completed' => [], 'pending' => [], 'cancelled' => []];
+        $barTrx = [];
+
+        for ($i = 0; $i < 24; $i++) {
+            $label = str_pad($i, 2, '0', STR_PAD_LEFT) . ':00';
+            $hours[] = $label;
+
+            $hourOrders = $orders->filter(fn($o) => $o->created_at->hour == $i);
+
+            // Data Line Chart (Status)
+            $lineStatus['completed'][] = $hourOrders->where('status', 'completed')->count();
+            $lineStatus['pending'][] = $hourOrders->where('status', 'pending')->count();
+            $lineStatus['cancelled'][] = $hourOrders->where('status', 'cancelled')->count();
+
+            // Data Bar Chart (Total Trx)
+            $barTrx[] = $hourOrders->count();
+        }
+
+        // --- TAMBAHAN LOGIKA PEAK HOUR ---
+        // Mencari nilai tertinggi di array barTrx
+        $peakTrxCount = max($barTrx);
+        $peakHourIndex = array_search($peakTrxCount, $barTrx);
+
+        // Jika ada transaksi, tampilkan jamnya, jika 0 tampilkan "-"
+        $peakHour = $peakTrxCount > 0 ? str_pad($peakHourIndex, 2, '0', STR_PAD_LEFT) . ':00' : '-';
+
+        // Data Pie Chart (Metode)
+        $pieData = [
+            'cash' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
+            'transfer' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
+        ];
+
+        // Data Horizontal Bar (Kasir)
+        $cashierData = $orders
+            ->groupBy('user_id')
+            ->map(function ($group) {
+                return [
+                    'name' => $group->first()->user->name ?? 'Unknown',
+                    'count' => $group->count(),
+                ];
             })
-            ->map->count(); 
+            ->sortByDesc('count');
 
-        $peakHour = $peakHourData->sortDesc()->keys()->first() ?? '-';
-        $peakTrxCount = $peakHourData->max() ?? 0;
-
-        return view('dashboard.reports.hourly', compact('orders', 'startDate', 'endDate', 'statusFilter', 'methodFilter', 'kasirFilter', 'kasirs', 'peakHour', 'peakTrxCount'));
+        // Masukkan peakHour dan peakTrxCount ke dalam compact
+        return view('dashboard.reports.hourly', compact('orders', 'startDate', 'endDate', 'statusFilter', 'methodFilter', 'kasirFilter', 'kasirs', 'hours', 'lineStatus', 'barTrx', 'pieData', 'cashierData', 'peakHour', 'peakTrxCount'));
     }
 
     public function exportHourlyPdf(Request $request)

@@ -5,12 +5,13 @@
 
         <div class="row align-items-center mb-4">
             <div class="col">
-                <h4 class="font-weight-bold mb-0">
-                    <i class="fas fa-list-check text-primary mr-2"></i> Laporan Transaksi Per-Jam
+                <h4 class="font-weight-bold mb-0 text-dark">
+                    <i class="fas fa-chart-line text-primary mr-2"></i> Analisis Transaksi Per-Jam
                 </h4>
             </div>
             <div class="col-auto">
-                <a href="{{ route('dashboard.reports.hourly.export', request()->all()) }}" class="btn btn-danger shadow-sm">
+                <a href="{{ route('dashboard.reports.hourly.export', request()->all()) }}"
+                    class="btn btn-danger shadow-sm font-weight-bold">
                     <i class="fas fa-file-pdf fa-sm mr-1"></i> Export PDF
                 </a>
             </div>
@@ -20,17 +21,14 @@
             <div class="card-body p-4">
                 <form action="{{ route('dashboard.reports.hourly') }}" method="GET">
                     <div class="row align-items-end">
-
                         <div class="col-md-2 form-group mb-md-0">
                             <label class="text-muted small font-weight-bold mb-1">Mulai Tanggal</label>
                             <input type="date" name="start_date" class="form-control" value="{{ $startDate }}">
                         </div>
-
                         <div class="col-md-2 form-group mb-md-0">
                             <label class="text-muted small font-weight-bold mb-1">Sampai Tanggal</label>
                             <input type="date" name="end_date" class="form-control" value="{{ $endDate }}">
                         </div>
-
                         <div class="col-md-2 form-group mb-md-0">
                             <label class="text-muted small font-weight-bold mb-1">Status</label>
                             <select name="status" class="form-control">
@@ -42,7 +40,6 @@
                                 </option>
                             </select>
                         </div>
-
                         <div class="col-md-2 form-group mb-md-0">
                             <label class="text-muted small font-weight-bold mb-1">Metode</label>
                             <select name="payment_method" class="form-control">
@@ -52,7 +49,6 @@
                                 </option>
                             </select>
                         </div>
-
                         <div class="col-md-2 form-group mb-md-0">
                             <label class="text-muted small font-weight-bold mb-1">Kasir</label>
                             <select name="kasir_id" class="form-control">
@@ -63,84 +59,91 @@
                                 @endforeach
                             </select>
                         </div>
-
                         <div class="col-md-2">
                             <button type="submit" class="btn btn-primary btn-block font-weight-bold shadow-sm">
-                                <i class="fas fa-filter mr-1"></i> Terapkan
+                                <i class="fas fa-filter mr-1"></i> Filter
                             </button>
                         </div>
-
                     </div>
                 </form>
             </div>
         </div>
 
         <div class="row mb-4">
-            <div class="col-md-4">
+            <div class="col-md-4 mb-3 mb-md-0">
                 <div class="card border-0 shadow-sm bg-primary text-white">
-                    <div class="card-body">
-                        <div class="row align-items-center">
-                            <div class="col">
-                                <p class="small font-weight-bold mb-1">JAM PALING RAMAI</p>
-                                <h3 class="mb-0 font-weight-bold">{{ $peakHour }}</h3>
-                                <small class="text-white-50">{{ $peakTrxCount }} Transaksi terjadi</small>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-fire fa-3x text-white-50"></i>
-                            </div>
-                        </div>
+                    <div class="card-body text-center">
+                        <p class="small font-weight-bold mb-1 text-uppercase">Jam Paling Ramai</p>
+                        <h3 class="mb-0 font-weight-bold">{{ $peakHour }}</h3>
+                        <small class="text-white-50">{{ $peakTrxCount }} Transaksi</small>
                     </div>
                 </div>
             </div>
-
-            <div class="col-md-4">
+            <div class="col-md-4 mb-3 mb-md-0">
                 <div class="card border-0 shadow-sm bg-info text-white">
-                    <div class="card-body">
-                        <div class="row align-items-center">
-                            <div class="col">
-                                <p class="small font-weight-bold mb-1">TOTAL TRANSAKSI</p>
-                                <h3 class="mb-0 font-weight-bold">{{ $orders->count() }}</h3>
-                                <small class="text-white-50">Dari semua filter dipilih</small>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-shopping-basket fa-3x text-white-50"></i>
-                            </div>
-                        </div>
+                    <div class="card-body text-center">
+                        <p class="small font-weight-bold mb-1 text-uppercase">Total Transaksi</p>
+                        <h3 class="mb-0 font-weight-bold">{{ $orders->count() }}</h3>
+                        <small class="text-white-50">Periode Terpilih</small>
                     </div>
                 </div>
             </div>
-
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm bg-success text-white">
-                    <div class="card-body">
-                        <div class="row align-items-center">
-                            <div class="col">
-                                <p class="small font-weight-bold mb-1">TOTAL REVENUE</p>
-                                <h3 class="mb-0 font-weight-bold">
-                                    Rp{{ number_format($orders->sum('total_amount'), 0, ',', '.') }}</h3>
-                                <small class="text-white-50">Periode terpilih</small>
-                            </div>
-                            <div class="col-auto">
-                                <i class="fas fa-wallet fa-3x text-white-50"></i>
-                            </div>
-                        </div>
+                    <div class="card-body text-center">
+                        <p class="small font-weight-bold mb-1 text-uppercase">Total Revenue</p>
+                        <h3 class="mb-0 font-weight-bold">Rp{{ number_format($orders->sum('total_amount'), 0, ',', '.') }}
+                        </h3>
+                        <small class="text-white-50">Estimasi Pendapatan</small>
                     </div>
                 </div>
             </div>
         </div>
 
+        <div class="row mb-4">
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white font-weight-bold border-0 pt-3">Tren Status Transaksi</div>
+                    <div class="card-body"><canvas id="lineStatusChart"></canvas></div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white font-weight-bold border-0 pt-3">Volume Transaksi (Per-Jam)</div>
+                    <div class="card-body"><canvas id="barTrxChart"></canvas></div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white font-weight-bold border-0 pt-3">Metode Pembayaran</div>
+                    <div class="card-body" style="position: relative; height:300px;">
+                        <canvas id="pieMethodChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white font-weight-bold border-0 pt-3">Performa Kasir (Total Trx)</div>
+                    <div class="card-body"><canvas id="horiCashierChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
         <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3">
+                <h6 class="font-weight-bold mb-0">Rincian Transaksi Log</h6>
+            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover table-striped table-bordered mb-0 align-middle text-center">
-                        <thead class="bg-primary text-white">
+                        <thead class="bg-light">
                             <tr>
                                 <th class="py-3 border-0">No</th>
                                 <th class="py-3 border-0">Waktu</th>
                                 <th class="py-3 border-0 text-left">Kasir</th>
                                 <th class="py-3 border-0">Status</th>
                                 <th class="py-3 border-0">Metode</th>
-                                <th class="py-3 border-0 text-right pr-4">Estimasi Total Revenue</th>
+                                <th class="py-3 border-0 text-right pr-4">Total Revenue</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -152,23 +155,23 @@
                                     <td><span
                                             class="badge badge-light border">{{ $order->created_at->format('H:i a') }}</span>
                                     </td>
-                                    <td class="text-left font-weight-bold">{{ $order->user->name ?? 'N/A' }}</td>
+                                    <td class="text-left font-weight-bold text-dark">{{ $order->user->name ?? 'N/A' }}
+                                    </td>
                                     <td>
                                         @if ($order->status == 'completed')
                                             <span class="badge badge-success px-3 py-2">Completed</span>
                                         @elseif($order->status == 'pending')
-                                            <span class="badge badge-warning px-3 py-2">Pending</span>
+                                            <span
+                                                class="badge badge-warning px-3 py-2 text-dark font-weight-bold">Pending</span>
                                         @else
                                             <span class="badge badge-danger px-3 py-2">Cancelled</span>
                                         @endif
                                     </td>
                                     <td>
                                         @if (optional($order->payment)->payment_method == 'cash')
-                                            <span class="text-success font-weight-bold"><i
-                                                    class="fa-solid fa-money-bill-wave"></i> Cash</span>
+                                            <span class="text-success font-weight-bold">Cash</span>
                                         @elseif(optional($order->payment)->payment_method == 'transfer')
-                                            <span class="text-primary font-weight-bold"><i
-                                                    class="fa-solid fa-credit-card"></i> Transfer</span>
+                                            <span class="text-primary font-weight-bold">Transfer</span>
                                         @else
                                             -
                                         @endif
@@ -178,7 +181,8 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-muted py-5">Tidak ada transaksi ditemukan.</td>
+                                    <td colspan="6" class="text-muted py-5 text-center">Tidak ada transaksi ditemukan.
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -196,3 +200,94 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Ambil data dari Controller (Pastikan Controller mengirim data-data ini)
+        const jamLabels = {!! json_encode($hours) !!};
+
+        // 1. Line Chart: Status Comparison
+        new Chart(document.getElementById('lineStatusChart'), {
+            type: 'line',
+            data: {
+                labels: jamLabels,
+                datasets: [{
+                        label: 'Completed',
+                        data: {!! json_encode($lineStatus['completed']) !!},
+                        borderColor: '#28a745',
+                        fill: false,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Pending',
+                        data: {!! json_encode($lineStatus['pending']) !!},
+                        borderColor: '#ffc107',
+                        fill: false,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Cancelled',
+                        data: {!! json_encode($lineStatus['cancelled']) !!},
+                        borderColor: '#dc3545',
+                        fill: false,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true
+            }
+        });
+
+        // 2. Bar Chart: Hourly Volume
+        new Chart(document.getElementById('barTrxChart'), {
+            type: 'bar',
+            data: {
+                labels: jamLabels,
+                datasets: [{
+                    label: 'Total Transaksi',
+                    data: {!! json_encode($barTrx) !!},
+                    backgroundColor: '#4e73df',
+                    borderRadius: 5
+                }]
+            }
+        });
+
+        // 3. Pie Chart: Payment Method
+        new Chart(document.getElementById('pieMethodChart'), {
+            type: 'pie',
+            data: {
+                labels: ['Cash', 'Transfer'],
+                datasets: [{
+                    data: [{{ $pieData['cash'] }}, {{ $pieData['transfer'] }}],
+                    backgroundColor: ['#1cc88a', '#4e73df'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // 4. Horizontal Bar Chart: Cashier Performance
+        new Chart(document.getElementById('horiCashierChart'), {
+            type: 'bar',
+            data: {
+                labels: {!! json_encode($cashierData->pluck('name')) !!},
+                datasets: [{
+                    label: 'Jumlah Transaksi',
+                    data: {!! json_encode($cashierData->pluck('count')) !!},
+                    backgroundColor: '#36b9cc',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true
+            }
+        });
+    </script>
+@endpush
