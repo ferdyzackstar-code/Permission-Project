@@ -2,58 +2,108 @@
 <html>
 
 <head>
-    <title>Laporan Harian PetShop</title>
+    <meta charset="UTF-8">
+    <title>Laporan Transaksi Harian PetShop</title>
     <style>
-        /* Gaya CSS Sederhana khusus untuk PDF */
+        /* Reset & Base Styles */
         body {
-            font-family: sans-serif;
+            font-family: 'Helvetica', 'Arial', sans-serif;
             font-size: 12px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
-        }
-
-        .header h2 {
+            color: #333;
             margin: 0;
             padding: 0;
         }
 
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            margin: 5px 0;
+            font-size: 12px;
+        }
+
+        .sub-header {
+            margin-bottom: 20px;
+        }
+
+        .sub-header p {
+            margin: 2px 0;
+            color: #555;
+        }
+
+        /* Table Styling */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-bottom: 20px;
+            table-layout: fixed;
         }
 
         th,
         td {
-            border: 1px solid #333;
-            padding: 8px;
+            border: 1px solid #444;
+            padding: 10px;
+            word-wrap: break-word;
+        }
+
+        /* Warna Header (Primary - Biru) */
+        thead th {
+            background-color: #007bff !important;
+            color: #ffffff !important;
+            text-transform: uppercase;
+            font-size: 11px;
             text-align: center;
         }
 
-        th {
-            background-color: #f2f2f2;
+        /* Warna Footer (Warning - Kuning) */
+        .bg-warning-pdf {
+            background-color: #ffc107 !important;
+            color: #ffffff !important;
         }
 
-        .text-left {
-            text-align: left;
+        /* Utility Classes */
+        .text-white {
+            color: #ffffff !important;
         }
 
         .text-right {
             text-align: right;
         }
 
-        .fw-bold {
+        .text-left {
+            text-align: left;
+        }
+
+        .font-bold {
             font-weight: bold;
         }
 
-        .footer {
-            margin-top: 30px;
+        /* Tanda Tangan */
+        .ttd-box {
+            width: 100%;
+            margin-top: 50px;
+        }
+
+        .ttd-box table {
+            width: 100%;
+            border: none;
+        }
+
+        .ttd-box td {
+            border: none;
             text-align: right;
+            padding-right: 50px;
         }
     </style>
 </head>
@@ -61,52 +111,63 @@
 <body>
 
     <div class="header">
-        <h2>ANDA PETSHOP</h2>
-        <p>Laporan Pendapatan Harian</p>
-        <p>Periode: {{ date('F', mktime(0, 0, 0, $month, 10)) }} {{ $year }}</p>
+        <h1>ANDA PETSHOP</h1>
+        <p>Jl. Raya Pisangan, Tambun Utara, Bekasi</p>
+        <p style="margin: 0; font-weight: bold;">LAPORAN TRANSAKSI HARIAN</p>
+    </div>
+
+    <div class="sub-header">
+        <p><strong>Periode:</strong> {{ \Carbon\Carbon::parse($startDate)->translatedFormat('d F Y') }} s/d
+            {{ \Carbon\Carbon::parse($endDate)->translatedFormat('d F Y') }}</p>
+        <p><strong>Dicetak pada:</strong> {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}</p>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th width="5%">No</th>
-                <th width="35%">Hari, Tanggal</th>
-                <th width="30%">Total Transaksi</th>
-                <th width="30%">Revenue (Omset)</th>
+                <th width="8%">No</th>
+                <th width="42%" class="text-left">Hari, Tanggal</th>
+                <th width="20%">Total Transaksi</th>
+                <th width="30%" class="text-right">Estimasi Keuntungan</th>
             </tr>
         </thead>
         <tbody>
-            @php
-                $totalKeseluruhan = 0;
-                $no = 1;
-            @endphp
-
-            @forelse($dailyData as $date => $data)
-                @php $totalKeseluruhan += $data['revenue']; @endphp
+            @forelse($tableData as $index => $row)
                 <tr>
-                    <td>{{ $no++ }}</td>
-                    <td class="text-left">{{ \Carbon\Carbon::parse($date)->locale('id')->translatedFormat('l, d F Y') }}
-                    </td>
-                    <td>{{ $data['total_transaksi'] }} Transaksi</td>
-                    <td class="text-right">Rp {{ number_format($data['revenue'], 0, ',', '.') }}</td>
+                    <td style="text-align: center;">{{ $index + 1 }}</td>
+                    <td class="text-left">{{ $row['date_formatted'] }}</td>
+                    <td style="text-align: center;">{{ $row['total_trx'] }}</td>
+                    <td class="text-right">Rp {{ number_format($row['revenue'], 0, ',', '.') }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4">Tidak ada data transaksi pada bulan ini.</td>
+                    <td colspan="4" style="text-align: center;">Tidak ada data transaksi pada periode ini.</td>
                 </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="3" class="text-right fw-bold">TOTAL REVENUE KESELURUHAN</td>
-                <td class="text-right fw-bold">Rp {{ number_format($totalKeseluruhan, 0, ',', '.') }}</td>
+                <td colspan="3" class="text-right bg-warning-pdf text-white font-bold">
+                    ESTIMASI TOTAL KEUNTUNGAN :
+                </td>
+                <td class="text-right bg-warning-pdf text-white font-bold">
+                    Rp {{ number_format($totalKeuntunganKeseluruhan, 0, ',', '.') }}
+                </td>
             </tr>
         </tfoot>
     </table>
 
-    <div class="footer">
-        <p>Dicetak pada: {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('l, d F Y H:i') }}</p>
-        <p>Oleh: {{ auth()->user()->name ?? 'Administrator' }}</p>
+    <div class="ttd-box">
+        <table>
+            <tr>
+                <td>
+                    <p>Bekasi, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+                    <br><br><br><br>
+                    <p><strong>( ______________________ )</strong></p>
+                    <p>Manager Operasional</p>
+                </td>
+            </tr>
+        </table>
     </div>
 
 </body>

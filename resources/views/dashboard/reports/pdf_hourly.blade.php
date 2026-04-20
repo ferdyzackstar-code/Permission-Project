@@ -69,15 +69,40 @@
             font-size: 10px;
             text-transform: uppercase;
         }
+
+        .bg-primary {
+            background-color: #007bff !important;
+            color: #ffffff !important;
+        }
+
+        .bg-warning {
+            background-color: #ffc107 !important;
+            color: #ffffff !important;
+        }
+
+        .text-white {
+            color: #ffffff !important;
+        }
+
+        tr.bg-primary th {
+            background-color: #007bff !important;
+            color: #ffffff !important;
+        }
+
+        tr.bg-warning td {
+            background-color: #ffc107 !important;
+            color: #ffffff !important;
+        }
     </style>
 </head>
 
 <body>
 
     <div class="header">
+        <img src="" alt="">
         <h2>ANDA PETSHOP</h2>
-        <p style="margin: 5px 0;">Jl. Alamat Petshop Kamu No. 123, Bekasi</p>
-        <p style="margin: 0; font-weight: bold;">LAPORAN LOG TRANSAKSI KASIR</p>
+        <p style="margin: 5px 0;">Jl. Raya Pisangan, Tambun Utara, Bekasi</p>
+        <p style="margin: 0; font-weight: bold;">LAPORAN TRANSAKSI PER-JAM</p>
     </div>
 
     <div class="info-filter">
@@ -88,13 +113,13 @@
 
     <table>
         <thead>
-            <tr>
+            <tr class="bg-primary text-white">
                 <th width="5%">No</th>
                 <th width="15%">Waktu</th>
                 <th width="20%">Nama Kasir</th>
                 <th width="15%">Status</th>
                 <th width="15%">Metode</th>
-                <th width="30%">Total Revenue</th>
+                <th width="30%">Estimasi Keuntungan</th>
             </tr>
         </thead>
         <tbody>
@@ -103,8 +128,7 @@
                 @php $totalKeseluruhan += $order->total_amount; @endphp
                 <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td>{{ $order->created_at->format('H:i') }} <small
-                            style="color: #888;">({{ $order->created_at->format('d/m') }})</small></td>
+                    <td>{{ $order->created_at->format('j F H:i') }}</td>
                     <td class="text-left">{{ $order->user->name ?? 'Unknown' }}</td>
                     <td>{{ ucfirst($order->status) }}</td>
                     <td>{{ ucfirst(optional($order->payment)->payment_method) ?? '-' }}</td>
@@ -113,9 +137,9 @@
             @endforeach
         </tbody>
         <tfoot>
-            <tr class="footer-table">
-                <td colspan="5" class="text-right">TOTAL PENDAPATAN (REVENUE):</td>
-                <td class="text-right" style="color: #28a745;">Rp {{ number_format($totalKeseluruhan, 0, ',', '.') }}
+            <tr class="footer-table bg-warning text-white">
+                <td colspan="5" class="text-right">ESTIMASI TOTAL KEUNTUNGAN:</td>
+                <td class="text-right">Rp {{ number_format($totalKeseluruhan, 0, ',', '.') }}
                 </td>
             </tr>
         </tfoot>

@@ -6,7 +6,7 @@
         <div class="row align-items-center mb-4">
             <div class="col">
                 <h4 class="font-weight-bold mb-0 text-dark">
-                    <i class="fas fa-chart-line text-primary mr-2"></i> Analisis Transaksi Per-Jam
+                    <i class="fa-solid fa-square-poll-horizontal text-primary"></i> Laporan Transaksi Per-Jam
                 </h4>
             </div>
             <div class="col-auto">
@@ -71,30 +71,54 @@
 
         <div class="row mb-4">
             <div class="col-md-4 mb-3 mb-md-0">
-                <div class="card border-0 shadow-sm bg-primary text-white">
-                    <div class="card-body text-center">
-                        <p class="small font-weight-bold mb-1 text-uppercase">Jam Paling Ramai</p>
-                        <h3 class="mb-0 font-weight-bold">{{ $peakHour }}</h3>
-                        <small class="text-white-50">{{ $peakTrxCount }} Transaksi</small>
+                <div class="card border-0 shadow-sm bg-primary text-white h-100">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <p class="small font-weight-bold mb-1 text-uppercase text-white-50">Jam Paling Ramai</p>
+                                <h3 class="mb-0 font-weight-bold">{{ $peakHour }}</h3>
+                                <div class="small mt-1 font-weight-bold">{{ $peakTrxCount }} Transaksi</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-clock fa-3x text-white-50"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+
             <div class="col-md-4 mb-3 mb-md-0">
-                <div class="card border-0 shadow-sm bg-info text-white">
-                    <div class="card-body text-center">
-                        <p class="small font-weight-bold mb-1 text-uppercase">Total Transaksi</p>
-                        <h3 class="mb-0 font-weight-bold">{{ $orders->count() }}</h3>
-                        <small class="text-white-50">Periode Terpilih</small>
+                <div class="card border-0 shadow-sm bg-info text-white h-100">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <p class="small font-weight-bold mb-1 text-uppercase text-white-50">Total Transaksi</p>
+                                <h3 class="mb-0 font-weight-bold">{{ $orders->count() }}</h3>
+                                <div class="small mt-1">Periode Terpilih</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-shopping-basket fa-3x text-white-50"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm bg-success text-white">
-                    <div class="card-body text-center">
-                        <p class="small font-weight-bold mb-1 text-uppercase">Total Revenue</p>
-                        <h3 class="mb-0 font-weight-bold">Rp{{ number_format($orders->sum('total_amount'), 0, ',', '.') }}
-                        </h3>
-                        <small class="text-white-50">Estimasi Pendapatan</small>
+                <div class="card border-0 shadow-sm bg-success text-white h-100">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <p class="small font-weight-bold mb-1 text-uppercase text-white-50">Estimasi Keuntungan</p>
+                                <h3 class="mb-0 font-weight-bold">
+                                    Rp{{ number_format($orders->sum('total_amount'), 0, ',', '.') }}
+                                </h3>
+                                <div class="small mt-1">Estimasi Pendapatan</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-hand-holding-usd fa-3x text-white-50"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -103,19 +127,22 @@
         <div class="row mb-4">
             <div class="col-md-6 mb-4">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white font-weight-bold border-0 pt-3">Tren Status Transaksi</div>
+                    <div class="card-header bg-white font-weight-bold border-0 pt-3">
+                        <i class="fa-solid fa-chart-line text-primary"></i> Tren Status Transaksi</div>
                     <div class="card-body"><canvas id="lineStatusChart"></canvas></div>
                 </div>
             </div>
             <div class="col-md-6 mb-4">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white font-weight-bold border-0 pt-3">Volume Transaksi (Per-Jam)</div>
+                    <div class="card-header bg-white font-weight-bold border-0 pt-3">
+                        <i class="fa-solid fa-chart-simple text-primary"></i> Volume Transaksi</div>
                     <div class="card-body"><canvas id="barTrxChart"></canvas></div>
                 </div>
             </div>
             <div class="col-md-6 mb-4">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white font-weight-bold border-0 pt-3">Metode Pembayaran</div>
+                    <div class="card-header bg-white font-weight-bold border-0 pt-3">
+                        <i class="fa-solid fa-chart-pie text-primary"></i> Metode Pembayaran</div>
                     <div class="card-body" style="position: relative; height:300px;">
                         <canvas id="pieMethodChart"></canvas>
                     </div>
@@ -123,7 +150,8 @@
             </div>
             <div class="col-md-6 mb-4">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white font-weight-bold border-0 pt-3">Performa Kasir (Total Trx)</div>
+                    <div class="card-header bg-white font-weight-bold border-0 pt-3">
+                        <i class="fa-solid fa-chart-bar text-primary"></i> Performa Kasir</div>
                     <div class="card-body"><canvas id="horiCashierChart"></canvas></div>
                 </div>
             </div>
@@ -131,19 +159,19 @@
 
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-0 pt-3">
-                <h6 class="font-weight-bold mb-0">Rincian Transaksi Log</h6>
+                <h6 class="font-weight-bold mb-0"><i class="fa-solid fa-table-list text-primary"></i> Rincian Transaksi</h6>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover table-striped table-bordered mb-0 align-middle text-center">
                         <thead class="bg-light">
-                            <tr>
+                            <tr class="bg-primary text-white">
                                 <th class="py-3 border-0">No</th>
                                 <th class="py-3 border-0">Waktu</th>
                                 <th class="py-3 border-0 text-left">Kasir</th>
                                 <th class="py-3 border-0">Status</th>
                                 <th class="py-3 border-0">Metode</th>
-                                <th class="py-3 border-0 text-right pr-4">Total Revenue</th>
+                                <th class="py-3 border-0 text-right pr-4">Estimasi Keuntungan</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -153,30 +181,30 @@
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
                                     <td><span
-                                            class="badge badge-light border">{{ $order->created_at->format('H:i a') }}</span>
+                                            class="badge badge-secondary border">{{ $order->created_at->format('j F H:i') }}</span>
                                     </td>
                                     <td class="text-left font-weight-bold text-dark">{{ $order->user->name ?? 'N/A' }}
                                     </td>
                                     <td>
                                         @if ($order->status == 'completed')
-                                            <span class="badge badge-success px-3 py-2">Completed</span>
+                                            <span class="badge badge-primary px-3 py-2">Completed</span>
                                         @elseif($order->status == 'pending')
                                             <span
-                                                class="badge badge-warning px-3 py-2 text-dark font-weight-bold">Pending</span>
+                                                class="badge badge-warning px-3 py-2 text-white font-weight-bold">Pending</span>
                                         @else
                                             <span class="badge badge-danger px-3 py-2">Cancelled</span>
                                         @endif
                                     </td>
                                     <td>
                                         @if (optional($order->payment)->payment_method == 'cash')
-                                            <span class="text-success font-weight-bold">Cash</span>
+                                            <span class="badge bg-success text-white font-weight-bold">Cash</span>
                                         @elseif(optional($order->payment)->payment_method == 'transfer')
-                                            <span class="text-primary font-weight-bold">Transfer</span>
+                                            <span class="badge bg-info text-white font-weight-bold">Transfer</span>
                                         @else
                                             -
                                         @endif
                                     </td>
-                                    <td class="text-right pr-4 font-weight-bold">Rp
+                                    <td class="text-right pr-4 font-weight-bold text-success">Rp
                                         {{ number_format($order->total_amount, 0, ',', '.') }}</td>
                                 </tr>
                             @empty
@@ -186,10 +214,10 @@
                                 </tr>
                             @endforelse
                         </tbody>
-                        <tfoot class="bg-light font-weight-bold">
+                        <tfoot class="bg-warning font-weight-bold text-white">
                             <tr>
-                                <td colspan="5" class="text-right py-3 pr-2">ESTIMASI GRAND TOTAL:</td>
-                                <td class="text-right pr-4 text-success py-3" style="font-size: 1.1rem;">
+                                <td colspan="5" class="text-right py-3 pr-2">ESTIMASI TOTAL KEUNTUNGAN:</td>
+                                <td class="text-right pr-4 text-white py-3" style="font-size: 1.1rem;">
                                     Rp {{ number_format($totalKeseluruhan, 0, ',', '.') }}
                                 </td>
                             </tr>

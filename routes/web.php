@@ -57,7 +57,7 @@ Route::group(['middleware' => ['auth'], 'prefix' => 'dashboard', 'as' => 'dashbo
         ->where('id', '[0-9]+');
     Route::get('/orders/{id}/receipt', [OrderController::class, 'receipt'])->name('orders.receipt');
     Route::post('/orders/{order}/approve', [OrderController::class, 'approve'])->name('orders.approve');
-    Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/orders/{id}/cancel', [OrderController::class, 'cancpel'])->name('orders.cancel');
 
     Route::resource('outlets', OutletController::class);
 
