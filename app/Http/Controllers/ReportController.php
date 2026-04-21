@@ -133,192 +133,6 @@ class ReportController extends Controller
         return view('dashboard.reports.income', compact('orders', 'chartData'));
     }
 
-    public function dailyReport(Request $request)
-    {
-        // Default: Awal bulan sampai akhir bulan ini
-        $startDate = $request->start_date ?? date('Y-m-01');
-        $endDate = $request->end_date ?? date('Y-m-t');
-
-        $statusFilter = $request->status;
-        $methodFilter = $request->payment_method;
-        $kasirFilter = $request->kasir_id;
-
-        $kasirs = User::role('kasir')->get();
-
-        // Ambil data transaksi
-        $query = Order::with(['user', 'payment'])->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
-
-        if ($statusFilter) {
-            $query->where('status', $statusFilter);
-        }
-        if ($kasirFilter) {
-            $query->where('user_id', $kasirFilter);
-        }
-        if ($methodFilter) {
-            $query->whereHas('payment', fn($q) => $q->where('payment_method', $methodFilter));
-        }
-
-        $orders = $query->oldest()->get();
-
-        // --- C. PENGELOMPOKAN DATA TABEL (PER HARI) ---
-        $dailyData = $orders->groupBy(function ($order) {
-            return Carbon::parse($order->created_at)->format('Y-m-d');
-        });
-
-        $tableData = [];
-        foreach ($dailyData as $date => $dayOrders) {
-            Carbon::setLocale('id'); // Pastikan bahasa Indonesia
-            $tableData[] = [
-                'date_raw' => $date,
-                'date_formatted' => Carbon::parse($date)->translatedFormat('l, d F Y'),
-                'total_trx' => $dayOrders->count(),
-                'revenue' => $dayOrders->sum('total_amount'),
-            ];
-        }
-
-        // Urutkan berdasarkan tanggal terlama ke terbaru
-        $tableData = collect($tableData)->sortBy('date_raw')->values();
-
-        // --- F. BOX INFORMATION ---
-        $totalTransaksiKeseluruhan = $orders->count();
-        $totalKeuntunganKeseluruhan = $orders->sum('total_amount');
-
-        $peakDay = collect($tableData)->sortByDesc('total_trx')->first();
-        $peakDate = $peakDay ? $peakDay['date_formatted'] : '-';
-        $peakTrxCount = $peakDay ? $peakDay['total_trx'] : 0;
-
-        // --- E. DATA UNTUK CHART ---
-        // 1. Chart Volume Transaksi (Tren Hari)
-        // Gunakan 'date_raw' (format 2026-04-09) agar Carbon bisa membacanya tanpa error
-        $chartDates = $tableData->pluck('date_raw')->map(function ($date) {
-            return \Carbon\Carbon::parse($date)->translatedFormat('d M'); // Hasil: 09 Apr
-        });
-        $chartVolume = $tableData->pluck('total_trx');
-
-        // 2. Chart Status Transaksi
-        $chartStatusCompleted = [];
-        $chartStatusPending = [];
-        $chartStatusCancelled = [];
-
-        foreach ($tableData as $row) {
-            // Ambil data order asli dari grup berdasarkan tanggal
-            $dayOrders = $dailyData[$row['date_raw']];
-
-            $chartStatusCompleted[] = $dayOrders->where('status', 'completed')->count();
-            $chartStatusPending[] = $dayOrders->where('status', 'pending')->count();
-            $chartStatusCancelled[] = $dayOrders->where('status', 'cancelled')->count();
-        }
-
-        // 3. Chart Metode Pembayaran
-        $pieData = [
-            'cash' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
-            'transfer' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
-        ];
-
-        // 4. Chart Performa Kasir
-        $cashierData = $orders
-            ->groupBy('user_id')
-            ->map(function ($group) {
-                return [
-                    'name' => $group->first()->user->name ?? 'Unknown',
-                    'count' => $group->count(),
-                ];
-            })
-            ->sortByDesc('count')
-            ->values();
-
-        return view('dashboard.reports.daily', compact('tableData', 'startDate', 'endDate', 'statusFilter', 'methodFilter', 'kasirFilter', 'kasirs', 'totalTransaksiKeseluruhan', 'totalKeuntunganKeseluruhan', 'peakDate', 'peakTrxCount', 'chartDates', 'chartVolume', 'chartStatusCompleted', 'chartStatusPending', 'chartStatusCancelled', 'pieData', 'cashierData', 'orders'));
-    }
-
-    public function exportDailyPdf(Request $request)
-    {
-        $startDate = $request->start_date ?? date('Y-m-01');
-        $endDate = $request->end_date ?? date('Y-m-t');
-        $statusFilter = $request->status;
-        $methodFilter = $request->payment_method;
-        $kasirFilter = $request->kasir_id;
-
-        $query = Order::with(['user', 'payment'])->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
-
-        if ($statusFilter) {
-            $query->where('status', $statusFilter);
-        }
-        if ($kasirFilter) {
-            $query->where('user_id', $kasirFilter);
-        }
-        if ($methodFilter) {
-            $query->whereHas('payment', fn($q) => $q->where('payment_method', $methodFilter));
-        }
-
-        $orders = $query->oldest()->get();
-
-        if ($orders->isEmpty()) {
-            return redirect()->back()->with('error', 'Gagal Export: Tidak ada data transaksi pada filter yang dipilih.');
-        }
-
-        // Kelompokkan data sama seperti di View
-        $dailyData = $orders->groupBy(function ($order) {
-            return Carbon::parse($order->created_at)->format('Y-m-d');
-        });
-
-        $tableData = [];
-        foreach ($dailyData as $date => $dayOrders) {
-            Carbon::setLocale('id');
-            $tableData[] = [
-                'date_formatted' => Carbon::parse($date)->translatedFormat('l, d F Y'),
-                'total_trx' => $dayOrders->count(),
-                'revenue' => $dayOrders->sum('total_amount'),
-            ];
-        }
-        $tableData = collect($tableData)->sortBy('date_raw')->values();
-        $totalKeuntunganKeseluruhan = $orders->sum('total_amount');
-
-        $pdf = Pdf::loadView('dashboard.reports.pdf_daily', compact('tableData', 'startDate', 'endDate', 'totalKeuntunganKeseluruhan'));
-
-        $pdf->setPaper('a4', 'portrait');
-        return $pdf->download("Laporan_Harian_{$startDate}_sampai_{$endDate}.pdf");
-    }
-
-    public function monthlyReport(Request $request)
-    {
-        $year = $request->year ?? date('Y');
-
-        // 1. Ambil data mentah dari database
-        $monthlyOrders = Order::whereYear('created_at', $year)->where('status', 'completed')->select(DB::raw('MONTH(created_at) as month'), DB::raw('COUNT(*) as total_transaksi'), DB::raw('SUM(total_amount) as revenue'))->groupBy('month')->orderBy('month')->get()->keyBy('month'); // Agar gampang dipanggil berdasarkan nomor bulan (1-12)
-
-        // 2. Kita "bungkus" datanya agar selalu ada 12 bulan (Jan-Des)
-        $reportData = [];
-        for ($m = 1; $m <= 12; $m++) {
-            $reportData[$m] = [
-                'month_name' => \Carbon\Carbon::create()->month($m)->locale('id')->translatedFormat('F'),
-                'total_transaksi' => $monthlyOrders->get($m)->total_transaksi ?? 0,
-                'revenue' => $monthlyOrders->get($m)->revenue ?? 0,
-            ];
-        }
-
-        return view('dashboard.reports.monthly', compact('reportData', 'year'));
-    }
-
-    public function exportMonthlyPdf(Request $request)
-    {
-        $year = $request->year ?? date('Y');
-
-        // Logika pengolahan data sama seperti di atas
-        $monthlyOrders = Order::whereYear('created_at', $year)->where('status', 'completed')->select(DB::raw('MONTH(created_at) as month'), DB::raw('COUNT(*) as total_transaksi'), DB::raw('SUM(total_amount) as revenue'))->groupBy('month')->get()->keyBy('month');
-
-        $reportData = [];
-        for ($m = 1; $m <= 12; $m++) {
-            $reportData[$m] = [
-                'month_name' => \Carbon\Carbon::create()->month($m)->locale('id')->translatedFormat('F'),
-                'total_transaksi' => $monthlyOrders->get($m)->total_transaksi ?? 0,
-                'revenue' => $monthlyOrders->get($m)->revenue ?? 0,
-            ];
-        }
-
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('dashboard.reports.pdf_monthly', compact('reportData', 'year'));
-        return $pdf->download("Laporan_Tahunan_PetShop_$year.pdf");
-    }
-
     public function hourlyReport(Request $request)
     {
         $startDate = $request->start_date ?? date('Y-m-d');
@@ -539,5 +353,312 @@ class ReportController extends Controller
         $pdf->setPaper('a4', 'portrait');
 
         return $pdf->download("Laporan_Transaksi_{$startDate}_sampai_{$endDate}.pdf");
+    }
+
+    public function dailyReport(Request $request)
+    {
+        // Default: Awal bulan sampai akhir bulan ini
+        $startDate = $request->start_date ?? date('Y-m-01');
+        $endDate = $request->end_date ?? date('Y-m-t');
+
+        $statusFilter = $request->status;
+        $methodFilter = $request->payment_method;
+        $kasirFilter = $request->kasir_id;
+
+        $kasirs = User::role('kasir')->get();
+
+        // Ambil data transaksi
+        $query = Order::with(['user', 'payment'])->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
+        if ($kasirFilter) {
+            $query->where('user_id', $kasirFilter);
+        }
+        if ($methodFilter) {
+            $query->whereHas('payment', fn($q) => $q->where('payment_method', $methodFilter));
+        }
+
+        $orders = $query->oldest()->get();
+
+        // --- C. PENGELOMPOKAN DATA TABEL (PER HARI) ---
+        $dailyData = $orders->groupBy(function ($order) {
+            return Carbon::parse($order->created_at)->format('Y-m-d');
+        });
+
+        $tableData = [];
+        foreach ($dailyData as $date => $dayOrders) {
+            $tableData[] = [
+                'date_raw' => $date,
+                'date_formatted' => \Carbon\Carbon::parse($date)->translatedFormat('l, d F Y'),
+                'date_short' => \Carbon\Carbon::parse($date)->translatedFormat('j M'),
+                'completed' => $dayOrders->where('status', 'completed')->count(),
+                'pending' => $dayOrders->where('status', 'pending')->count(),
+                'cancelled' => $dayOrders->where('status', 'cancelled')->count(),
+                'cash' => $dayOrders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
+                'transfer' => $dayOrders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
+                'total_trx' => $dayOrders->count(),
+                'revenue' => $dayOrders->sum('total_amount'),
+            ];
+        }
+
+        $totals = [
+            'completed' => $orders->where('status', 'completed')->count(),
+            'pending' => $orders->where('status', 'pending')->count(),
+            'cancelled' => $orders->where('status', 'cancelled')->count(),
+            'cash' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
+            'transfer' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
+            'total_trx' => $orders->count(),
+            'revenue' => $orders->sum('total_amount'),
+        ];
+
+        // Urutkan berdasarkan tanggal terlama ke terbaru
+        $tableData = collect($tableData)->sortBy('date_raw')->values();
+
+        // --- F. BOX INFORMATION ---
+        $totalTransaksiKeseluruhan = $orders->count();
+        $totalKeuntunganKeseluruhan = $orders->sum('total_amount');
+
+        $peakDay = collect($tableData)->sortByDesc('total_trx')->first();
+        $peakDate = $peakDay ? $peakDay['date_formatted'] : '-';
+        $peakTrxCount = $peakDay ? $peakDay['total_trx'] : 0;
+
+        // --- E. DATA UNTUK CHART ---
+        // 1. Chart Volume Transaksi (Tren Hari)
+        // Gunakan 'date_raw' (format 2026-04-09) agar Carbon bisa membacanya tanpa error
+        $chartDates = $tableData->pluck('date_raw')->map(function ($date) {
+            return \Carbon\Carbon::parse($date)->translatedFormat('d M'); // Hasil: 09 Apr
+        });
+        $chartVolume = $tableData->pluck('total_trx');
+
+        // 2. Chart Status Transaksi
+        $chartStatusCompleted = [];
+        $chartStatusPending = [];
+        $chartStatusCancelled = [];
+
+        foreach ($tableData as $row) {
+            // Ambil data order asli dari grup berdasarkan tanggal
+            $dayOrders = $dailyData[$row['date_raw']];
+
+            $chartStatusCompleted[] = $dayOrders->where('status', 'completed')->count();
+            $chartStatusPending[] = $dayOrders->where('status', 'pending')->count();
+            $chartStatusCancelled[] = $dayOrders->where('status', 'cancelled')->count();
+        }
+
+        // 3. Chart Metode Pembayaran
+        $pieData = [
+            'cash' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
+            'transfer' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
+        ];
+
+        // 4. Chart Performa Kasir
+        $cashierData = $orders
+            ->groupBy('user_id')
+            ->map(function ($group) {
+                return [
+                    'name' => $group->first()->user->name ?? 'Unknown',
+                    'count' => $group->count(),
+                ];
+            })
+            ->sortByDesc('count')
+            ->values();
+
+        return view('dashboard.reports.daily', compact('tableData', 'startDate', 'endDate', 'statusFilter', 'methodFilter', 'kasirFilter', 'kasirs', 'totalTransaksiKeseluruhan', 'totalKeuntunganKeseluruhan', 'peakDate', 'peakTrxCount', 'chartDates', 'chartVolume', 'chartStatusCompleted', 'chartStatusPending', 'chartStatusCancelled', 'pieData', 'cashierData', 'orders', 'totals'));
+    }
+
+    public function exportDailyPdf(Request $request)
+    {
+        $startDate = $request->start_date ?? date('Y-m-01');
+        $endDate = $request->end_date ?? date('Y-m-t');
+        $statusFilter = $request->status;
+        $methodFilter = $request->payment_method;
+        $kasirFilter = $request->kasir_id;
+
+        $query = Order::with(['user', 'payment'])->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
+        if ($kasirFilter) {
+            $query->where('user_id', $kasirFilter);
+        }
+        if ($methodFilter) {
+            $query->whereHas('payment', fn($q) => $q->where('payment_method', $methodFilter));
+        }
+
+        $orders = $query->oldest()->get();
+
+        if ($orders->isEmpty()) {
+            return redirect()->back()->with('error', 'Gagal Export: Tidak ada data transaksi pada filter yang dipilih.');
+        }
+
+        // Kelompokkan data sama seperti di View
+        $dailyData = $orders->groupBy(function ($order) {
+            return Carbon::parse($order->created_at)->format('Y-m-d');
+        });
+
+        $tableData = [];
+        foreach ($dailyData as $date => $dayOrders) {
+            $tableData[] = [
+                'date_raw' => $date,
+                'date_formatted' => \Carbon\Carbon::parse($date)->translatedFormat('l, d F Y'),
+                'date_short' => \Carbon\Carbon::parse($date)->translatedFormat('l, d M'),
+                'completed' => $dayOrders->where('status', 'completed')->count(),
+                'pending' => $dayOrders->where('status', 'pending')->count(),
+                'cancelled' => $dayOrders->where('status', 'cancelled')->count(),
+                'cash' => $dayOrders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
+                'transfer' => $dayOrders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
+                'total_trx' => $dayOrders->count(),
+                'revenue' => $dayOrders->sum('total_amount'),
+            ];
+        }
+
+        $totals = [
+            'completed' => $orders->where('status', 'completed')->count(),
+            'pending' => $orders->where('status', 'pending')->count(),
+            'cancelled' => $orders->where('status', 'cancelled')->count(),
+            'cash' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
+            'transfer' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
+            'total_trx' => $orders->count(),
+            'revenue' => $orders->sum('total_amount'),
+        ];
+
+        $tableData = collect($tableData)->sortBy('date_raw')->values();
+        $totalKeuntunganKeseluruhan = $orders->sum('total_amount');
+
+        $pdf = Pdf::loadView('dashboard.reports.daily', compact('tableData', 'startDate', 'endDate', 'totalKeuntunganKeseluruhan', 'totals'));
+
+        $pdf->setPaper('a4', 'portrait');
+        return $pdf->download("Laporan_Harian_{$startDate}_sampai_{$endDate}.pdf");
+    }
+
+    public function monthlyReport(Request $request)
+    {
+        $startDate = $request->start_date ?? date('Y-m-01');
+        $endDate = $request->end_date ?? date('Y-m-t');
+        $statusFilter = $request->status;
+        $methodFilter = $request->payment_method;
+        $kasirFilter = $request->kasir_id;
+
+        $query = Order::with(['user', 'payment'])->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
+        if ($kasirFilter) {
+            $query->where('user_id', $kasirFilter);
+        }
+        if ($methodFilter) {
+            $query->whereHas('payment', fn($q) => $q->where('payment_method', $methodFilter));
+        }
+
+        $orders = $query->oldest()->get();
+
+        if ($orders->isEmpty()) {
+            return redirect()->back()->with('error', 'Gagal Export: Tidak ada data transaksi pada filter yang dipilih.');
+        }
+
+        // Kelompokkan data sama seperti di View
+        $dailyData = $orders->groupBy(function ($order) {
+            return Carbon::parse($order->created_at)->format('Y-m-d');
+        });
+
+        $tableData = [];
+        foreach ($dailyData as $date => $dayOrders) {
+            $tableData[] = [
+                'date_raw' => $date,
+                'date_formatted' => \Carbon\Carbon::parse($date)->translatedFormat('F Y'),
+                'date_short' => \Carbon\Carbon::parse($date)->translatedFormat('M y'),
+                'completed' => $dayOrders->where('status', 'completed')->count(),
+                'pending' => $dayOrders->where('status', 'pending')->count(),
+                'cancelled' => $dayOrders->where('status', 'cancelled')->count(),
+                'cash' => $dayOrders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
+                'transfer' => $dayOrders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
+                'total_trx' => $dayOrders->count(),
+                'revenue' => $dayOrders->sum('total_amount'),
+            ];
+        }
+
+        $totals = [
+            'completed' => $orders->where('status', 'completed')->count(),
+            'pending' => $orders->where('status', 'pending')->count(),
+            'cancelled' => $orders->where('status', 'cancelled')->count(),
+            'cash' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
+            'transfer' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
+            'total_trx' => $orders->count(),
+            'revenue' => $orders->sum('total_amount'),
+        ];
+
+        $tableData = collect($tableData)->sortBy('date_raw')->values();
+        $totalKeuntunganKeseluruhan = $orders->sum('total_amount');
+
+        return view('dashboard.reports.monthly', compact('tableData', 'startDate', 'endDate', 'statusFilter', 'methodFilter', 'kasirFilter', 'kasirs', 'totalTransaksiKeseluruhan', 'totalKeuntunganKeseluruhan', 'peakDate', 'peakTrxCount', 'chartDates', 'chartVolume', 'chartStatusCompleted', 'chartStatusPending', 'chartStatusCancelled', 'pieData', 'cashierData', 'orders', 'totals'));
+    }
+
+    public function exportMonthlyPdf(Request $request)
+    {
+        $startDate = $request->start_date ?? date('Y-m-01');
+        $endDate = $request->end_date ?? date('Y-m-t');
+        $statusFilter = $request->status;
+        $methodFilter = $request->payment_method;
+        $kasirFilter = $request->kasir_id;
+
+        $query = Order::with(['user', 'payment'])->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
+        if ($kasirFilter) {
+            $query->where('user_id', $kasirFilter);
+        }
+        if ($methodFilter) {
+            $query->whereHas('payment', fn($q) => $q->where('payment_method', $methodFilter));
+        }
+
+        $orders = $query->oldest()->get();
+
+        if ($orders->isEmpty()) {
+            return redirect()->back()->with('error', 'Gagal Export: Tidak ada data transaksi pada filter yang dipilih.');
+        }
+
+        // Kelompokkan data sama seperti di View
+        $dailyData = $orders->groupBy(function ($order) {
+            return Carbon::parse($order->created_at)->format('Y-m-d');
+        });
+
+        $tableData = [];
+        foreach ($dailyData as $date => $dayOrders) {
+            $tableData[] = [
+                'date_raw' => $date,
+                'date_formatted' => \Carbon\Carbon::parse($date)->translatedFormat('F Y'),
+                'date_short' => \Carbon\Carbon::parse($date)->translatedFormat('M y'),
+                'completed' => $dayOrders->where('status', 'completed')->count(),
+                'pending' => $dayOrders->where('status', 'pending')->count(),
+                'cancelled' => $dayOrders->where('status', 'cancelled')->count(),
+                'cash' => $dayOrders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
+                'transfer' => $dayOrders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
+                'total_trx' => $dayOrders->count(),
+                'revenue' => $dayOrders->sum('total_amount'),
+            ];
+        }
+
+        $totals = [
+            'completed' => $orders->where('status', 'completed')->count(),
+            'pending' => $orders->where('status', 'pending')->count(),
+            'cancelled' => $orders->where('status', 'cancelled')->count(),
+            'cash' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
+            'transfer' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
+            'total_trx' => $orders->count(),
+            'revenue' => $orders->sum('total_amount'),
+        ];
+
+        $tableData = collect($tableData)->sortBy('date_raw')->values();
+        $totalKeuntunganKeseluruhan = $orders->sum('total_amount');
+
+        $pdf = Pdf::loadView('dashboard.reports.monthly', compact('tableData', 'startDate', 'endDate', 'totalKeuntunganKeseluruhan', 'totals'));
+
+        $pdf->setPaper('a4', 'portrait');
+        return $pdf->download("Laporan_Harian_{$startDate}_sampai_{$endDate}.pdf");
     }
 }

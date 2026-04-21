@@ -134,14 +134,16 @@
             <div class="col-md-6 mb-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white font-weight-bold border-0 pt-3">
-                        <i class="fa-solid fa-chart-bar text-primary"></i> Performa Kasir</div>
+                        <i class="fa-solid fa-chart-bar text-primary"></i> Performa Kasir
+                    </div>
                     <div class="card-body"><canvas id="cashierChart"></canvas></div>
                 </div>
             </div>
             <div class="col-md-6 mb-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white font-weight-bold border-0 pt-3">
-                        <i class="fa-solid fa-chart-line text-primary"></i> Perbandingan Status Transaksi</div>
+                        <i class="fa-solid fa-chart-line text-primary"></i> Perbandingan Status Transaksi
+                    </div>
                     <div class="card-body" style="position: relative; height:250px;"><canvas id="statusChart"></canvas>
                     </div>
                 </div>
@@ -149,7 +151,8 @@
             <div class="col-md-6 mb-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white font-weight-bold border-0 pt-3">
-                        <i class="fa-solid fa-chart-pie text-primary"></i> Perbandingan Metode Pembayaran</div>
+                        <i class="fa-solid fa-chart-pie text-primary"></i> Perbandingan Metode Pembayaran
+                    </div>
                     <div class="card-body" style="position: relative; height:250px;"><canvas id="methodChart"></canvas>
                     </div>
                 </div>
@@ -158,43 +161,60 @@
 
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-0 pt-3">
-                <h6 class="font-weight-bold mb-0"><i class="fa-solid fa-table-list text-primary"></i> Rincian Laporan Harian</h6>
+                <h6 class="font-weight-bold mb-0"><i class="fa-solid fa-table-list text-primary"></i> Rincian Laporan
+                    Harian</h6>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover table-striped table-bordered mb-0 align-middle text-center">
-                        <thead class="bg-light">
-                            <tr class="bg-primary text-white">
-                                <th class="py-3 border-0" width="10%">No</th>
-                                <th class="py-3 border-0 text-left">Hari, Tanggal</th>
-                                <th class="py-3 border-0">Total Transaksi</th>
-                                <th class="py-3 border-0 text-right pr-4">Estimasi Keuntungan</th>
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                <th rowspan="2" class="align-middle">No</th>
+                                <th rowspan="2" class="align-middle">Waktu</th>
+                                <th colspan="3" class="border-bottom-0">Status</th>
+                                <th colspan="2" class="border-bottom-0">Metode Pembayaran</th>
+                                <th rowspan="2" class="align-middle">Total Transaksi</th>
+                                <th rowspan="2" class="align-middle text-right pr-4">Estimasi Keuntungan</th>
+                            </tr>
+                            <tr>
+                                <th class="bg-success">Completed</th>
+                                <th class="bg-warning">Pending</th>
+                                <th class="bg-danger">Cancelled</th>
+                                <th class="bg-success">Cash</th>
+                                <th class="bg-info">Transfer</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($tableData as $index => $row)
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
-                                    <td class="text-left font-weight-bold text-dark">{{ $row['date_formatted'] }}</td>
-                                    <td><span class="badge badge-info px-3 py-2">{{ $row['total_trx'] }} Transaksi</span>
-                                    </td>
+                                    <td><span class="badge badge-secondary">{{ $row['date_formatted'] }}</span></td>
+                                    <td>{{ $row['completed'] }}</td>
+                                    <td>{{ $row['pending'] }}</td>
+                                    <td>{{ $row['cancelled'] }}</td>
+                                    <td>{{ $row['cash'] }}</td>
+                                    <td>{{ $row['transfer'] }}</td>
+                                    <td class="font-weight-bold">{{ $row['total_trx'] }}</td>
                                     <td class="text-right pr-4 font-weight-bold text-success">
                                         Rp {{ number_format($row['revenue'], 0, ',', '.') }}
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-muted py-5 text-center">Tidak ada transaksi ditemukan
-                                        pada periode ini.</td>
+                                    <td colspan="9" class="text-muted py-5">Tidak ada transaksi ditemukan.</td>
                                 </tr>
                             @endforelse
                         </tbody>
-                        <tfoot class="bg-warning text-white font-weight-bold">
+                        <tfoot class="bg-warning font-weight-bold text-white">
                             <tr>
-                                <td colspan="3" class="text-right py-3 pr-2">ESTIMASI TOTAL KEUNTUNGAN:</td>
-                                <td class="text-right pr-4 py-3" style="font-size: 1.1rem;">
-                                    Rp {{ number_format($totalKeuntunganKeseluruhan, 0, ',', '.') }}
-                                </td>
+                                <td colspan="2" class="text-center">TOTAL :</td>
+                                <td>{{ $totals['completed'] }}</td>
+                                <td>{{ $totals['pending'] }}</td>
+                                <td>{{ $totals['cancelled'] }}</td>
+                                <td>{{ $totals['cash'] }}</td>
+                                <td>{{ $totals['transfer'] }}</td>
+                                <td>{{ $totals['total_trx'] }}</td>
+                                <td class="text-right pr-4">Rp {{ number_format($totals['revenue'], 0, ',', '.') }}</td>
                             </tr>
                         </tfoot>
                     </table>

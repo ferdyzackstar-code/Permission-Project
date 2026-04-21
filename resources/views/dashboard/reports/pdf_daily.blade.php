@@ -3,171 +3,85 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Transaksi Harian PetShop</title>
-    <style>
-        /* Reset & Base Styles */
-        body {
-            font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 12px;
-            color: #333;
-            margin: 0;
-            padding: 0;
-        }
-
-        .header {
-            text-align: center;
-            border-bottom: 2px solid #000;
-            padding-bottom: 15px;
-            margin-bottom: 25px;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        .header p {
-            margin: 5px 0;
-            font-size: 12px;
-        }
-
-        .sub-header {
-            margin-bottom: 20px;
-        }
-
-        .sub-header p {
-            margin: 2px 0;
-            color: #555;
-        }
-
-        /* Table Styling */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            table-layout: fixed;
-        }
-
-        th,
-        td {
-            border: 1px solid #444;
-            padding: 10px;
-            word-wrap: break-word;
-        }
-
-        /* Warna Header (Primary - Biru) */
-        thead th {
-            background-color: #007bff !important;
-            color: #ffffff !important;
-            text-transform: uppercase;
-            font-size: 11px;
-            text-align: center;
-        }
-
-        /* Warna Footer (Warning - Kuning) */
-        .bg-warning-pdf {
-            background-color: #ffc107 !important;
-            color: #ffffff !important;
-        }
-
-        /* Utility Classes */
-        .text-white {
-            color: #ffffff !important;
-        }
-
-        .text-right {
-            text-align: right;
-        }
-
-        .text-left {
-            text-align: left;
-        }
-
-        .font-bold {
-            font-weight: bold;
-        }
-
-        /* Tanda Tangan */
-        .ttd-box {
-            width: 100%;
-            margin-top: 50px;
-        }
-
-        .ttd-box table {
-            width: 100%;
-            border: none;
-        }
-
-        .ttd-box td {
-            border: none;
-            text-align: right;
-            padding-right: 50px;
-        }
-    </style>
+    <title>Laporan Harian PetShop</title>
 </head>
 
-<body>
+<body style="font-family: sans-serif; font-size: 10px; color: #333;">
 
-    <div class="header">
-        <h1>ANDA PETSHOP</h1>
-        <p>Jl. Raya Pisangan, Tambun Utara, Bekasi</p>
-        <p style="margin: 0; font-weight: bold;">LAPORAN TRANSAKSI HARIAN</p>
+    <div style="text-align: center; border-bottom: 2px solid #444; padding-bottom: 10px; margin-bottom: 20px;">
+        <h2 style="margin: 0; letter-spacing: 2px;">ANDA PETSHOP</h2>
+        <p style="margin: 5px 0;">Jl. Raya Pisangan, Tambun Utara, Bekasi</p>
+        <p style="margin: 0; font-weight: bold; text-transform: uppercase;">LAPORAN TRANSAKSI HARIAN</p>
     </div>
 
-    <div class="sub-header">
-        <p><strong>Periode:</strong> {{ \Carbon\Carbon::parse($startDate)->translatedFormat('d F Y') }} s/d
-            {{ \Carbon\Carbon::parse($endDate)->translatedFormat('d F Y') }}</p>
-        <p><strong>Dicetak pada:</strong> {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}</p>
+    <div style="margin-bottom: 15px;">
+        Periode: <strong>{{ \Carbon\Carbon::parse($startDate)->translatedFormat('j F Y') }}</strong> s/d
+        <strong>{{ \Carbon\Carbon::parse($endDate)->translatedFormat('j F Y') }}</strong><br>
+        Dicetak pada: {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
     </div>
 
-    <table>
+    <table style="width: 100%; border-collapse: collapse; text-align: center;">
         <thead>
-            <tr>
-                <th width="8%">No</th>
-                <th width="42%" class="text-left">Hari, Tanggal</th>
-                <th width="20%">Total Transaksi</th>
-                <th width="30%" class="text-right">Estimasi Keuntungan</th>
+            <tr style="color: white;">
+                <th rowspan="2" style="background-color: #4472c4; border: 1px solid #fff; padding: 10px 2px;">NO</th>
+                <th rowspan="2"
+                    style="background-color: #4472c4; border: 1px solid #fff; padding: 10px 2px; width: 20%;">HARI,
+                    TANGGAL</th>
+                <th colspan="3" style="background-color: #4472c4; border: 1px solid #fff; padding: 5px;">STATUS</th>
+                <th colspan="2" style="background-color: #4472c4; border: 1px solid #fff; padding: 5px;">METODE PEMBAYARAN</th>
+                <th rowspan="2" style="background-color: #4472c4; border: 1px solid #fff; padding: 10px 2px;">TOTAL
+                    TRANSAKSI</th>
+                <th rowspan="2" style="background-color: #4472c4; border: 1px solid #fff; padding: 10px 2px;">
+                    ESTIMASI KEUNTUNGAN</th>
+            </tr>
+            <tr style="color: white; font-size: 9px;">
+                <th style="background-color: #2ebf91; border: 1px solid #fff; padding: 5px;">Completed</th>
+                <th style="background-color: #ffc107; border: 1px solid #fff; padding: 5px;">Pending</th>
+                <th style="background-color: #ee1313; border: 1px solid #fff; padding: 5px;">Cancel</th>
+                <th style="background-color: #2ebf91; border: 1px solid #fff; padding: 5px;">Cash</th>
+                <th style="background-color: #00c4ce; border: 1px solid #fff; padding: 5px;">Transfer</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($tableData as $index => $row)
-                <tr>
-                    <td style="text-align: center;">{{ $index + 1 }}</td>
-                    <td class="text-left">{{ $row['date_formatted'] }}</td>
-                    <td style="text-align: center;">{{ $row['total_trx'] }}</td>
-                    <td class="text-right">Rp {{ number_format($row['revenue'], 0, ',', '.') }}</td>
+            @foreach ($tableData as $index => $row)
+                <tr style="background-color: {{ $index % 2 == 0 ? '#ffffff' : '#f9f9f9' }};">
+                    <td style="border: 1px solid #ccc; padding: 8px 2px;">{{ $index + 1 }}</td>
+                    <td style="border: 1px solid #ccc; padding: 8px 2px; text-align: left; padding-left: 5px;">
+                        {{ $row['date_formatted'] }}</td>
+                    <td style="border: 1px solid #ccc; padding: 8px 2px;">{{ $row['completed'] }}</td>
+                    <td style="border: 1px solid #ccc; padding: 8px 2px;">{{ $row['pending'] }}</td>
+                    <td style="border: 1px solid #ccc; padding: 8px 2px;">{{ $row['cancelled'] }}</td>
+                    <td style="border: 1px solid #ccc; padding: 8px 2px;">{{ $row['cash'] }}</td>
+                    <td style="border: 1px solid #ccc; padding: 8px 2px;">{{ $row['transfer'] }}</td>
+                    <td style="border: 1px solid #ccc; padding: 8px 2px; font-weight: bold;">{{ $row['total_trx'] }}
+                    </td>
+                    <td style="border: 1px solid #ccc; padding: 8px 2px; text-align: right; padding-right: 5px;">
+                        Rp {{ number_format($row['revenue'], 0, ',', '.') }}
+                    </td>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="4" style="text-align: center;">Tidak ada data transaksi pada periode ini.</td>
-                </tr>
-            @endforelse
+            @endforeach
         </tbody>
         <tfoot>
-            <tr>
-                <td colspan="3" class="text-right bg-warning-pdf text-white font-bold">
-                    ESTIMASI TOTAL KEUNTUNGAN :
+            <tr style="background-color: #ffc107; font-weight: bold;">
+                <td colspan="2" style="border: 1px solid #ccc; padding: 10px; text-align: center; color: white;">TOTAL:
                 </td>
-                <td class="text-right bg-warning-pdf text-white font-bold">
-                    Rp {{ number_format($totalKeuntunganKeseluruhan, 0, ',', '.') }}
+                <td style="border: 1px solid #ccc; color: white;">{{ $totals['completed'] }}</td>
+                <td style="border: 1px solid #ccc; color: white;">{{ $totals['pending'] }}</td>
+                <td style="border: 1px solid #ccc; color: white;">{{ $totals['cancelled'] }}</td>
+                <td style="border: 1px solid #ccc; color: white;">{{ $totals['cash'] }}</td>
+                <td style="border: 1px solid #ccc; color: white;">{{ $totals['transfer'] }}</td>
+                <td style="border: 1px solid #ccc; color: white;">{{ $totals['total_trx'] }}</td>
+                <td style="border: 1px solid #ccc; color: white; text-align: right; padding-right: 5px;">
+                    Rp {{ number_format($totals['revenue'], 0, ',', '.') }}
                 </td>
             </tr>
         </tfoot>
     </table>
 
-    <div class="ttd-box">
-        <table>
-            <tr>
-                <td>
-                    <p>Bekasi, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-                    <br><br><br><br>
-                    <p><strong>( ______________________ )</strong></p>
-                    <p>Manager Operasional</p>
-                </td>
-            </tr>
-        </table>
+    <div style="margin-top: 30px; text-align: right; padding-right: 20px;">
+        <p>Bekasi, {{ date('d F Y') }}</p>
+        <br><br><br>
+        <p><strong>( ____________________ )</strong><br>Manager Operasional</p>
     </div>
 
 </body>

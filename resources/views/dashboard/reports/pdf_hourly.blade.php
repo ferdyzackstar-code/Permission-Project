@@ -14,10 +14,10 @@
         <p style="margin: 0; font-weight: bold; text-transform: uppercase;">Laporan Transaksi Per-Jam</p>
     </div>
 
-    <div style="margin-bottom: 15px; color: #555;">
-        Periode: <strong>{{ date('d F Y', strtotime($startDate)) }}</strong> s/d
-        <strong>{{ date('d F Y', strtotime($endDate)) }}</strong><br>
-        Dicetak pada: {{ date('d/m/Y H:i') }}
+    <div style="margin-bottom: 15px;">
+        Periode: <strong>{{ \Carbon\Carbon::parse($startDate)->translatedFormat('j F Y') }}</strong> s/d
+        <strong>{{ \Carbon\Carbon::parse($endDate)->translatedFormat('j F Y') }}</strong><br>
+        Dicetak pada: {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
     </div>
 
     <table style="width: 100%; border-collapse: collapse; text-align: center; border: 1px solid #ccc;">
@@ -44,7 +44,7 @@
                 <th style="background-color: #2ebf91; border: 1px solid #ffffff; padding: 8px 2px;">Completed</th>
                 <th style="background-color: #ffc107; border: 1px solid #ffffff; padding: 8px 2px;">Pending</th>
                 <th style="background-color: #fb3909; border: 1px solid #ffffff; padding: 8px 2px;">Cancelled</th>
-                <th style="background-color: #4facfe; border: 1px solid #ffffff; padding: 8px 2px;">Cash</th>
+                <th style="background-color: #2ebf91; border: 1px solid #ffffff; padding: 8px 2px;">Cash</th>
                 <th style="background-color: #00c4ce; border: 1px solid #ffffff; padding: 8px 2px;">Transfer</th>
             </tr>
         </thead>
@@ -80,15 +80,15 @@
         <tfoot>
             <tr style="background-color: #ffc107; color: white; font-weight: bold; font-size: 12px;">
                 <td colspan="2"
-                    style="border: 1px solid #ffc107; padding: 12px 5px; text-align: right; padding-right: 10px; text-transform: uppercase;">
+                    style="border: 1px solid #ccc; padding: 12px 5px; text-align: right; padding-right: 10px; text-transform: uppercase;">
                     Total :</td>
-                <td style="border: 1px solid #ffc107; padding: 12px 5px;">{{ $totals['completed'] }}</td>
-                <td style="border: 1px solid #ffc107; padding: 12px 5px;">{{ $totals['pending'] }}</td>
-                <td style="border: 1px solid #ffc107; padding: 12px 5px;">{{ $totals['cancelled'] }}</td>
-                <td style="border: 1px solid #ffc107; padding: 12px 5px;">{{ $totals['cash'] }}</td>
-                <td style="border: 1px solid #ffc107; padding: 12px 5px;">{{ $totals['transfer'] }}</td>
-                <td style="border: 1px solid #ffc107; padding: 12px 5px;">{{ $totals['total_trx'] }}</td>
-                <td style="border: 1px solid #ffc107; padding: 12px 5px; text-align: right; padding-right: 15px;">
+                <td style="border: 1px solid #ccc; padding: 12px 5px;">{{ $totals['completed'] }}</td>
+                <td style="border: 1px solid #ccc; padding: 12px 5px;">{{ $totals['pending'] }}</td>
+                <td style="border: 1px solid #ccc; padding: 12px 5px;">{{ $totals['cancelled'] }}</td>
+                <td style="border: 1px solid #ccc; padding: 12px 5px;">{{ $totals['cash'] }}</td>
+                <td style="border: 1px solid #ccc; padding: 12px 5px;">{{ $totals['transfer'] }}</td>
+                <td style="border: 1px solid #ccc; padding: 12px 5px;">{{ $totals['total_trx'] }}</td>
+                <td style="border: 1px solid #ccc; padding: 12px 5px; text-align: right; padding-right: 15px;">
                     Rp {{ number_format($totals['revenue'], 0, ',', '.') }}
                 </td>
             </tr>
