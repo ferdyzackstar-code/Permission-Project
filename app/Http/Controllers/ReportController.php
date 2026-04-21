@@ -420,9 +420,9 @@ class ReportController extends Controller
         $totalTransaksiKeseluruhan = $orders->count();
         $totalKeuntunganKeseluruhan = $orders->sum('total_amount');
 
-        $peakDay = collect($tableData)->sortByDesc('total_trx')->first();
-        $peakDate = $peakDay ? $peakDay['date_formatted'] : '-';
-        $peakTrxCount = $peakDay ? $peakDay['total_trx'] : 0;
+        $peakDateRow = collect($tableData)->sortByDesc('total_trx')->first();
+        $peakDateName = $peakDateRow ? $peakDateRow['date_formatted'] : '-';
+        $peakDateTrxCount = $peakDateRow ? $peakDateRow['total_trx'] : 0;
 
         // --- E. DATA UNTUK CHART ---
         // 1. Chart Volume Transaksi (Tren Hari)
@@ -463,8 +463,7 @@ class ReportController extends Controller
             })
             ->sortByDesc('count')
             ->values();
-
-        return view('dashboard.reports.daily', compact('tableData', 'startDate', 'endDate', 'statusFilter', 'methodFilter', 'kasirFilter', 'kasirs', 'totalTransaksiKeseluruhan', 'totalKeuntunganKeseluruhan', 'peakDate', 'peakTrxCount', 'chartDates', 'chartVolume', 'chartStatusCompleted', 'chartStatusPending', 'chartStatusCancelled', 'pieData', 'cashierData', 'orders', 'totals'));
+        return view('dashboard.reports.daily', compact('tableData', 'startDate', 'endDate', 'statusFilter', 'methodFilter', 'kasirFilter', 'kasirs', 'totalTransaksiKeseluruhan', 'totalKeuntunganKeseluruhan', 'peakDateName', 'peakDateTrxCount', 'chartDates', 'chartVolume', 'chartStatusCompleted', 'chartStatusPending', 'chartStatusCancelled', 'pieData', 'cashierData', 'orders', 'totals'));
     }
 
     public function exportDailyPdf(Request $request)
@@ -474,6 +473,8 @@ class ReportController extends Controller
         $statusFilter = $request->status;
         $methodFilter = $request->payment_method;
         $kasirFilter = $request->kasir_id;
+
+        $kasirs = User::role('kasir')->get();
 
         $query = Order::with(['user', 'payment'])->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
 
@@ -527,7 +528,7 @@ class ReportController extends Controller
         $tableData = collect($tableData)->sortBy('date_raw')->values();
         $totalKeuntunganKeseluruhan = $orders->sum('total_amount');
 
-        $pdf = Pdf::loadView('dashboard.reports.daily', compact('tableData', 'startDate', 'endDate', 'totalKeuntunganKeseluruhan', 'totals'));
+        $pdf = Pdf::loadView('dashboard.reports.pdf_daily', compact('tableData', 'startDate', 'endDate', 'statusFilter', 'methodFilter', 'kasirFilter', 'kasirs', 'totalKeuntunganKeseluruhan', 'orders', 'totals'));
 
         $pdf->setPaper('a4', 'portrait');
         return $pdf->download("Laporan_Harian_{$startDate}_sampai_{$endDate}.pdf");
@@ -535,11 +536,13 @@ class ReportController extends Controller
 
     public function monthlyReport(Request $request)
     {
-        $startDate = $request->start_date ?? date('Y-m-01');
-        $endDate = $request->end_date ?? date('Y-m-t');
+        $startDate = $request->start_date ?? date('Y-01-01');
+        $endDate = $request->end_date ?? date('Y-12-31');
         $statusFilter = $request->status;
         $methodFilter = $request->payment_method;
         $kasirFilter = $request->kasir_id;
+
+        $kasirs = User::role('kasir')->get();
 
         $query = Order::with(['user', 'payment'])->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
 
@@ -560,23 +563,23 @@ class ReportController extends Controller
         }
 
         // Kelompokkan data sama seperti di View
-        $dailyData = $orders->groupBy(function ($order) {
-            return Carbon::parse($order->created_at)->format('Y-m-d');
+        $monthlyData = $orders->groupBy(function ($order) {
+            return Carbon::parse($order->created_at)->format('Y-m');
         });
 
         $tableData = [];
-        foreach ($dailyData as $date => $dayOrders) {
+        foreach ($monthlyData as $month => $monthOrders) {
             $tableData[] = [
-                'date_raw' => $date,
-                'date_formatted' => \Carbon\Carbon::parse($date)->translatedFormat('F Y'),
-                'date_short' => \Carbon\Carbon::parse($date)->translatedFormat('M y'),
-                'completed' => $dayOrders->where('status', 'completed')->count(),
-                'pending' => $dayOrders->where('status', 'pending')->count(),
-                'cancelled' => $dayOrders->where('status', 'cancelled')->count(),
-                'cash' => $dayOrders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
-                'transfer' => $dayOrders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
-                'total_trx' => $dayOrders->count(),
-                'revenue' => $dayOrders->sum('total_amount'),
+                'month_raw' => $month,
+                'month_formatted' => \Carbon\Carbon::parse($month)->translatedFormat('F Y'),
+                'month_short' => \Carbon\Carbon::parse($month)->translatedFormat('M y'),
+                'completed' => $monthOrders->where('status', 'completed')->count(),
+                'pending' => $monthOrders->where('status', 'pending')->count(),
+                'cancelled' => $monthOrders->where('status', 'cancelled')->count(),
+                'cash' => $monthOrders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
+                'transfer' => $monthOrders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
+                'total_trx' => $monthOrders->count(),
+                'revenue' => $monthOrders->sum('total_amount'),
             ];
         }
 
@@ -590,10 +593,49 @@ class ReportController extends Controller
             'revenue' => $orders->sum('total_amount'),
         ];
 
-        $tableData = collect($tableData)->sortBy('date_raw')->values();
+        $tableData = collect($tableData)->sortBy('month_raw')->values();
         $totalKeuntunganKeseluruhan = $orders->sum('total_amount');
 
-        return view('dashboard.reports.monthly', compact('tableData', 'startDate', 'endDate', 'statusFilter', 'methodFilter', 'kasirFilter', 'kasirs', 'totalTransaksiKeseluruhan', 'totalKeuntunganKeseluruhan', 'peakDate', 'peakTrxCount', 'chartDates', 'chartVolume', 'chartStatusCompleted', 'chartStatusPending', 'chartStatusCancelled', 'pieData', 'cashierData', 'orders', 'totals'));
+        $totalTransaksiKeseluruhan = $orders->count();
+        $totalKeuntunganKeseluruhan = $orders->sum('total_amount');
+
+        $peakMonthRow = collect($tableData)->sortByDesc('total_trx')->first();
+        $peakMonthName = $peakMonthRow ? $peakMonthRow['month_formatted'] : '-';
+        $peakMonthTrxCount = $peakMonthRow ? $peakMonthRow['total_trx'] : 0;
+
+        $chartMonths = $tableData->pluck('month_raw')->map(function ($month) {
+            return \Carbon\Carbon::parse($month)->translatedFormat('F Y');
+        });
+        $chartVolume = $tableData->pluck('total_trx');
+
+        $chartStatusCompleted = [];
+        $chartStatusPending = [];
+        $chartStatusCancelled = [];
+
+        foreach ($tableData as $row) {
+            $monthOrders = $monthlyData[$row['month_raw']];
+            $chartStatusCompleted[] = $monthOrders->where('status', 'completed')->count();
+            $chartStatusPending[] = $monthOrders->where('status', 'pending')->count();
+            $chartStatusCancelled[] = $monthOrders->where('status', 'cancelled')->count();
+        }
+
+        $pieData = [
+            'cash' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
+            'transfer' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
+        ];
+
+        $cashierData = $orders
+            ->groupBy('user_id')
+            ->map(function ($group) {
+                return [
+                    'name' => $group->first()->user->name ?? 'Unknown',
+                    'count' => $group->count(),
+                ];
+            })
+            ->sortByDesc('count')
+            ->values();
+
+        return view('dashboard.reports.monthly', compact('tableData', 'startDate', 'endDate', 'statusFilter', 'methodFilter', 'kasirFilter', 'kasirs', 'totalTransaksiKeseluruhan', 'totalKeuntunganKeseluruhan', 'peakMonthName', 'peakMonthTrxCount', 'chartMonths', 'chartVolume', 'chartStatusCompleted', 'chartStatusPending', 'chartStatusCancelled', 'pieData', 'cashierData', 'orders', 'totals'));
     }
 
     public function exportMonthlyPdf(Request $request)
@@ -604,6 +646,8 @@ class ReportController extends Controller
         $methodFilter = $request->payment_method;
         $kasirFilter = $request->kasir_id;
 
+        $kasirs = User::role('kasir')->get();
+
         $query = Order::with(['user', 'payment'])->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
 
         if ($statusFilter) {
@@ -623,23 +667,23 @@ class ReportController extends Controller
         }
 
         // Kelompokkan data sama seperti di View
-        $dailyData = $orders->groupBy(function ($order) {
+        $monthlyData = $orders->groupBy(function ($order) {
             return Carbon::parse($order->created_at)->format('Y-m-d');
         });
 
         $tableData = [];
-        foreach ($dailyData as $date => $dayOrders) {
+        foreach ($monthlyData as $month => $monthOrders) {
             $tableData[] = [
-                'date_raw' => $date,
-                'date_formatted' => \Carbon\Carbon::parse($date)->translatedFormat('F Y'),
-                'date_short' => \Carbon\Carbon::parse($date)->translatedFormat('M y'),
-                'completed' => $dayOrders->where('status', 'completed')->count(),
-                'pending' => $dayOrders->where('status', 'pending')->count(),
-                'cancelled' => $dayOrders->where('status', 'cancelled')->count(),
-                'cash' => $dayOrders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
-                'transfer' => $dayOrders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
-                'total_trx' => $dayOrders->count(),
-                'revenue' => $dayOrders->sum('total_amount'),
+                'month_raw' => $month,
+                'month_formatted' => \Carbon\Carbon::parse($month)->translatedFormat('F Y'),
+                'month_short' => \Carbon\Carbon::parse($month)->translatedFormat('M y'),
+                'completed' => $monthOrders->where('status', 'completed')->count(),
+                'pending' => $monthOrders->where('status', 'pending')->count(),
+                'cancelled' => $monthOrders->where('status', 'cancelled')->count(),
+                'cash' => $monthOrders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
+                'transfer' => $monthOrders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
+                'total_trx' => $monthOrders->count(),
+                'revenue' => $monthOrders->sum('total_amount'),
             ];
         }
 
@@ -653,12 +697,12 @@ class ReportController extends Controller
             'revenue' => $orders->sum('total_amount'),
         ];
 
-        $tableData = collect($tableData)->sortBy('date_raw')->values();
+        $tableData = collect($tableData)->sortBy('month_raw')->values();
         $totalKeuntunganKeseluruhan = $orders->sum('total_amount');
 
-        $pdf = Pdf::loadView('dashboard.reports.monthly', compact('tableData', 'startDate', 'endDate', 'totalKeuntunganKeseluruhan', 'totals'));
+        $pdf = Pdf::loadView('dashboard.reports.pdf_monthly', compact('tableData', 'startDate', 'endDate', 'totalKeuntunganKeseluruhan', 'totals'));
 
         $pdf->setPaper('a4', 'portrait');
-        return $pdf->download("Laporan_Harian_{$startDate}_sampai_{$endDate}.pdf");
+        return $pdf->download("Laporan_Bulanan_{$startDate}_sampai_{$endDate}.pdf");
     }
 }

@@ -76,8 +76,8 @@
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
                                 <p class="small font-weight-bold mb-1 text-uppercase text-white-50">TANGGAL PALING RAMAI</p>
-                                <h4 class="mb-0 font-weight-bold">{{ $peakDate }}</h4>
-                                <div class="small mt-1">{{ $peakTrxCount }} Transaksi</div>
+                                <h4 class="mb-0 font-weight-bold">{{ $peakDateName ?? '-' }}</h4>
+                                <div class="small mt-1">{{ $peakDateTrxCount ?? 0 }} Transaksi</div>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-fire fa-3x text-white-50"></i>
@@ -93,7 +93,7 @@
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
                                 <p class="small font-weight-bold mb-1 text-uppercase text-white-50">TOTAL TRANSAKSI</p>
-                                <h3 class="mb-0 font-weight-bold">{{ $totalTransaksiKeseluruhan }}</h3>
+                                <h3 class="mb-0 font-weight-bold">{{ $totalTransaksiKeseluruhan ?? 0 }}</h3>
                                 <div class="small mt-1">Sesuai filter</div>
                             </div>
                             <div class="col-auto">
@@ -136,7 +136,7 @@
                     <div class="card-header bg-white font-weight-bold border-0 pt-3">
                         <i class="fa-solid fa-chart-bar text-primary"></i> Performa Kasir
                     </div>
-                    <div class="card-body"><canvas id="cashierChart"></canvas></div>
+                    <div class="card-body"><canvas id="cashierChart"></canvas></div>    
                 </div>
             </div>
             <div class="col-md-6 mb-4">
