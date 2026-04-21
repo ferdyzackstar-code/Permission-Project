@@ -94,7 +94,7 @@
                 Swal.fire({
                     title: "Batalkan Transaksi?",
                     text: "Transaksi ini akan di-cancel dan stok barang akan dikembalikan.",
-                    icon: "warning",
+                    icon: "warning", 
                     showCancelButton: true,
                     confirmButtonText: "Ya, Batalkan!",
                     cancelButtonText: "Kembali",

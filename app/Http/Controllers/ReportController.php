@@ -343,6 +343,63 @@ class ReportController extends Controller
 
         $orders = $query->oldest()->get();
 
+        // --- 1. SIAPKAN WADAH UNTUK DATA TABEL & GRAND TOTAL ---
+        $tableData = [];
+        $totals = [
+            'completed' => 0,
+            'pending' => 0,
+            'cancelled' => 0,
+            'cash' => 0,
+            'transfer' => 0,
+            'total_trx' => 0,
+            'revenue' => 0,
+        ];
+
+        // --- 2. KELOMPOKKAN DATA BERDASARKAN JAM ---
+        // Mengubah '2026-04-17 09:15:00' menjadi '09:00'
+        $groupedByHour = $orders->groupBy(function ($item) {
+            return $item->created_at->format('H:00');
+        });
+
+        // --- 3. HITUNG TOTAL MASING-MASING JAM ---
+        foreach ($groupedByHour as $hour => $hourOrders) {
+            $completed = $hourOrders->where('status', 'completed')->count();
+            $pending = $hourOrders->where('status', 'pending')->count();
+            $cancelled = $hourOrders->where('status', 'cancelled')->count();
+
+            $cash = $hourOrders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count();
+            $transfer = $hourOrders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count();
+
+            $totalTrx = $hourOrders->count();
+
+            // PERUBAHAN DI SINI: Langsung jumlahkan semua total_amount tanpa memfilter status
+            $estimasiKeuntungan = $hourOrders->sum('total_amount');
+
+            // Masukkan ke array per baris
+            $tableData[] = [
+                'waktu' => $hour,
+                'completed' => $completed,
+                'pending' => $pending,
+                'cancelled' => $cancelled,
+                'cash' => $cash,
+                'transfer' => $transfer,
+                'total_trx' => $totalTrx,
+                'revenue' => $estimasiKeuntungan,
+            ];
+
+            // Tambahkan ke Grand Total Bawah
+            $totals['completed'] += $completed;
+            $totals['pending'] += $pending;
+            $totals['cancelled'] += $cancelled;
+            $totals['cash'] += $cash;
+            $totals['transfer'] += $transfer;
+            $totals['total_trx'] += $totalTrx;
+            $totals['revenue'] += $estimasiKeuntungan;
+        }
+
+        // --- 4. URUTKAN JAM DARI 00:00 KE 23:00 ---
+        $tableData = collect($tableData)->sortBy('waktu')->values()->all();
+
         // --- DATA UNTUK CHART ---
         $hours = [];
         $lineStatus = ['completed' => [], 'pending' => [], 'cancelled' => []];
@@ -388,7 +445,7 @@ class ReportController extends Controller
             })
             ->sortByDesc('count');
 
-        return view('dashboard.reports.hourly', compact('orders', 'startDate', 'endDate', 'statusFilter', 'methodFilter', 'kasirFilter', 'kasirs', 'hours', 'lineStatus', 'barTrx', 'pieData', 'cashierData', 'peakHour', 'peakTrxCount'));
+        return view('dashboard.reports.hourly', compact('orders', 'startDate', 'endDate', 'statusFilter', 'methodFilter', 'kasirFilter', 'kasirs', 'hours', 'lineStatus', 'barTrx', 'pieData', 'cashierData', 'peakHour', 'peakTrxCount', 'tableData', 'totals'));
     }
 
     public function exportHourlyPdf(Request $request)
@@ -413,7 +470,62 @@ class ReportController extends Controller
             $query->whereHas('payment', fn($q) => $q->where('payment_method', $methodFilter));
         }
 
+        // ... kode filter sebelumnya tetap sama ...
         $orders = $query->oldest()->get();
+
+        // --- 1. SIAPKAN WADAH UNTUK DATA TABEL & GRAND TOTAL ---
+        $tableData = [];
+        $totals = [
+            'completed' => 0,
+            'pending' => 0,
+            'cancelled' => 0,
+            'cash' => 0,
+            'transfer' => 0,
+            'total_trx' => 0,
+            'revenue' => 0,
+        ];
+
+        // --- 2. KELOMPOKKAN DATA BERDASARKAN JAM ---
+        // Mengubah '2026-04-17 09:15:00' menjadi '09:00'
+        $groupedByHour = $orders->groupBy(function ($item) {
+            return $item->created_at->format('H:00');
+        });
+
+        // --- 3. HITUNG TOTAL MASING-MASING JAM ---
+        foreach ($groupedByHour as $hour => $hourOrders) {
+            $completed = $hourOrders->where('status', 'completed')->count();
+            $pending = $hourOrders->where('status', 'pending')->count();
+            $cancelled = $hourOrders->where('status', 'cancelled')->count();
+
+            $cash = $hourOrders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count();
+            $transfer = $hourOrders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count();
+
+            $totalTrx = $hourOrders->count();
+
+            // PERUBAHAN DI SINI: Langsung jumlahkan semua total_amount tanpa memfilter status
+            $estimasiKeuntungan = $hourOrders->sum('total_amount');
+
+            // Masukkan ke array per baris
+            $tableData[] = [
+                'waktu' => $hour,
+                'completed' => $completed,
+                'pending' => $pending,
+                'cancelled' => $cancelled,
+                'cash' => $cash,
+                'transfer' => $transfer,
+                'total_trx' => $totalTrx,
+                'revenue' => $estimasiKeuntungan,
+            ];
+
+            // Tambahkan ke Grand Total Bawah
+            $totals['completed'] += $completed;
+            $totals['pending'] += $pending;
+            $totals['cancelled'] += $cancelled;
+            $totals['cash'] += $cash;
+            $totals['transfer'] += $transfer;
+            $totals['total_trx'] += $totalTrx;
+            $totals['revenue'] += $estimasiKeuntungan;
+        }
 
         // 3. Kondisi: Jika data Kosong, jangan export!
         if ($orders->isEmpty()) {
@@ -421,7 +533,7 @@ class ReportController extends Controller
         }
 
         // 4. Jika ada data, lanjut proses PDF
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('dashboard.reports.pdf_hourly', compact('orders', 'startDate', 'endDate'));
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('dashboard.reports.pdf_hourly', compact('orders', 'startDate', 'endDate', 'tableData', 'totals'));
 
         // Custom kertas ke A4 (opsional agar lebih rapi)
         $pdf->setPaper('a4', 'portrait');

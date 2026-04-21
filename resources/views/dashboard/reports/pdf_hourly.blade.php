@@ -4,151 +4,103 @@
 <head>
     <meta charset="UTF-8">
     <title>Laporan Transaksi PetShop</title>
-    <style>
-        body {
-            font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 11px;
-            color: #333;
-        }
-
-        .header {
-            text-align: center;
-            border-bottom: 2px solid #444;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        .header h2 {
-            margin: 0;
-            color: #000;
-            letter-spacing: 2px;
-        }
-
-        .info-filter {
-            margin-bottom: 15px;
-            font-style: italic;
-            color: #555;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        th {
-            background-color: #f2f2f2;
-            color: #333;
-            font-weight: bold;
-            border: 1px solid #ccc;
-            padding: 10px 5px;
-        }
-
-        td {
-            border: 1px solid #ccc;
-            padding: 8px 5px;
-            text-align: center;
-        }
-
-        .text-right {
-            text-align: right;
-        }
-
-        .text-left {
-            text-align: left;
-        }
-
-        .footer-table {
-            background-color: #f9f9f9;
-            font-weight: bold;
-        }
-
-        .badge-status {
-            padding: 3px 7px;
-            border-radius: 4px;
-            font-size: 10px;
-            text-transform: uppercase;
-        }
-
-        .bg-primary {
-            background-color: #007bff !important;
-            color: #ffffff !important;
-        }
-
-        .bg-warning {
-            background-color: #ffc107 !important;
-            color: #ffffff !important;
-        }
-
-        .text-white {
-            color: #ffffff !important;
-        }
-
-        tr.bg-primary th {
-            background-color: #007bff !important;
-            color: #ffffff !important;
-        }
-
-        tr.bg-warning td {
-            background-color: #ffc107 !important;
-            color: #ffffff !important;
-        }
-    </style>
 </head>
 
-<body>
+<body style="font-family: sans-serif; font-size: 11px; color: #333; margin: 0; padding: 20px;">
 
-    <div class="header">
-        <img src="" alt="">
-        <h2>ANDA PETSHOP</h2>
+    <div style="text-align: center; border-bottom: 2px solid #444; padding-bottom: 10px; margin-bottom: 20px;">
+        <h2 style="margin: 0; letter-spacing: 2px; font-size: 18px;">ANDA PETSHOP</h2>
         <p style="margin: 5px 0;">Jl. Raya Pisangan, Tambun Utara, Bekasi</p>
-        <p style="margin: 0; font-weight: bold;">LAPORAN TRANSAKSI PER-JAM</p>
+        <p style="margin: 0; font-weight: bold; text-transform: uppercase;">Laporan Transaksi Per-Jam</p>
     </div>
 
-    <div class="info-filter">
-        Periode: <strong>{{ date('d M Y', strtotime($startDate)) }}</strong> s/d
-        <strong>{{ date('d M Y', strtotime($endDate)) }}</strong><br>
+    <div style="margin-bottom: 15px; color: #555;">
+        Periode: <strong>{{ date('d F Y', strtotime($startDate)) }}</strong> s/d
+        <strong>{{ date('d F Y', strtotime($endDate)) }}</strong><br>
         Dicetak pada: {{ date('d/m/Y H:i') }}
     </div>
 
-    <table>
+    <table style="width: 100%; border-collapse: collapse; text-align: center; border: 1px solid #ccc;">
         <thead>
-            <tr class="bg-primary text-white">
-                <th width="5%">No</th>
-                <th width="15%">Waktu</th>
-                <th width="20%">Nama Kasir</th>
-                <th width="15%">Status</th>
-                <th width="15%">Metode</th>
-                <th width="30%">Estimasi Keuntungan</th>
+            <tr style="color: white;">
+                <th rowspan="2"
+                    style="background-color: #4472c4; border: 1px solid #ffffff; padding: 12px 5px; vertical-align: middle;">
+                    No</th>
+                <th rowspan="2"
+                    style="background-color: #4472c4; border: 1px solid #ffffff; padding: 12px 5px; vertical-align: middle;">
+                    Waktu</th>
+                <th colspan="3" style="background-color: #4472c4; border: 1px solid #ffffff; padding: 8px 5px;">
+                    Status</th>
+                <th colspan="2" style="background-color: #4472c4; border: 1px solid #ffffff; padding: 8px 5px;">
+                    Metode Pembayaran</th>
+                <th rowspan="2"
+                    style="background-color: #4472c4; border: 1px solid #ffffff; padding: 12px 5px; vertical-align: middle;">
+                    Total Transaksi</th>
+                <th rowspan="2"
+                    style="background-color: #4472c4; border: 1px solid #ffffff; padding: 12px 5px; vertical-align: middle;">
+                    Estimasi Keuntungan</th>
+            </tr>
+            <tr style="color: white; font-size: 10px;">
+                <th style="background-color: #2ebf91; border: 1px solid #ffffff; padding: 8px 2px;">Completed</th>
+                <th style="background-color: #ffc107; border: 1px solid #ffffff; padding: 8px 2px;">Pending</th>
+                <th style="background-color: #fb3909; border: 1px solid #ffffff; padding: 8px 2px;">Cancelled</th>
+                <th style="background-color: #4facfe; border: 1px solid #ffffff; padding: 8px 2px;">Cash</th>
+                <th style="background-color: #00c4ce; border: 1px solid #ffffff; padding: 8px 2px;">Transfer</th>
             </tr>
         </thead>
         <tbody>
-            @php $totalKeseluruhan = 0; @endphp
-            @foreach ($orders as $index => $order)
-                @php $totalKeseluruhan += $order->total_amount; @endphp
-                <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td>{{ $order->created_at->format('j F H:i') }}</td>
-                    <td class="text-left">{{ $order->user->name ?? 'Unknown' }}</td>
-                    <td>{{ ucfirst($order->status) }}</td>
-                    <td>{{ ucfirst(optional($order->payment)->payment_method) ?? '-' }}</td>
-                    <td class="text-right">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</td>
+            @forelse($tableData as $index => $row)
+                <tr style="background-color: {{ $index % 2 == 0 ? '#ffffff' : '#f9f9f9' }};">
+                    <td style="border: 1px solid #eee; padding: 8px 5px; color: #777;">{{ $index + 1 }}</td>
+                    <td style="border: 1px solid #eee; padding: 8px 5px;">
+                        <span
+                            style="background: #e9ecef; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #495057;">
+                            {{ $row['waktu'] }}
+                        </span>
+                    </td>
+                    <td style="border: 1px solid #eee; padding: 8px 5px;">{{ $row['completed'] }}</td>
+                    <td style="border: 1px solid #eee; padding: 8px 5px;">{{ $row['pending'] }}</td>
+                    <td style="border: 1px solid #eee; padding: 8px 5px;">{{ $row['cancelled'] }}</td>
+                    <td style="border: 1px solid #eee; padding: 8px 5px;">{{ $row['cash'] }}</td>
+                    <td style="border: 1px solid #eee; padding: 8px 5px;">{{ $row['transfer'] }}</td>
+                    <td style="border: 1px solid #eee; padding: 8px 5px; font-weight: bold; color: #444;">
+                        {{ $row['total_trx'] }}</td>
+                    <td
+                        style="border: 1px solid #eee; padding: 8px 5px; text-align: right; font-weight: bold; color: #28a745; padding-right: 15px;">
+                        Rp {{ number_format($row['revenue'], 0, ',', '.') }}
+                    </td>
                 </tr>
-            @endforeach
+            @empty
+                <tr>
+                    <td colspan="9" style="padding: 30px; color: #999; border: 1px solid #eee;">Data transaksi tidak
+                        tersedia untuk periode ini.</td>
+                </tr>
+            @endforelse
         </tbody>
         <tfoot>
-            <tr class="footer-table bg-warning text-white">
-                <td colspan="5" class="text-right">ESTIMASI TOTAL KEUNTUNGAN:</td>
-                <td class="text-right">Rp {{ number_format($totalKeseluruhan, 0, ',', '.') }}
+            <tr style="background-color: #ffc107; color: white; font-weight: bold; font-size: 12px;">
+                <td colspan="2"
+                    style="border: 1px solid #ffc107; padding: 12px 5px; text-align: right; padding-right: 10px; text-transform: uppercase;">
+                    Total :</td>
+                <td style="border: 1px solid #ffc107; padding: 12px 5px;">{{ $totals['completed'] }}</td>
+                <td style="border: 1px solid #ffc107; padding: 12px 5px;">{{ $totals['pending'] }}</td>
+                <td style="border: 1px solid #ffc107; padding: 12px 5px;">{{ $totals['cancelled'] }}</td>
+                <td style="border: 1px solid #ffc107; padding: 12px 5px;">{{ $totals['cash'] }}</td>
+                <td style="border: 1px solid #ffc107; padding: 12px 5px;">{{ $totals['transfer'] }}</td>
+                <td style="border: 1px solid #ffc107; padding: 12px 5px;">{{ $totals['total_trx'] }}</td>
+                <td style="border: 1px solid #ffc107; padding: 12px 5px; text-align: right; padding-right: 15px;">
+                    Rp {{ number_format($totals['revenue'], 0, ',', '.') }}
                 </td>
             </tr>
         </tfoot>
     </table>
 
-    <div style="margin-top: 30px; text-align: right;">
-        <p>Bekasi, {{ date('d M Y') }}</p>
-        <br><br><br>
-        <p>( ____________________ )<br>Manager Operasional</p>
+    <div style="margin-top: 40px; text-align: right; padding-right: 30px;">
+        <p>Bekasi, {{ date('d F Y') }}</p>
+        <div style="margin-top: 60px;">
+            <p style="margin-bottom: 0; font-weight: bold;">( ____________________ )</p>
+            <p style="margin-top: 5px; color: #666;">Manager Operasional</p>
+        </div>
     </div>
 
 </body>
