@@ -16,8 +16,6 @@
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/bb8a89d0cb.js" crossorigin="anonymous"></script>
 
-    @stack('styles')
-
     <style>
         body {
             font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
@@ -58,6 +56,8 @@
             }
         }
     </style>
+
+    @stack('styles')
 
 </head>
 

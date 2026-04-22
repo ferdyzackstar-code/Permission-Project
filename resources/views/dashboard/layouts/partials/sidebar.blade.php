@@ -1,3 +1,52 @@
+<style>
+    #accordionSidebar .nav-item .collapse .collapse-inner,
+    #accordionSidebar .nav-item .collapsing .collapse-inner {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    #accordionSidebar .nav-item .nav-link span,
+    #accordionSidebar .nav-item .collapse .collapse-inner a.collapse-item,
+    #accordionSidebar .nav-item .collapsing .collapse-inner a.collapse-item {
+        white-space: normal !important;
+        font-size: 0.85rem !important;
+        line-height: 1 !important;
+        display: inline-block;
+        vertical-align: middle;
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+
+    #accordionSidebar .nav-item .nav-link {
+        padding: 0.6rem 0.75rem !important;
+    }
+
+    #accordionSidebar .nav-item .collapse .collapse-inner a.collapse-item,
+    #accordionSidebar .nav-item .collapsing .collapse-inner a.collapse-item {
+        padding: 0.6rem 1rem !important;
+        margin: 0 !important;
+    }
+
+    #accordionSidebar .nav-item .collapse .collapse-inner a.collapse-item:hover,
+    #accordionSidebar .nav-item .collapsing .collapse-inner a.collapse-item:hover {
+        color: #ffffff !important;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    #accordionSidebar .nav-item .collapse .collapse-inner a.collapse-item.active,
+    #accordionSidebar .nav-item .collapsing .collapse-inner a.collapse-item.active {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        background-color: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    @media (max-width: 768px) {
+        #accordionSidebar .nav-item .nav-link span {
+            font-size: 0.7rem !important;
+        }
+    }
+</style>
+
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion sticky-top" id="accordionSidebar">
 
     <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ route('dashboard.index') }}">
@@ -18,7 +67,7 @@
     <hr class="sidebar-divider">
 
     {{-- GRUP TRANSAKSI KASIR --}}
-    @canany(['order.pos', 'order.history','order.confirm'])
+    @canany(['order.pos', 'order.history', 'order.confirm'])
 
         <div class="sidebar-heading">Transaksi</div>
 
@@ -39,11 +88,11 @@
         @endcan
 
         @can('order.confirm')
-        <li class="nav-item {{ request()->routeIs('dashboard.orders.confirmation*') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('dashboard.orders.confirmation') }}">
-                <i class="fas fa-fw fa-receipt"></i>
-                <span>Konfirmasi Pembayaran</span></a>
-        </li>
+            <li class="nav-item {{ request()->routeIs('dashboard.orders.confirmation*') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('dashboard.orders.confirmation') }}">
+                    <i class="fas fa-fw fa-receipt"></i>
+                    <span>Konfirmasi Pembayaran</span></a>
+            </li>
         @endcan
     @endcanany
 
@@ -64,7 +113,7 @@
             <div id="collapseLogistik"
                 class="collapse {{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/outlets*', 'dashboard/suppliers*') ? 'show' : '' }}"
                 data-parent="#accordionSidebar">
-                <div class="bg-white py-2 collapse-inner rounded">
+                <div class="py-2 collapse-inner">
                     @can('category.index')
                         <a class="collapse-item {{ request()->is('dashboard/categories*') ? 'active' : '' }}"
                             href="{{ route('dashboard.categories.index') }}">
@@ -111,22 +160,18 @@
         </a>
         <div id="collapseLaporan" class="collapse {{ request()->is('dashboard/reports*') ? 'show' : '' }}"
             data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item {{ request()->is('dashboard/reports') ? 'active' : '' }}"
-                    href="{{ route('dashboard.reports.index') }}">Ringkasan Laporan</a>
-
-                <a class="collapse-item {{ request()->is('dashboard/reports/income') ? 'active' : '' }}"
-                    href="{{ route('dashboard.reports.income') }}">Laporan Pemasukan</a>
-
-                <a class="collapse-item {{-- {{ request()->is('dashboard/reports*') ? 'active' : '' }} --}}" href="#">Laporan Pengeluaran</a>
-
-                <a class="collapse-item {{ request()->is('dashboard/reports/hourly') ? 'active' : '' }}" href="{{ route('dashboard.reports.hourly') }}">Laporan Per-jam</a>
+            <div class="py-2 collapse-inner">
+                <a class="collapse-item {{ request()->is('dashboard/reports/hourly') ? 'active' : '' }}"
+                    href="{{ route('dashboard.reports.hourly') }}">
+                    <i class="fa-solid fa-clock"></i> Laporan Per-jam</a>
 
                 <a class="collapse-item {{ request()->is('dashboard/reports/daily') ? 'active' : '' }}"
-                    href="{{ route('dashboard.reports.daily') }}">Laporan Harian</a>
+                    href="{{ route('dashboard.reports.daily') }}"><i class="fa-solid fa-calendar-days"></i> Laporan
+                    Harian</a>
 
                 <a class="collapse-item {{ request()->is('dashboard/reports/monthly') ? 'active' : '' }}"
-                    href="{{ route('dashboard.reports.monthly') }}">Laporan Bulanan</a>
+                    href="{{ route('dashboard.reports.monthly') }}"><i class="fa-solid fa-calendar-week"></i> Laporan
+                    Bulanan</a>
             </div>
         </div>
         </class=>
@@ -145,7 +190,7 @@
             <div id="collapseSystem"
                 class="collapse {{ request()->is('dashboard/users*', 'dashboard/roles*', 'dashboard/permissions*') ? 'show' : '' }}"
                 data-parent="#accordionSidebar">
-                <div class="bg-white py-2 collapse-inner rounded">
+                <div class="py-2 collapse-inner">
                     @can('user.index')
                         <a class="collapse-item {{ request()->is('dashboard/users*') ? 'active' : '' }}"
                             href="{{ route('dashboard.users.index') }}"><i class="fa-solid fa-user-shield"></i> User

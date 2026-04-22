@@ -25,8 +25,7 @@
             <tr style="color: white;">
                 <th rowspan="2" style="background-color: #4472c4; border: 1px solid #fff; padding: 10px 2px;">NO</th>
                 <th rowspan="2"
-                    style="background-color: #4472c4; border: 1px solid #fff; padding: 10px 2px; width: 20%;">HARI,
-                    TANGGAL</th>
+                    style="background-color: #4472c4; border: 1px solid #fff; padding: 10px 2px; width: 20%;">WAKTU</th>
                 <th colspan="3" style="background-color: #4472c4; border: 1px solid #fff; padding: 5px;">STATUS</th>
                 <th colspan="2" style="background-color: #4472c4; border: 1px solid #fff; padding: 5px;">METODE PEMBAYARAN</th>
                 <th rowspan="2" style="background-color: #4472c4; border: 1px solid #fff; padding: 10px 2px;">TOTAL
@@ -46,7 +45,7 @@
             @foreach ($tableData as $index => $row)
                 <tr style="background-color: {{ $index % 2 == 0 ? '#ffffff' : '#f9f9f9' }};">
                     <td style="border: 1px solid #ccc; padding: 8px 2px;">{{ $index + 1 }}</td>
-                    <td style="border: 1px solid #ccc; padding: 8px 2px; text-align: left; padding-left: 5px;">
+                    <td style="border: 1px solid #ccc; padding: 8px 2px; text-align: center; padding-left: 5px;">
                         {{ $row['date_formatted'] }}</td>
                     <td style="border: 1px solid #ccc; padding: 8px 2px;">{{ $row['completed'] }}</td>
                     <td style="border: 1px solid #ccc; padding: 8px 2px;">{{ $row['pending'] }}</td>

@@ -94,10 +94,10 @@
                             <div class="col mr-2">
                                 <p class="small font-weight-bold mb-1 text-uppercase text-white-50">TOTAL TRANSAKSI</p>
                                 <h3 class="mb-0 font-weight-bold">{{ $totalTransaksiKeseluruhan }}</h3>
-                                <div class="small mt-1">Sesuai filter</div>
+                                <div class="small mt-1">Berdasarkan filter</div>
                             </div>
                             <div class="col-auto">
-                                <i class="fas fa-shopping-cart fa-3x text-white-50"></i>
+                                <i class="fas fa-shopping-basket fa-3x text-white-50"></i>
                             </div>
                         </div>
                     </div>
@@ -112,10 +112,10 @@
                                 <p class="small font-weight-bold mb-1 text-uppercase text-white-50">ESTIMASI KEUNTUNGAN</p>
                                 <h3 class="mb-0 font-weight-bold">Rp
                                     {{ number_format($totalKeuntunganKeseluruhan, 0, ',', '.') }}</h3>
-                                <div class="small mt-1">Sesuai filter</div>
+                                <div class="small mt-1">Berdasarkan filter</div>
                             </div>
                             <div class="col-auto">
-                                <i class="fas fa-money-bill-wave fa-3x text-white-50"></i>
+                                <i class="fas fa-hand-holding-usd fa-3x text-white-50"></i>
                             </div>
                         </div>
                     </div>
