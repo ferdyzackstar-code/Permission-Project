@@ -78,6 +78,61 @@ class PurchaseController extends Controller
         }
     }
 
+    public function update(Request $request, $id)
+    {
+        $purchase = Purchase::with('items')->findOrFail($id);
+
+        // Bersihkan format harga
+        $cleanPrices = array_map(function ($price) {
+            return (float) preg_replace('/[^0-9]/', '', $price);
+        }, $request->price);
+
+        DB::beginTransaction();
+        try {
+            // 1. ROLLBACK STOK LAMA
+            foreach ($purchase->items as $oldItem) {
+                Product::where('id', $oldItem->product_id)->decrement('stock', $oldItem->quantity);
+            }
+
+            // 2. HAPUS DETAIL LAMA
+            $purchase->items()->delete();
+
+            // 3. HITUNG TOTAL BARU & SIMPAN DETAIL BARU
+            $totalAmount = 0;
+            for ($i = 0; $i < count($request->product_id); $i++) {
+                $qty = $request->quantity[$i];
+                $price = $cleanPrices[$i];
+                $subtotal = $qty * $price;
+                $totalAmount += $subtotal;
+
+                PurchaseItem::create([
+                    'purchase_id' => $purchase->id,
+                    'product_id' => $request->product_id[$i],
+                    'quantity' => $qty,
+                    'price' => $price,
+                    'subtotal' => $subtotal,
+                ]);
+
+                // 4. UPDATE STOK BARU
+                Product::where('id', $request->product_id[$i])->increment('stock', $qty);
+            }
+
+            // 5. UPDATE HEADER (PURCHASES)
+            $purchase->update([
+                'supplier_id' => $request->supplier_id,
+                'purchase_date' => $request->purchase_date,
+                'total_amount' => $totalAmount,
+                'notes' => $request->notes,
+            ]);
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Pembelian berhasil diperbarui!']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Gagal update: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function show($id)
     {
         // Load relasi penuh untuk ditampilkan di modal detail

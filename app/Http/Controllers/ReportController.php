@@ -35,23 +35,42 @@ class ReportController extends Controller
 
         $orders = $query->oldest()->get();
 
+        $tableData = [];
+        $totals = [
+            'completed' => 0,
+            'pending' => 0,
+            'cancelled' => 0,
+            'cash' => 0,
+            'transfer' => 0,
+            'total_trx' => 0,
+            'revenue' => 0,
+        ];
+        $hourlyData = collect();
+
         $hourlyData = $orders->groupBy(function ($order) {
             return Carbon::parse($order->created_at)->format('H:00');
         });
 
-        foreach ($hourlyData as $hour => $hourOrders) {
-            $tableData[] = [
-                'hour_raw' => $hour,
-                'hour_formatted' => $hour,
-                'completed' => $hourOrders->where('status', 'completed')->count(),
-                'pending' => $hourOrders->where('status', 'pending')->count(),
-                'cancelled' => $hourOrders->where('status', 'cancelled')->count(),
-                'cash' => $hourOrders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
-                'transfer' => $hourOrders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
-                'total_trx' => $hourOrders->count(),
-                'revenue' => $hourOrders->sum('total_amount'),
-            ];
+        if ($orders->isNotEmpty()) {
+            $hourlyData = $orders->groupBy(function ($order) {
+                return \Carbon\Carbon::parse($order->created_at)->format('H:00');
+            });
 
+            foreach ($hourlyData as $hour => $hourOrders) {
+                $tableData[] = [
+                    'hour_raw' => $hour,
+                    'hour_formatted' => $hour,
+                    'completed' => $hourOrders->where('status', 'completed')->count(),
+                    'pending' => $hourOrders->where('status', 'pending')->count(),
+                    'cancelled' => $hourOrders->where('status', 'cancelled')->count(),
+                    'cash' => $hourOrders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
+                    'transfer' => $hourOrders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
+                    'total_trx' => $hourOrders->count(),
+                    'revenue' => $hourOrders->sum('total_amount'),
+                ];
+            }
+
+            // Hitung total di luar loop (biar lebih cepat)
             $totals = [
                 'completed' => $orders->where('status', 'completed')->count(),
                 'pending' => $orders->where('status', 'pending')->count(),
@@ -223,7 +242,7 @@ class ReportController extends Controller
             'total_trx' => $orders->count(),
             'revenue' => $orders->sum('total_amount'),
         ];
-        
+
         $tableData = collect($tableData)->sortBy('date_raw')->values();
 
         $totalTransaksiKeseluruhan = $orders->count();
@@ -234,7 +253,7 @@ class ReportController extends Controller
         $peakDateTrxCount = $peakDateRow ? $peakDateRow['total_trx'] : 0;
 
         $chartDates = $tableData->pluck('date_raw')->map(function ($date) {
-            return \Carbon\Carbon::parse($date)->translatedFormat('d F'); 
+            return \Carbon\Carbon::parse($date)->translatedFormat('d F');
         });
         $chartVolume = $tableData->pluck('total_trx');
 
@@ -243,19 +262,18 @@ class ReportController extends Controller
         $chartStatusCancelled = [];
 
         foreach ($tableData as $row) {
-            
             $dayOrders = $dailyData[$row['date_raw']];
 
             $chartStatusCompleted[] = $dayOrders->where('status', 'completed')->count();
             $chartStatusPending[] = $dayOrders->where('status', 'pending')->count();
             $chartStatusCancelled[] = $dayOrders->where('status', 'cancelled')->count();
         }
-        
+
         $pieData = [
             'cash' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'cash')->count(),
             'transfer' => $orders->filter(fn($o) => optional($o->payment)->payment_method == 'transfer')->count(),
         ];
-        
+
         $cashierData = $orders
             ->groupBy('user_id')
             ->map(function ($group) {
@@ -361,7 +379,6 @@ class ReportController extends Controller
             return redirect()->back()->with('error', 'Gagal Export: Tidak ada data transaksi pada filter yang dipilih.');
         }
 
-        
         $monthlyData = $orders->groupBy(function ($order) {
             return Carbon::parse($order->created_at)->format('Y-m');
         });
@@ -463,7 +480,6 @@ class ReportController extends Controller
             return redirect()->back()->with('error', 'Gagal Export: Tidak ada data transaksi pada filter yang dipilih.');
         }
 
-        
         $monthlyData = $orders->groupBy(function ($order) {
             return Carbon::parse($order->created_at)->format('Y-m');
         });
