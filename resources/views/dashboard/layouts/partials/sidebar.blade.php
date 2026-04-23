@@ -69,7 +69,32 @@
     {{-- GRUP TRANSAKSI KASIR --}}
     @canany(['order.pos', 'order.history', 'order.confirm'])
 
-        <div class="sidebar-heading">Transaksi</div>
+        <div class="sidebar-heading">PENJUALAN</div>
+        <li class="nav-item {{ request()->is('dashboard/reports*') ? 'active' : '' }}">
+            <a class="nav-link {{ request()->is('dashboard/reports*') ? '' : 'collapsed' }}" href="#"
+                data-toggle="collapse" data-target="#collapseLaporan"
+                aria-expanded="{{ request()->is('dashboard/reports*') ? 'true' : 'false' }}"
+                aria-controls="collapseLaporan">
+                <i class="fa-solid fa-chart-bar"></i>
+                <span>Laporan</span>
+            </a>
+            <div id="collapseLaporan" class="collapse {{ request()->is('dashboard/reports*') ? 'show' : '' }}"
+                data-parent="#accordionSidebar">
+                <div class="py-2 collapse-inner">
+                    <a class="collapse-item {{ request()->is('dashboard/reports/hourly') ? 'active' : '' }}"
+                        href="{{ route('dashboard.reports.hourly') }}">
+                        <i class="fa-solid fa-clock"></i> Laporan Per-jam</a>
+
+                    <a class="collapse-item {{ request()->is('dashboard/reports/daily') ? 'active' : '' }}"
+                        href="{{ route('dashboard.reports.daily') }}"><i class="fa-solid fa-calendar-days"></i> Laporan
+                        Harian</a>
+
+                    <a class="collapse-item {{ request()->is('dashboard/reports/monthly') ? 'active' : '' }}"
+                        href="{{ route('dashboard.reports.monthly') }}"><i class="fa-solid fa-calendar-week"></i> Laporan
+                        Bulanan</a>
+                </div>
+            </div>
+        </li>
 
         @can('order.pos')
             <li class="nav-item {{ request()->routeIs('dashboard.orders.pos') ? 'active' : '' }}">
@@ -95,6 +120,23 @@
             </li>
         @endcan
     @endcanany
+
+    <hr class="sidebar-divider">
+
+    {{-- GRUP PEMBELIAN --}}
+    <div class="sidebar-heading">Pembelian</div>
+
+    <li class="nav-item {{ request()->routeIs('dashboard.purchases.index') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('dashboard.purchases.index') }}">
+            <i class="fa-solid fa-cart-plus"></i>
+            <span>Pembelian</span></a>
+    </li>
+
+    <li class="nav-item {{-- {{ request()->routeIs('dashboard.orders.index*') ? 'active' : '' }} --}}">
+        <a class="nav-link" href="#{{-- {{ route('dashboard.orders.index') }} --}}">
+            <i class="fa-solid fa-box-open"></i>
+            <span>Item Pembelian</span></a>
+    </li>
 
     <hr class="sidebar-divider">
 
@@ -148,39 +190,9 @@
 
     <hr class="sidebar-divider">
 
-    {{-- GRUP LAPORAN --}}
-    <div class="sidebar-heading">Laporan Penjualan</div>
-    <li class="nav-item {{ request()->is('dashboard/reports*') ? 'active' : '' }}">
-        <a class="nav-link {{ request()->is('dashboard/reports*') ? '' : 'collapsed' }}" href="#"
-            data-toggle="collapse" data-target="#collapseLaporan"
-            aria-expanded="{{ request()->is('dashboard/reports*') ? 'true' : 'false' }}"
-            aria-controls="collapseLaporan">
-            <i class="fa-solid fa-chart-bar"></i>
-            <span>Laporan</span>
-        </a>
-        <div id="collapseLaporan" class="collapse {{ request()->is('dashboard/reports*') ? 'show' : '' }}"
-            data-parent="#accordionSidebar">
-            <div class="py-2 collapse-inner">
-                <a class="collapse-item {{ request()->is('dashboard/reports/hourly') ? 'active' : '' }}"
-                    href="{{ route('dashboard.reports.hourly') }}">
-                    <i class="fa-solid fa-clock"></i> Laporan Per-jam</a>
-
-                <a class="collapse-item {{ request()->is('dashboard/reports/daily') ? 'active' : '' }}"
-                    href="{{ route('dashboard.reports.daily') }}"><i class="fa-solid fa-calendar-days"></i> Laporan
-                    Harian</a>
-
-                <a class="collapse-item {{ request()->is('dashboard/reports/monthly') ? 'active' : '' }}"
-                    href="{{ route('dashboard.reports.monthly') }}"><i class="fa-solid fa-calendar-week"></i> Laporan
-                    Bulanan</a>
-            </div>
-        </div>
-        </class=>
-
-        <hr class="sidebar-divider">
-
-        {{-- GRUP SETTINGS --}}
-        @canany(['user.index', 'role.index', 'permission.index'])
-            <div class="sidebar-heading">System Settings</div>
+    {{-- GRUP SETTINGS --}}
+    @canany(['user.index', 'role.index', 'permission.index'])
+        <div class="sidebar-heading">System Settings</div>
         <li class="nav-item {{ request()->is('dashboard/users*', 'roles*', 'dashboard/permissions*') ? 'active' : '' }}">
             <a class="nav-link {{ request()->is('dashboard/users*', 'dashboard/roles*', 'dashboard/permissions*') ? '' : 'collapsed' }}"
                 href="#" data-toggle="collapse" data-target="#collapseSystem">

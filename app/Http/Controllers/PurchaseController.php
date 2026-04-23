@@ -3,88 +3,108 @@
 namespace App\Http\Controllers;
 
 use App\Models\Purchase;
+use App\Models\PurchaseItem;
+use App\Models\Product;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
-use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class PurchaseController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        if ($request->ajax()) {
-            $data = Purchase::with('supplier')->select('purchases.*');
-            return DataTables::of($data)
-                ->addIndexColumn()
-                ->editColumn('purchase_date', fn($row) => Carbon::parse($row->purchase_date)->format('d/m/Y'))
-                ->editColumn('status', function ($row) {
-                    $color = $row->status == 'received' ? 'success' : 'warning';
-                    return '<span class="badge bg-' . $color . '">' . ucfirst($row->status) . '</span>';
-                })
-                ->addColumn('action', function ($row) {
-                    return '
-                        <button class="btn btn-sm btn-info text-white show-btn" data-id="' .
-                        $row->id .
-                        '">Detail</button>
-                        <button class="btn btn-sm btn-warning edit-btn" data-id="' .
-                        $row->id .
-                        '">Edit</button>
-                        <button class="btn btn-sm btn-danger delete-btn" data-id="' .
-                        $row->id .
-                        '">Delete</button>
-                    ';
-                })
-                ->rawColumns(['status', 'action'])
-                ->make(true);
-        }
-
+        $purchases = Purchase::with('supplier')->latest()->get();
         $suppliers = Supplier::all();
-        return view('dashboard.purchases.index', compact('suppliers'));
+        $products = Product::all(); // Untuk dropdown di modal
+
+        return view('dashboard.purchases.index', compact('purchases', 'suppliers', 'products'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'supplier_id' => 'required',
-            'purchase_date' => 'required|date',
-        ]);
+        // Bersihkan format harga dari "Rp. 1.000.000" menjadi "1000000"
+        $cleanPrices = array_map(function ($price) {
+            return (float) preg_replace('/[^0-9]/', '', $price);
+        }, $request->price);
 
-        $datePrefix = Carbon::parse($request->purchase_date)->format('Ymd');
-        $last = Purchase::whereDate('purchase_date', $request->purchase_date)->latest('id')->first();
-        $seq = $last ? intval(substr($last->purchase_number, -4)) + 1 : 1;
+        DB::beginTransaction();
+        try {
+            // 1. Generate PO Number
+            $datePrefix = Carbon::parse($request->purchase_date)->format('Ymd');
+            $last = Purchase::whereDate('purchase_date', $request->purchase_date)->latest('id')->first();
+            $seq = $last ? intval(substr($last->purchase_number, -4)) + 1 : 1;
+            $poNumber = 'PO-' . $datePrefix . '-' . str_pad($seq, 4, '0', STR_PAD_LEFT);
 
-        $purchase = Purchase::create([
-            'supplier_id' => $request->supplier_id,
-            'purchase_date' => $request->purchase_date,
-            'purchase_number' => 'PO-' . $datePrefix . '-' . str_pad($seq, 4, '0', STR_PAD_LEFT),
-            'notes' => $request->notes,
-            'status' => 'pending',
-        ]);
+            // 2. Hitung Grand Total dari Array
+            $totalAmount = 0;
+            for ($i = 0; $i < count($request->product_id); $i++) {
+                $totalAmount += $request->quantity[$i] * $cleanPrices[$i];
+            }
 
-        return response()->json(['success' => 'Purchase created!']);
+            // 3. Simpan Header (Purchases)
+            $purchase = Purchase::create([
+                'supplier_id' => $request->supplier_id,
+                'purchase_date' => $request->purchase_date,
+                'purchase_number' => $poNumber,
+                'total_amount' => $totalAmount,
+                'notes' => $request->notes,
+                'status' => 'received', // Asumsi barang langsung masuk stok
+            ]);
+
+            // 4. Simpan Detail (Purchase Items) & Update Stok
+            for ($i = 0; $i < count($request->product_id); $i++) {
+                $qty = $request->quantity[$i];
+                $price = $cleanPrices[$i];
+                $subtotal = $qty * $price;
+
+                PurchaseItem::create([
+                    'purchase_id' => $purchase->id,
+                    'product_id' => $request->product_id[$i],
+                    'quantity' => $qty,
+                    'price' => $price,
+                    'subtotal' => $subtotal,
+                ]);
+
+                // Update Stok Produk
+                Product::where('id', $request->product_id[$i])->increment('stock', $qty);
+            }
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Pembelian berhasil disimpan!']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
     }
 
     public function show($id)
     {
-        // Load relasi agar data supplier muncul di modal detail
-        return response()->json(Purchase::with('supplier')->findOrFail($id));
-    }
-
-    public function edit($id)
-    {
-        return response()->json(Purchase::findOrFail($id));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $purchase = Purchase::findOrFail($id);
-        $purchase->update($request->all());
-        return response()->json(['success' => 'Purchase updated!']);
+        // Load relasi penuh untuk ditampilkan di modal detail
+        $purchase = Purchase::with(['supplier', 'items.product'])->findOrFail($id);
+        return response()->json($purchase);
     }
 
     public function destroy($id)
     {
-        Purchase::destroy($id);
-        return response()->json(['success' => 'Deleted!']);
+        $purchase = Purchase::with('items')->findOrFail($id);
+
+        DB::beginTransaction();
+        try {
+            // Kembalikan stok produk sebelum menghapus item
+            foreach ($purchase->items as $item) {
+                Product::where('id', $item->product_id)->decrement('stock', $item->quantity);
+            }
+
+            // Hapus items lalu hapus purchase (atau biarkan foreign key cascade yang bekerja jika sudah diset di database)
+            $purchase->items()->delete();
+            $purchase->delete();
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Data berhasil dihapus']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Gagal menghapus data'], 500);
+        }
     }
 }
