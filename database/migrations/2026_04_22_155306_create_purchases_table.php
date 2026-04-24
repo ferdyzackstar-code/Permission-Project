@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('purchase_number')->unique();
             $table->decimal('total_amount', 12, 2)->default(0);;
             $table->text('notes')->nullable();
-            $table->enum('status', ['pending', 'received'])->default('pending');
+            $table->enum('status', ['pending', 'received','cancelled'])->default('pending');
             $table->timestamps();
         });
     }

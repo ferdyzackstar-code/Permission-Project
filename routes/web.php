@@ -46,7 +46,15 @@ Route::group(['middleware' => ['auth'], 'prefix' => 'dashboard', 'as' => 'dashbo
     Route::get('/get-subcategories/{parentId}', [ProductController::class, 'getSubCategories'])->name('products.getSubCategories');
     Route::resource('categories', CategoryController::class);
     Route::resource('suppliers', SupplierController::class);
-    Route::resource('purchases', PurchaseController::class);
+
+    Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
+    Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
+    Route::get('/purchases/{id}', [PurchaseController::class, 'show'])->name('purchases.show');
+    Route::put('/purchases/{id}', [PurchaseController::class, 'update'])->name('purchases.update');
+
+    Route::get('/purchases-confirmation', [PurchaseController::class, 'confirmation'])->name('purchases.confirmation');
+    Route::post('/purchases/{id}/approve', [PurchaseController::class, 'approve'])->name('purchases.approve');
+    Route::post('/purchases/{id}/cancel', [PurchaseController::class, 'cancel'])->name('purchases.cancel');
 
     Route::get('/orders/confirmation', [OrderController::class, 'confirmation'])->name('orders.confirmation');
 
@@ -72,7 +80,6 @@ Route::group(['middleware' => ['auth'], 'prefix' => 'dashboard', 'as' => 'dashbo
     Route::get('/reports/monthly/export', [ReportController::class, 'exportMonthlyPdf'])->name('reports.monthly.export');
     Route::get('/reports/hourly', [ReportController::class, 'hourlyReport'])->name('reports.hourly');
     Route::get('/reports/hourly/export', [ReportController::class, 'exportHourlyPdf'])->name('reports.hourly.export');
-
 });
 
 Route::group(['middleware' => ['auth']], function () {

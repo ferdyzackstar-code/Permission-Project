@@ -14,11 +14,21 @@ class PurchaseController extends Controller
 {
     public function index()
     {
-        $purchases = Purchase::with('supplier')->latest()->get();
+        $purchases = Purchase::with('supplier')
+            ->whereIn('status', ['received', 'cancelled'])
+            ->latest()
+            ->get();
+
         $suppliers = Supplier::all();
         $products = Product::all();
 
-        return view('dashboard.purchases.index', compact('purchases', 'suppliers', 'products'));
+        // Info Cards Data
+        $totalProducts = Product::count();
+        $pendingPurchases = Purchase::where('status', 'pending')->count();
+        $receivedPurchases = Purchase::where('status', 'received')->count();
+        $cancelledPurchases = Purchase::where('status', 'cancelled')->count();
+
+        return view('dashboard.purchases.index', compact('purchases', 'suppliers', 'products', 'totalProducts', 'pendingPurchases', 'receivedPurchases', 'cancelledPurchases'));
     }
 
     public function store(Request $request)
@@ -26,7 +36,6 @@ class PurchaseController extends Controller
         $validated = $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
             'purchase_date' => 'required|date',
-            'status' => 'required|in:pending,received',
             'notes' => 'nullable|string',
             'product_id' => 'required|array',
             'product_id.*' => 'required|exists:products,id',
@@ -41,25 +50,29 @@ class PurchaseController extends Controller
 
         DB::beginTransaction();
         try {
+            // Generate PO Number
             $datePrefix = Carbon::parse($request->purchase_date)->format('Ymd');
             $last = Purchase::whereDate('purchase_date', $request->purchase_date)->latest('id')->first();
             $seq = $last ? intval(substr($last->purchase_number, -4)) + 1 : 1;
             $poNumber = 'PO-' . $datePrefix . '-' . str_pad($seq, 4, '0', STR_PAD_LEFT);
 
+            // Calculate Grand Total
             $totalAmount = 0;
             for ($i = 0; $i < count($request->product_id); $i++) {
                 $totalAmount += $request->quantity[$i] * $cleanPrices[$i];
             }
 
+            // Create Purchase Header - Status always 'pending' on create
             $purchase = Purchase::create([
                 'supplier_id' => $request->supplier_id,
                 'purchase_date' => $request->purchase_date,
                 'purchase_number' => $poNumber,
                 'total_amount' => $totalAmount,
                 'notes' => $request->notes,
-                'status' => $request->status, 
+                'status' => 'pending', // Always pending on create
             ]);
 
+            // Create Purchase Items - Stock NOT incremented yet
             for ($i = 0; $i < count($request->product_id); $i++) {
                 $qty = $request->quantity[$i];
                 $price = $cleanPrices[$i];
@@ -73,17 +86,22 @@ class PurchaseController extends Controller
                     'price' => $price,
                     'subtotal' => $subtotal,
                 ]);
-
-                if ($request->status === 'received') {
-                    Product::where('id', $productId)->increment('stock', $qty);
-                }
             }
 
             DB::commit();
-            return response()->json(['success' => true, 'message' => 'Pembelian berhasil disimpan!']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Pesanan pembelian berhasil dibuat! Menunggu konfirmasi.',
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Error: ' . $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
 
@@ -91,10 +109,20 @@ class PurchaseController extends Controller
     {
         $purchase = Purchase::with('items')->findOrFail($id);
 
+        // Only allow editing if status is 'pending'
+        if ($purchase->status !== 'pending') {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Hanya pesanan dengan status Pending yang dapat diedit!',
+                ],
+                403,
+            );
+        }
+
         $validated = $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
             'purchase_date' => 'required|date',
-            'status' => 'required|in:pending,received',
             'notes' => 'nullable|string',
             'product_id' => 'required|array',
             'quantity' => 'required|array',
@@ -107,15 +135,11 @@ class PurchaseController extends Controller
 
         DB::beginTransaction();
         try {
-            if ($purchase->status === 'received') {
-                foreach ($purchase->items as $oldItem) {
-                    Product::where('id', $oldItem->product_id)->decrement('stock', $oldItem->quantity);
-                }
-            }
-
+            // Delete old items
             $purchase->items()->delete();
 
             $totalAmount = 0;
+            // Create new items
             for ($i = 0; $i < count($request->product_id); $i++) {
                 $qty = $request->quantity[$i];
                 $price = $cleanPrices[$i];
@@ -130,25 +154,30 @@ class PurchaseController extends Controller
                     'price' => $price,
                     'subtotal' => $subtotal,
                 ]);
-
-                if ($request->status === 'received') {
-                    Product::where('id', $productId)->increment('stock', $qty);
-                }
             }
 
+            // Update purchase header
             $purchase->update([
                 'supplier_id' => $request->supplier_id,
                 'purchase_date' => $request->purchase_date,
                 'total_amount' => $totalAmount,
                 'notes' => $request->notes,
-                'status' => $request->status,
             ]);
 
             DB::commit();
-            return response()->json(['success' => true, 'message' => 'Pembelian berhasil diperbarui!']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Pesanan pembelian berhasil diperbarui!',
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Gagal update: ' . $e->getMessage()], 500);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Gagal update: ' . $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
 
@@ -158,26 +187,90 @@ class PurchaseController extends Controller
         return response()->json($purchase);
     }
 
-    public function destroy($id)
+    // NEW: Confirmation Page
+    public function confirmation()
+    {
+        $pendingPurchases = Purchase::with('supplier')->where('status', 'pending')->latest()->get();
+
+        return view('dashboard.purchases.confirmation', compact('pendingPurchases'));
+    }
+
+    // NEW: Approve Purchase
+    public function approve($id)
     {
         $purchase = Purchase::with('items')->findOrFail($id);
 
+        if ($purchase->status !== 'pending') {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Hanya pesanan Pending yang dapat disetujui!',
+                ],
+                403,
+            );
+        }
+
         DB::beginTransaction();
         try {
-            if ($purchase->status === 'received') {
-                foreach ($purchase->items as $item) {
-                    Product::where('id', $item->product_id)->decrement('stock', $item->quantity);
-                }
+            // Update status to received
+            $purchase->update(['status' => 'received']);
+
+            // Increment stock for all items
+            foreach ($purchase->items as $item) {
+                Product::where('id', $item->product_id)->increment('stock', $item->quantity);
             }
 
-            $purchase->items()->delete();
-            $purchase->delete();
-
             DB::commit();
-            return response()->json(['success' => true, 'message' => 'Data berhasil dihapus']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Pesanan berhasil disetujui! Stok produk telah ditambahkan.',
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Gagal menghapus data'], 500);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Gagal menyetujui: ' . $e->getMessage(),
+                ],
+                500,
+            );
+        }
+    }
+
+    // NEW: Cancel Purchase
+    public function cancel($id)
+    {
+        $purchase = Purchase::findOrFail($id);
+
+        if ($purchase->status !== 'pending') {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Hanya pesanan Pending yang dapat dibatalkan!',
+                ],
+                403,
+            );
+        }
+
+        DB::beginTransaction();
+        try {
+            // Update status to cancelled - Stock is NOT incremented
+            $purchase->update(['status' => 'cancelled']);
+
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => 'Pesanan berhasil dibatalkan.',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Gagal membatalkan: ' . $e->getMessage(),
+                ],
+                500,
+            );
         }
     }
 }
