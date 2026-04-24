@@ -18,6 +18,7 @@
                                 <th>No PO</th>
                                 <th>Tanggal</th>
                                 <th>Supplier</th>
+                                <th>Status</th>
                                 <th>Total</th>
                                 <th>Aksi</th>
                             </tr>
@@ -28,6 +29,13 @@
                                     <td><span class="badge badge-dark">{{ $p->purchase_number }}</span></td>
                                     <td>{{ date('d/m/Y', strtotime($p->purchase_date)) }}</td>
                                     <td>{{ $p->supplier->name }}</td>
+                                    <td>
+                                        @if ($p->status == 'received')
+                                            <span class="badge badge-success">Received</span>
+                                        @else
+                                            <span class="badge badge-warning">Pending</span>
+                                        @endif
+                                    </td>
                                     <td class="font-weight-bold">Rp {{ number_format($p->total_amount, 0, ',', '.') }}</td>
                                     <td>
                                         <button class="btn btn-sm btn-info show-btn"
@@ -57,7 +65,7 @@
                     </div>
                     <div class="modal-body">
                         <div class="row mb-3">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label>Supplier</label>
                                 <select name="supplier_id" class="form-control select2" required>
                                     <option value="">-- Pilih Supplier --</option>
@@ -66,12 +74,19 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label>Tanggal Pembelian</label>
                                 <input type="date" name="purchase_date" class="form-control" value="{{ date('Y-m-d') }}"
                                     required>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label>Status</label>
+                                <select name="status" class="form-control" required>
+                                    <option value="pending" selected>Pending (Rencana)</option>
+                                    <option value="received">Received (Barang Masuk)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
                                 <label>Catatan</label>
                                 <input type="text" name="notes" class="form-control" placeholder="Opsional">
                             </div>
@@ -117,8 +132,12 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">Simpan Transaksi</button>
+                        <button type="button" class="btn btn-secondary btn-reset" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-submit">Simpan Transaksi</button>
+                        <button class="btn btn-primary btn-loading d-none" type="button" disabled>
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Menyimpan...
+                        </button>
                     </div>
                 </div>
             </form>
@@ -138,7 +157,7 @@
                     </div>
                     <div class="modal-body">
                         <div class="row mb-3">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label>Supplier</label>
                                 <select name="supplier_id" id="edit_supplier_id" class="form-control select2-edit"
                                     required>
@@ -147,12 +166,19 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label>Tanggal Pembelian</label>
                                 <input type="date" name="purchase_date" id="edit_purchase_date" class="form-control"
                                     required>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label>Status</label>
+                                <select name="status" id="edit_status" class="form-control" required>
+                                    <option value="pending">Pending (Rencana)</option>
+                                    <option value="received">Received (Barang Masuk)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
                                 <label>Catatan</label>
                                 <input type="text" name="notes" id="edit_notes" class="form-control">
                             </div>
@@ -160,8 +186,7 @@
                         <hr>
                         <h6 class="font-weight-bold">Detail Barang <button type="button"
                                 class="btn btn-sm btn-success float-right" id="addEditRow">+ Tambah Baris</button></h6>
-                        <div id="editEntriesContainer">
-                        </div>
+                        <div id="editEntriesContainer"></div>
                         <div class="row mt-3 text-right">
                             <div class="col-md-12">
                                 <h4 class="font-weight-bold text-primary">Grand Total: <span id="editGrandTotalDisplay">Rp
@@ -170,7 +195,12 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-warning font-weight-bold">Update Transaksi</button>
+                        <button type="submit" class="btn btn-warning font-weight-bold btn-submit-edit">Update
+                            Transaksi</button>
+                        <button class="btn btn-warning font-weight-bold btn-loading-edit d-none" type="button" disabled>
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Updating...
+                        </button>
                     </div>
                 </div>
             </form>
@@ -195,8 +225,12 @@
                         <tr>
                             <th>Supplier</th>
                             <td id="det_sup"></td>
+                            <th>Status</th>
+                            <td id="det_status"></td>
+                        </tr>
+                        <tr>
                             <th>Catatan</th>
-                            <td id="det_notes"></td>
+                            <td colspan="3" id="det_notes"></td>
                         </tr>
                     </table>
                     <table class="table table-striped">
@@ -221,19 +255,12 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        // --- 1. FUNGSI HELPER GLOBAL ---
         function formatRupiah(angka) {
-            if (!angka) return '0';
-            let number_string = angka.toString().replace(/[^,\d]/g, ''),
-                split = number_string.split(','),
-                sisa = split[0].length % 3,
-                rupiah = split[0].substr(0, sisa),
-                ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-            if (ribuan) {
-                let separator = sisa ? '.' : '';
-                rupiah += separator + ribuan.join('.');
-            }
-            return rupiah;
+            if (angka === undefined || angka === null || angka === '') return '';
+            let angkaStr = angka.toString().replace(/\.00$/, '');
+            let number_string = angkaStr.replace(/[^0-9]/g, '');
+            let formatted = number_string.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            return formatted;
         }
 
         function calculateTotals(containerId, displayId) {
@@ -249,43 +276,37 @@
             $(displayId).text('Rp ' + formatRupiah(grandTotal));
         }
 
-        // --- 2. LOGIKA JQUERY ---
+        const productOptions =
+            `@foreach ($products as $prod)<option value="{{ $prod->id }}">{{ $prod->name }}</option>@endforeach`;
+
         $(document).ready(function() {
             $('.select2').select2({
                 width: '100%'
             });
 
-            // -- Event: Input Harga & Qty --
-            $(document).on('keyup change', '.qty-input, .price-input', function() {
+            $(document).on('keyup input', '.qty-input, .price-input', function(e) {
                 if ($(this).hasClass('price-input')) {
-                    $(this).val(formatRupiah($(this).val()));
+                    let rawVal = $(this).val().toString();
+
+                    $(this).val(formatRupiah(rawVal));
                 }
+
                 calculateTotals('#newEntriesContainer', '#grandTotalDisplay');
                 calculateTotals('#editEntriesContainer', '#editGrandTotalDisplay');
             });
 
-            // -- Event: Tambah Baris (Create) --
-            $('#addButton').on('click', function() {
-                let row = $('#newEntriesContainer .entry:first').clone();
-                row.find('input').val('');
-                row.find('.deleteEntry').show();
-                row.find('.select2-container').remove();
-                $('#newEntriesContainer').append(row);
-                row.find('select').select2({
-                    width: '100%'
-                });
+            $(document).on('input change', '.qty-input', function() {
+                calculateTotals('#newEntriesContainer', '#grandTotalDisplay');
+                calculateTotals('#editEntriesContainer', '#editGrandTotalDisplay');
             });
 
-            // -- Event: Tambah Baris (Edit) --
-            $('#addEditRow').on('click', function() {
-                let row = `
+            $('#addButton').on('click', function() {
+                let newRow = `
                 <div class="row entry mb-2 align-items-end">
                     <div class="col-md-4">
-                        <select name="product_id[]" class="form-control select2-new-edit" required>
+                        <select name="product_id[]" class="form-control select2-new" required>
                             <option value="" disabled selected>Pilih Produk</option>
-                            @foreach ($products as $prod)
-                                <option value="{{ $prod->id }}">{{ $prod->name }}</option>
-                            @endforeach
+                            ${productOptions}
                         </select>
                     </div>
                     <div class="col-md-2"><input type="number" name="quantity[]" class="form-control qty-input" min="1" required></div>
@@ -293,22 +314,43 @@
                     <div class="col-md-2"><input type="text" class="form-control subtotal-input bg-light" readonly></div>
                     <div class="col-md-1 text-right"><button type="button" class="btn btn-danger deleteEntry"><i class="fas fa-trash"></i></button></div>
                 </div>`;
-                $('#editEntriesContainer').append(row);
-                $('.select2-new-edit').select2({
+                $('#newEntriesContainer').append(newRow);
+                $('.select2-new').select2({
                     width: '100%'
-                }).removeClass('select2-new-edit');
+                }).removeClass('select2-new');
             });
 
-            // -- Event: Hapus Baris --
+            $('#addEditRow').on('click', function() {
+                let newRow = `
+                <div class="row entry mb-2 align-items-end">
+                    <div class="col-md-4">
+                        <select name="product_id[]" class="form-control select2-new" required>
+                            <option value="" disabled selected>Pilih Produk</option>
+                            ${productOptions}
+                        </select>
+                    </div>
+                    <div class="col-md-2"><input type="number" name="quantity[]" class="form-control qty-input" min="1" required></div>
+                    <div class="col-md-3"><input type="text" name="price[]" class="form-control price-input" required></div>
+                    <div class="col-md-2"><input type="text" class="form-control subtotal-input bg-light" readonly></div>
+                    <div class="col-md-1 text-right"><button type="button" class="btn btn-danger deleteEntry"><i class="fas fa-trash"></i></button></div>
+                </div>`;
+                $('#editEntriesContainer').append(newRow);
+                $('.select2-new').select2({
+                    width: '100%'
+                }).removeClass('select2-new');
+            });
+
             $(document).on('click', '.deleteEntry', function() {
                 $(this).closest('.entry').remove();
                 calculateTotals('#newEntriesContainer', '#grandTotalDisplay');
                 calculateTotals('#editEntriesContainer', '#editGrandTotalDisplay');
             });
 
-            // -- AJAX: Simpan (Store) --
             $('#createForm').submit(function(e) {
                 e.preventDefault();
+                $('.btn-submit, .btn-reset').addClass('d-none');
+                $('.btn-loading').removeClass('d-none');
+
                 $.ajax({
                     url: "{{ route('dashboard.purchases.store') }}",
                     type: "POST",
@@ -317,20 +359,25 @@
                         alert(res.message);
                         location.reload();
                     },
-                    error: function() {
-                        alert("Gagal menyimpan!");
+                    error: function(xhr) {
+                        alert("Gagal menyimpan! Cek data kembali.");
+                        $('.btn-submit, .btn-reset').removeClass('d-none');
+                        $('.btn-loading').addClass('d-none');
                     }
                 });
             });
 
-            // -- AJAX: Tampilkan Detail (Show) --
             $(document).on('click', '.show-btn', function() {
                 let id = $(this).data('id');
                 $.get("{{ url('dashboard/purchases') }}/" + id, function(data) {
                     $('#det_po').text(data.purchase_number);
                     $('#det_date').text(data.purchase_date);
                     $('#det_sup').text(data.supplier.name);
+                    $('#det_status').html(data.status === 'received' ?
+                        '<span class="badge badge-success">Received</span>' :
+                        '<span class="badge badge-warning">Pending</span>');
                     $('#det_notes').text(data.notes || '-');
+
                     let itemsHtml = '';
                     data.items.forEach(function(item) {
                         itemsHtml +=
@@ -341,14 +388,15 @@
                 });
             });
 
-            // -- AJAX: Tombol Edit (Muat Data) --
             $(document).on('click', '.edit-btn', function() {
                 let id = $(this).data('id');
                 $.get("{{ url('dashboard/purchases') }}/" + id, function(data) {
                     $('#edit_purchase_id').val(data.id);
                     $('#edit_supplier_id').val(data.supplier_id).trigger('change');
                     $('#edit_purchase_date').val(data.purchase_date);
+                    $('#edit_status').val(data.status); // Set status lama
                     $('#edit_notes').val(data.notes);
+
                     let itemsHtml = '';
                     data.items.forEach(function(item) {
                         itemsHtml += `
@@ -375,29 +423,32 @@
                 });
             });
 
-            // -- AJAX: Update --
-            // GANTI BAGIAN INI
             $('#editForm').submit(function(e) {
                 e.preventDefault();
+                $('.btn-submit-edit').addClass('d-none');
+                $('.btn-loading-edit').removeClass('d-none');
+
                 let id = $('#edit_purchase_id').val();
                 $.ajax({
                     url: "{{ url('dashboard/purchases') }}/" + id,
-                    type: "POST", // Tetap POST karena kita pakai spoofing _method di bawah
-                    data: $(this)
-                .serialize(), // Ini akan otomatis mengirimkan token CSRF dan _method PUT
+                    type: "POST",
+                    data: $(this).serialize(),
                     success: function(res) {
                         alert(res.message);
                         location.reload();
                     },
                     error: function(xhr) {
-                        alert("Gagal update data! Cek console untuk detail.");
-                        console.log(xhr.responseText);
+                        alert("Gagal update data!");
+                        $('.btn-submit-edit').removeClass('d-none');
+                        $('.btn-loading-edit').addClass('d-none');
                     }
                 });
             });
-            // -- AJAX: Hapus --
+
             $(document).on('click', '.delete-btn', function() {
-                if (confirm("Hapus transaksi ini? Stok produk akan dikembalikan secara otomatis.")) {
+                if (confirm(
+                        "Hapus transaksi ini? Jika status Received, stok akan dikembalikan secara otomatis."
+                    )) {
                     let id = $(this).data('id');
                     $.ajax({
                         url: "{{ url('dashboard/purchases') }}/" + id,
