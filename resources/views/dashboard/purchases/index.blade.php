@@ -1,6 +1,9 @@
 @extends('dashboard.layouts.admin')
 
 @section('content')
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('asset/css/purchases-style.css') }}">
+@endpush
     <div class="container-fluid">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -85,7 +88,7 @@
         <!-- Form Add/Edit Purchase -->
         <div class="card shadow mb-4" id="purchaseFormCard">
             <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                <h6 class="m-0 font-weight-bold text-primary" id="formTitle">
+                <h6 class="m-0 font-weight-bold text-white" id="formTitle">
                     <i class="fas fa-plus-circle"></i> Tambah Pesanan Pembelian Baru
                 </h6>
                 <button type="button" class="btn btn-sm btn-secondary" id="resetFormBtn" style="display:none;">
@@ -176,8 +179,8 @@
 
         <!-- Table Purchases -->
         <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">
+            <div class="card-header py-3 bg-primary">
+                <h6 class="m-0 font-weight-bold text-white">
                     <i class="fas fa-list"></i> Riwayat Pembelian
                 </h6>
             </div>

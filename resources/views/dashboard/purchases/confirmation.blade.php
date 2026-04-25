@@ -1,7 +1,9 @@
 @extends('dashboard.layouts.admin')
 
 @section('content')
-
+    @push('styles')
+        <link rel="stylesheet" href="{{ asset('asset/css/purchases-style.css') }}">
+    @endpush
     <div class="container-fluid">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
