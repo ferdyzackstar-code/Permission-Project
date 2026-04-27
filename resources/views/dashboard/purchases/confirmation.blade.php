@@ -1,9 +1,11 @@
 @extends('dashboard.layouts.admin')
 
 @section('content')
+
     @push('styles')
         <link rel="stylesheet" href="{{ asset('asset/css/purchases-style.css') }}">
     @endpush
+
     <div class="container-fluid">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -36,31 +38,31 @@
                         <table class="table table-bordered table-hover" id="confirmationTable" width="100%">
                             <thead class="thead-light">
                                 <tr>
-                                    <th width="5%">No</th>
+                                    <th width="3%" class="text-center">No</th>
                                     <th>No PO</th>
                                     <th>Tanggal Pembelian</th>
                                     <th>Supplier</th>
                                     <th>Total Pembayaran</th>
-                                    <th width="20%">Aksi</th>
+                                    <th width="22%">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($pendingPurchases as $index => $purchase)
                                     <tr>
-                                        <td class="font-weight-bold">{{ $index + 1 }}</td>
+                                        <td class="text-center">{{ $index + 1 }}</td>
                                         <td>
                                             <span class="badge badge-dark">{{ $purchase->purchase_number }}</span>
                                         </td>
                                         <td>
-                                            {{ \Carbon\Carbon::parse($purchase->purchase_date)->format('d/m/Y H:i') }}
+                                            {{ \Carbon\Carbon::parse($purchase->purchase_date)->isoFormat('dddd, DD MMMM YYYY') }}
                                         </td>
                                         <td>{{ $purchase->supplier->name }}</td>
                                         <td class="font-weight-bold text-primary">
                                             Rp {{ number_format($purchase->total_amount, 0, ',', '.') }}
                                         </td>
-                                        <td>
+                                        <td class="text-center action-buttons">
                                             <button class="btn btn-sm btn-info detail-btn" data-id="{{ $purchase->id }}">
-                                                <i class="fas fa-eye"></i> Lihat Detail
+                                                <i class="fas fa-eye"></i> Detail
                                             </button>
                                             <button class="btn btn-sm btn-success approve-btn"
                                                 data-id="{{ $purchase->id }}">
@@ -90,49 +92,52 @@
     <div class="modal fade" id="detailModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content">
-                <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title"><i class="fas fa-file-invoice"></i> Detail Pesanan Pembelian</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                <div class="modal-header bg-info text-white" style="align-items: flex-start; padding: 15px;">
+                    <div>
+                        <h5 class="modal-title mb-0"><i class="fas fa-file-invoice"></i> Detail Pesanan Pembelian</h5>
+                    </div>
+                    <button type="button" class="close text-white" data-dismiss="modal"
+                        style="position: absolute; right: 15px; top: 15px;">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            <table class="table table-borderless table-sm">
-                                <tr>
-                                    <th width="40%">No. PO</th>
-                                    <td id="detail_po" class="font-weight-bold"></td>
-                                </tr>
-                                <tr>
-                                    <th>Tanggal Pembelian</th>
-                                    <td id="detail_date"></td>
-                                </tr>
-                                <tr>
-                                    <th>Supplier</th>
-                                    <td id="detail_supplier"></td>
-                                </tr>
-                            </table>
+                            <div class="detail-info">
+                                <div class="detail-row">
+                                    <label class="detail-label">No. PO</label>
+                                    <span class="detail-value font-weight-bold" id="detail_po"></span>
+                                </div>
+                                <div class="detail-row">
+                                    <label class="detail-label">Tanggal Pembelian</label>
+                                    <span class="detail-value" id="detail_date"></span>
+                                </div>
+                                <div class="detail-row">
+                                    <label class="detail-label">Supplier</label>
+                                    <span class="detail-value" id="detail_supplier"></span>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <table class="table table-borderless table-sm">
-                                <tr>
-                                    <th width="40%">Status</th>
-                                    <td id="detail_status"></td>
-                                </tr>
-                                <tr>
-                                    <th>Email Supplier</th>
-                                    <td id="detail_email"></td>
-                                </tr>
-                                <tr>
-                                    <th>Catatan</th>
-                                    <td id="detail_notes"></td>
-                                </tr>
-                            </table>
+                            <div class="detail-info">
+                                <div class="detail-row">
+                                    <label class="detail-label">Status</label>
+                                    <span class="detail-value" id="detail_status"></span>
+                                </div>
+                                <div class="detail-row">
+                                    <label class="detail-label">Email Supplier</label>
+                                    <span class="detail-value" id="detail_email"></span>
+                                </div>
+                                <div class="detail-row">
+                                    <label class="detail-label">Catatan</label>
+                                    <span class="detail-value" id="detail_notes"></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <h6 class="font-weight-bold mb-3 border-bottom pb-2">Detail Produk</h6>
                     <div class="table-responsive">
-                        <table class="table table-bordered">
+                        <table class="table table-bordered table-sm">
                             <thead class="thead-light">
                                 <tr>
                                     <th>Nama Produk</th>
@@ -201,13 +206,18 @@
                 let id = $(this).data('id');
                 $.get("{{ url('dashboard/purchases') }}/" + id, function(data) {
                     $('#detail_po').text(data.purchase_number);
-                    $('#detail_date').text(new Date(data.purchase_date).toLocaleString('id-ID', {
+
+                    // Format date as: Hari, Tanggal Bulan Tahun
+                    let dateObj = new Date(data.purchase_date);
+                    let options = {
+                        weekday: 'long',
                         year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }));
+                        month: 'long',
+                        day: 'numeric'
+                    };
+                    let formattedDate = dateObj.toLocaleDateString('id-ID', options);
+                    $('#detail_date').text(formattedDate);
+
                     $('#detail_supplier').text(data.supplier.name);
                     $('#detail_email').text(data.supplier.email || '-');
                     $('#detail_notes').text(data.notes || '-');

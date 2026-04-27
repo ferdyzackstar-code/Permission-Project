@@ -9,6 +9,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use App\Models\Product;
@@ -25,6 +26,9 @@ Auth::routes();
 
 Route::group(['middleware' => ['auth'], 'prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
     Route::get('/', [DashboardController::class, 'index'])->name('index');
+
+    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
 
     Route::get('users/downloadImportTemplate', [UserController::class, 'downloadImportTemplate'])->name('users.downloadImportTemplate');
     Route::post('users/import', [UserController::class, 'import'])->name('users.import');

@@ -172,6 +172,42 @@ vertical-align: middle;
 padding: 12px;
 }
 
+/* Action Button Spacing */
+.table tbody td.text-center button {
+margin: 0 5px;
+display: inline-block;
+}
+
+/* Table layout fixes */
+.table th:first-child {
+text-align: center;
+width: 3% !important;
+}
+
+.table tbody td:first-child {
+text-align: center;
+}
+
+/* Status badge - white text */
+.badge-success,
+.badge-danger,
+.badge-warning {
+color: white !important;
+}
+
+/* Action buttons - keep in one line */
+td.action-buttons {
+white-space: nowrap !important;
+padding: 12px !important;
+vertical-align: middle;
+}
+
+td.action-buttons button {
+margin: 0 5px;
+display: inline-block;
+white-space: nowrap;
+}
+
 /* Badge Styling */
 .badge {
 padding: 6px 12px;
@@ -276,6 +312,49 @@ font-size: 0.9rem;
 padding: 0.35rem 0.5rem;
 font-size: 0.75rem;
 }
+}
+
+/* Modal Detail Styling */
+.detail-info {
+display: flex;
+flex-direction: column;
+gap: 15px;
+}
+
+.detail-row {
+display: flex;
+align-items: flex-start;
+padding-bottom: 10px;
+border-bottom: 1px solid #e3e6f0;
+}
+
+.detail-row:last-child {
+border-bottom: none;
+padding-bottom: 0;
+}
+
+.detail-label {
+font-weight: 600;
+color: #495057;
+width: 40%;
+margin: 0;
+padding-right: 15px;
+}
+
+.detail-value {
+color: #212529;
+flex: 1;
+word-break: break-word;
+}
+
+/* Modal header and body alignment */
+.modal-header {
+border-bottom: 2px solid #17a2b8 !important;
+}
+
+.modal-content {
+border-radius: 10px;
+border: 0;
 }
 
 /* Animation */

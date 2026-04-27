@@ -50,11 +50,22 @@
 
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion sticky-top" id="accordionSidebar">
 
+    @php
+        $appImage = \App\Models\SettingApp::get('app_image');
+        $appName = \App\Models\SettingApp::get('app_name', 'Anda Petshop');
+        $hasImage = $appImage && \Illuminate\Support\Facades\Storage::disk('public')->exists($appImage);
+    @endphp
+
     <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ route('dashboard.index') }}">
-        <div class="sidebar-brand-icon rotate-n-15">
-            <i class="fas fa-cat"></i>
+        <div class="sidebar-brand-icon">
+            @if ($hasImage)
+                <img src="{{ Storage::url($appImage) }}" alt="{{ $appName }}"
+                    style="height:36px; width:36px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.4);">
+            @else
+                <i class="fas fa-cat"></i>
+            @endif
         </div>
-        <div class="sidebar-brand-text mx-2">Anda Petshop</div>
+        <div class="sidebar-brand-text mx-2">{{ $appName }}</div>
     </a>
 
     <hr class="sidebar-divider my-0">
@@ -85,8 +96,8 @@
                 href="#" data-toggle="collapse" data-target="#collapseTransaksi"
                 aria-expanded="{{ request()->routeIs('dashboard.orders.index*', 'dashboard.orders.confirmation*') ? 'true' : 'false' }}"
                 aria-controls="collapseTransaksi">
-                <i class="fas fa-fw fa-exchange-alt"></i>
-                <span>Riwayat & Konfirmasi</span>
+                <i class="fas fa-solid fa-bag-shopping"></i>
+                <span>Penjualan</span>
             </a>
             <div id="collapseTransaksi"
                 class="collapse {{ request()->routeIs('dashboard.orders.index*', 'dashboard.orders.confirmation*') ? 'show' : '' }}"
@@ -108,13 +119,29 @@
     @endcanany
 
     {{-- GRUP SUPPLY --}}
-    <li class="nav-item {{ request()->routeIs('dashboard.purchases.index') ? 'active' : '' }}">
-        <a class="nav-link" href="{{ route('dashboard.purchases.index') }}">
+    <li
+        class="nav-item {{ request()->routeIs('dashboard.purchases.index*', 'dashboard.purchases.confirmation*') ? 'active' : '' }}">
+        <a class="nav-link {{ request()->routeIs('dashboard.purchases.index*', 'dashboard.purchases.confirmation*') ? '' : 'collapsed' }}"
+            href="#" data-toggle="collapse" data-target="#collapsePembelian"
+            aria-expanded="{{ request()->routeIs('dashboard.purchases.index*', 'dashboard.purchases.confirmation*') ? 'true' : 'false' }}"
+            aria-controls="collapsePembelian">
             <i class="fa-solid fa-cart-plus"></i>
-            <span>Restock / Pembelian</span></a>
+            <span>Pembelian </span>
+        </a>
+        <div id="collapsePembelian"
+            class="collapse {{ request()->routeIs('dashboard.purchases.index*', 'dashboard.purchases.confirmation*') ? 'show' : '' }}"
+            data-parent="#accordionSidebar">
+            <div class="py-2 collapse-inner">
+                <a class="collapse-item {{ request()->routeIs('dashboard.purchases.index*') ? 'active' : '' }}"
+                    href="{{ route('dashboard.purchases.index') }}">
+                    <i class="fas fa-history fa-sm fa-fw mr-2"></i>Riwayat Pembelian</a>
+                <a class="collapse-item {{ request()->routeIs('dashboard.purchases.confirmation*') ? 'active' : '' }}"
+                    href="{{ route('dashboard.purchases.confirmation') }}">
+                    <i class="fas fa-check-circle fa-sm fa-fw mr-2"></i>Konfirmasi Beli</a>
+            </div>
+        </div>
+        <hr class="sidebar-divider">
     </li>
-
-    <hr class="sidebar-divider">
 
     {{-- GRUP LOGISTIK --}}
     @canany(['category.index', 'product.index', 'supplier.index', 'outlet.index'])
@@ -155,9 +182,9 @@
                 </div>
             </div>
         </li>
+        <hr class="sidebar-divider">
     @endcanany
 
-    <hr class="sidebar-divider">
 
     {{-- GRUP ANALISIS --}}
     @canany(['order.pos', 'order.history'])
@@ -188,9 +215,9 @@
                 </div>
             </div>
         </li>
+        <hr class="sidebar-divider">
     @endcanany
 
-    <hr class="sidebar-divider">
 
     {{-- GRUP ADMINISTRATOR (SYSTEM SETTINGS) --}}
     @canany(['user.index', 'role.index', 'permission.index'])
@@ -226,8 +253,20 @@
                 </div>
             </div>
         </li>
-        <hr class="sidebar-divider d-none d-md-block">
+        <hr class="sidebar-divider">
     @endcanany
+
+
+    {{-- PENGATURAN --}}
+    <div class="sidebar-heading">Sistem</div>
+    <li class="nav-item {{ request()->is('dashboard/settings*') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('dashboard.settings.index') }}">
+            <i class="fas fa-fw fa-cog"></i>
+            <span>Pengaturan Aplikasi</span>
+        </a>
+    </li>
+
+    <hr class="sidebar-divider d-none d-md-block">
 
     <div class="text-center d-none d-md-inline">
         <button class="rounded-circle border-0" id="sidebarToggle"></button>

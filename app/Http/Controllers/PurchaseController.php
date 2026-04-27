@@ -14,10 +14,7 @@ class PurchaseController extends Controller
 {
     public function index()
     {
-        $purchases = Purchase::with('supplier')
-            ->whereIn('status', ['received', 'cancelled'])
-            ->latest()
-            ->get();
+        $purchases = Purchase::with('supplier')->latest()->get();
 
         $suppliers = Supplier::all();
         $products = Product::all();

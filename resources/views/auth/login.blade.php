@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auth | Anda Petshop</title>
+    <title>Login | {{ \App\Models\SettingApp::get('app_name', 'Anda Petshop') }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
@@ -17,17 +17,15 @@
         }
 
         body {
-            background-color: #c9d6ff;
-            background: linear-gradient(to right, #e2e2e2, #c9d6ff);
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
-            height: 100vh;
+            min-height: 100vh;
+            background: linear-gradient(to right, #e2e2e2, #c9d6ff);
         }
 
         .container {
-            background-color: #fff;
+            background: #fff;
             border-radius: 30px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
             position: relative;
@@ -159,20 +157,38 @@
         }
 
         .toggle {
-            background-color: #512da8;
             height: 100%;
-            background: linear-gradient(to right, #5c6bc0, #512da8);
             color: #fff;
             position: relative;
             left: -100%;
-            height: 100%;
             width: 200%;
             transform: translateX(0);
             transition: all 0.6s ease-in-out;
         }
 
-        .container.active .toggle {
-            transform: translateX(50%);
+        /* Jika ada foto: pakai foto sebagai background */
+        .toggle.has-image {
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Overlay ungu agar teks tetap terbaca */
+        .toggle.has-image::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to right, rgba(92, 107, 192, 0.82), rgba(81, 45, 168, 0.85));
+            z-index: 0;
+        }
+
+        .toggle-panel {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Jika tidak ada foto: pakai gradient ungu murni */
+        .toggle.no-image {
+            background: linear-gradient(to right, #5c6bc0, #512da8);
         }
 
         .toggle-panel {
@@ -186,7 +202,6 @@
             padding: 0 30px;
             text-align: center;
             top: 0;
-            transform: translateX(0);
             transition: all 0.6s ease-in-out;
         }
 
@@ -210,13 +225,42 @@
         .is-invalid {
             border: 1px solid red !important;
         }
+
+        .alert-success-box {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-bottom: 10px;
+            width: 100%;
+            text-align: center;
+        }
     </style>
 </head>
 
 <body>
 
+    @php
+        $appImage = \App\Models\SettingApp::get('app_image');
+        $appName = \App\Models\SettingApp::get('app_name', 'Anda Petshop');
+        $titleLogin = \App\Models\SettingApp::get('auth_title_login', 'Selamat Datang Kembali!');
+        $subLogin = \App\Models\SettingApp::get(
+            'auth_subtitle_login',
+            'Masukkan detail pribadi Anda untuk menggunakan semua fitur situs',
+        );
+        $titleReg = \App\Models\SettingApp::get('auth_title_register', 'Halo, Kawan!');
+        $subReg = \App\Models\SettingApp::get(
+            'auth_subtitle_register',
+            'Daftarkan detail pribadi Anda untuk menggunakan semua fitur situs',
+        );
+        $hasImage = $appImage && \Illuminate\Support\Facades\Storage::disk('public')->exists($appImage);
+    @endphp
+
     <div class="container {{ $errors->has('name') || $errors->has('password_confirmation') ? 'active' : '' }}"
         id="container">
+
+        {{-- Form Register --}}
         <div class="form-container sign-up">
             <form method="POST" action="{{ route('register') }}">
                 @csrf
@@ -232,12 +276,10 @@
             </form>
         </div>
 
+        {{-- Form Login --}}
         <div class="form-container sign-in">
             @if (session('success'))
-                <div
-                    style="background: #d4edda; color: #155724; padding: 10px; border-radius: 8px; font-size: 12px; margin-bottom: 10px; width: 100%; text-align: center;">
-                    {{ session('success') }}
-                </div>
+                <div class="alert-success-box">{{ session('success') }}</div>
             @endif
             <form method="POST" action="{{ route('login') }}">
                 @csrf
@@ -251,16 +293,28 @@
             </form>
         </div>
 
+        {{-- Panel Kanan --}}
         <div class="toggle-container">
-            <div class="toggle">
-                <div class="toggle-panel toggle-left">
-                    <h1>Selamat Datang Kembali!</h1>
-                    <p>Masukkan detail pribadi Anda untuk menggunakan semua fitur situs</p>
+            <div class="toggle {{ $hasImage ? 'has-image' : 'no-image' }}"
+                @if ($hasImage) style="background-image:url('{{ Storage::url($appImage) }}')" @endif>
+
+                {{-- Overlay & panel harus di dalam .toggle agar z-index benar --}}
+                @if ($hasImage)
+                    <div
+                        style="position:absolute;inset:0;background:linear-gradient(to right,rgba(92,107,192,0.82),rgba(81,45,168,0.85));z-index:0;">
+                    </div>
+                @endif
+
+                <div class="toggle-panel toggle-left"
+                    style="position:absolute;z-index:1;width:50%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:0 30px;text-align:center;">
+                    <h1>{{ $titleLogin }}</h1>
+                    <p>{{ $subLogin }}</p>
                     <button class="hidden" id="login">Sign In</button>
                 </div>
-                <div class="toggle-panel toggle-right">
-                    <h1>Halo, Kawan!</h1>
-                    <p>Daftarkan detail pribadi Anda untuk menggunakan semua fitur situs</p>
+                <div class="toggle-panel toggle-right"
+                    style="position:absolute;right:0;z-index:1;width:50%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:0 30px;text-align:center;">
+                    <h1>{{ $titleReg }}</h1>
+                    <p>{{ $subReg }}</p>
                     <button class="hidden" id="register">Sign Up</button>
                 </div>
             </div>
@@ -271,14 +325,8 @@
         const container = document.getElementById('container');
         const registerBtn = document.getElementById('register');
         const loginBtn = document.getElementById('login');
-
-        registerBtn.addEventListener('click', () => {
-            container.classList.add("active");
-        });
-
-        loginBtn.addEventListener('click', () => {
-            container.classList.remove("active");
-        });
+        registerBtn.addEventListener('click', () => container.classList.add('active'));
+        loginBtn.addEventListener('click', () => container.classList.remove('active'));
     </script>
 </body>
 
