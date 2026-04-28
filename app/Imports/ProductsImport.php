@@ -4,78 +4,98 @@ namespace App\Imports;
 
 use App\Models\Product;
 use App\Models\Category;
-use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\SkipsFailures;
-use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\Importable;
-use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
-use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use Illuminate\Support\Collection;
 
-class ProductsImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure, SkipsEmptyRows, WithMultipleSheets
+class ProductsImport implements ToCollection, WithHeadingRow
 {
-    use Importable, SkipsFailures;
+    use Importable;
 
-    public function sheets(): array
+    private array $failures = [];
+    private int $importedCount = 0;
+
+    public function collection(Collection $rows)
     {
-        return [
-            0 => new self(),
-        ];
+        foreach ($rows as $index => $row) {
+            $rowNumber = $index + 2; // +2 karena index 0-based + heading row
+
+            $name = trim((string) ($row['name'] ?? ''));
+            $price = trim((string) ($row['price'] ?? ''));
+            $stock = trim((string) ($row['stock'] ?? ''));
+            $speciesId = trim((string) ($row['species_id'] ?? ''));
+            $categoryId = trim((string) ($row['category_id'] ?? ''));
+
+            // Skip baris kosong sepenuhnya
+            if ($name === '' && $price === '' && $stock === '' && $speciesId === '' && $categoryId === '') {
+                continue;
+            }
+
+            // Validasi manual
+            $errors = [];
+
+            if ($name === '') {
+                $errors[] = 'Kolom nama produk wajib diisi.';
+            } elseif (Product::where('name', $name)->exists()) {
+                $errors[] = "Produk \"{$name}\" sudah terdaftar di sistem.";
+            }
+
+            if ($price === '') {
+                $errors[] = 'Kolom harga wajib diisi.';
+            } elseif (!is_numeric($price) || $price < 0) {
+                $errors[] = 'Harga harus berupa angka positif.';
+            }
+
+            if ($stock === '') {
+                $errors[] = 'Kolom stok wajib diisi.';
+            } elseif (!ctype_digit($stock)) {
+                $errors[] = 'Stok harus berupa bilangan bulat.';
+            }
+
+            if ($speciesId === '') {
+                $errors[] = 'ID Species wajib diisi.';
+            } elseif (!Category::where('id', $speciesId)->exists()) {
+                $errors[] = 'ID Species tidak terdaftar di sistem.';
+            }
+
+            if ($categoryId === '') {
+                $errors[] = 'ID Kategori wajib diisi.';
+            } else {
+                $category = Category::find($categoryId);
+                if (!$category) {
+                    $errors[] = 'ID Kategori tidak ditemukan di sistem.';
+                } elseif (is_null($category->parent_id)) {
+                    $errors[] = 'ID yang dimasukkan adalah ID Species. Gunakan ID Sub-Kategori.';
+                }
+            }
+
+            if (!empty($errors)) {
+                $this->failures[] = "Baris {$rowNumber}: " . implode(', ', $errors);
+                continue;
+            }
+
+            // Semua valid — simpan ke DB
+            Product::create([
+                'name' => $name,
+                'category_id' => $categoryId,
+                'price' => $price,
+                'stock' => $stock,
+                'detail' => trim((string) ($row['detail'] ?? '')) ?: null,
+                'status' => 'active',
+            ]);
+
+            $this->importedCount++;
+        }
     }
 
-    public function isEmpty($row): bool
+    public function getFailures(): array
     {
-        return empty($row['name']) && empty($row['price']) && empty($row['stock']);
+        return $this->failures;
     }
 
-    public function model(array $row)
+    public function getImportedCount(): int
     {
-        return new Product([
-            'name' => $row['name'],
-            'category_id' => $row['category_id'],
-            'supplier_id' => $row['supplier_id'],
-            'outlet_id' => $row['outlet_id'],
-            'price' => $row['price'],
-            'stock' => $row['stock'],
-            'detail' => $row['detail'],
-            'status' => 'active',
-        ]);
-    }
-
-    public function rules(): array
-    {
-        return [
-            'name' => 'required|unique:products,name',
-            'price' => 'required|numeric',
-            'stock' => 'required|integer',
-            'species_id' => 'required|exists:categories,id',
-            'supplier_id' => 'required|exists:suppliers,id',
-            'outlet_id' => 'required|exists:outlets,id',
-
-            'category_id' => [
-                'required',
-                function ($attribute, $value, $fail) {
-                    $category = Category::find($value);
-
-                    if (!$category) {
-                        $fail('ID Kategori tidak ditemukan di sistem.');
-                        return;
-                    }
-
-                    if (is_null($category->parent_id)) {
-                        $fail('ID yang dimasukkan adalah ID Species. Harap masukkan ID Sub-Kategori (contoh: Makanan/Kandang).');
-                    }
-                },
-            ],
-        ];
-    }
-
-    public function customValidationMessages()
-    {
-        return [
-            'category_id.required' => 'ID Kategori harus diisi.',
-            'species_id.exists' => 'ID Species tidak terdaftar di sistem.',
-        ];
+        return $this->importedCount;
     }
 }

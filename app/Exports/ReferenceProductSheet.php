@@ -9,21 +9,17 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 
 class ReferenceProductSheet implements FromView, WithTitle, ShouldAutoSize
 {
-    protected $categories, $suppliers, $outlets;
+    protected $categories;
 
-    public function __construct($categories, $suppliers, $outlets)
+    public function __construct($categories)
     {
         $this->categories = $categories;
-        $this->suppliers = $suppliers;
-        $this->outlets = $outlets;
     }
 
     public function view(): View
     {
         return view('dashboard.products.sheets.reference_template', [
             'categories' => $this->categories,
-            'suppliers' => $this->suppliers,
-            'outlets' => $this->outlets,
         ]);
     }
 

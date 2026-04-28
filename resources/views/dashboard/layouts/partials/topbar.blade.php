@@ -4,37 +4,6 @@
         <i class="fa fa-bars"></i>
     </button>
 
-    <div class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
-        <div class="dropdown">
-            <button class="btn btn-outline-primary dropdown-toggle btn-sm" type="button" id="dropdownMenuButton"
-                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="fas fa-store fa-sm"></i> Outlet:
-                <strong>
-                    @if (request('outlet_id'))
-                        {{ \App\Models\Outlet::find(request('outlet_id'))->name ?? 'Semua Cabang' }}
-                    @else
-                        Semua Cabang
-                    @endif
-                </strong>
-            </button>
-
-            <div class="dropdown-menu shadow animated--fade-in" aria-labelledby="dropdownMenuButton">
-                <a class="dropdown-item {{ !request('outlet_id') ? 'active' : '' }}"
-                    href="{{ request()->fullUrlWithQuery(['outlet_id' => null]) }}">
-                    Semua Cabang
-                </a>
-                <div class="dropdown-divider"></div>
-
-                @foreach (\App\Models\Outlet::all() as $outlet)
-                    <a class="dropdown-item {{ request('outlet_id') == $outlet->id ? 'active' : '' }}"
-                        href="{{ request()->fullUrlWithQuery(['outlet_id' => $outlet->id]) }}">
-                        {{ $outlet->name }}
-                    </a>
-                @endforeach
-            </div>
-        </div>
-    </div>
-
     <ul class="navbar-nav ml-auto">
         @auth
             <li class="nav-item dropdown no-arrow">

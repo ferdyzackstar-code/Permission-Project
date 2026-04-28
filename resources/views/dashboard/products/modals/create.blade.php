@@ -17,15 +17,6 @@
                                     required>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <strong>Supplier:</strong>
-                            <select name="supplier_id" class="form-control">
-                                <option value="">-- Pilih Supplier (Opsional) --</option>
-                                @foreach ($suppliers as $supplier)
-                                    <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <strong>Status:</strong>
@@ -84,15 +75,6 @@
                                 </select>
                             </div>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <strong>Cabang:</strong>
-                        <select name="outlet_id" class="form-control" required>
-                            <option value="">-- Pilih Cabang --</option>
-                            @foreach ($outlets as $outlet)
-                                <option value="{{ $outlet->id }}">{{ $outlet->name }}</option>
-                            @endforeach
-                        </select>
                     </div>
                     <div class="form-group">
                         <strong>Detail:</strong>

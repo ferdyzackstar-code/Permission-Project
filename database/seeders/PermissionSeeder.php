@@ -9,7 +9,7 @@ class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        $entities = ['supplier', 'product', 'category', 'role', 'user', 'outlet', 'permission', 'pos'];
+        $entities = ['supplier', 'product', 'category', 'role', 'user', 'permission'];
         $actions = ['index', 'show', 'edit', 'delete', 'create'];
 
         foreach ($entities as $entity) {

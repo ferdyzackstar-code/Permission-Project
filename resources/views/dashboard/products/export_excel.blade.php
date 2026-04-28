@@ -14,10 +14,6 @@
             </th>
             <th style="background-color: #4F81BD; color: #ffffff; border: 1px solid #000000; font-weight: bold;">Kategori
             </th>
-            <th style="background-color: #4F81BD; color: #ffffff; border: 1px solid #000000; font-weight: bold;">Supplier
-            </th>
-            <th style="background-color: #4F81BD; color: #ffffff; border: 1px solid #000000; font-weight: bold;">Outlet
-            </th>
             <th
                 style="background-color: #4F81BD; color: #ffffff; border: 1px solid #000000; font-weight: bold; width: 300px;">
                 Detail</th>
@@ -34,8 +30,6 @@
                 <td style="border: 1px solid #000000; background-color: {{ $loop->odd % 2 == 0 ? '#FFFFFF' : '#DCE6F1' }}; text-align: center;">{{ $product->stock }}</td>
                 <td style="border: 1px solid #000000; background-color: {{ $loop->odd % 2 == 0 ? '#FFFFFF' : '#DCE6F1' }};">{{ $product->category->parent->name ?? 'Tanpa Species' }}</td>
                 <td style="border: 1px solid #000000; background-color: {{ $loop->odd % 2 == 0 ? '#FFFFFF' : '#DCE6F1' }};">{{ $product->category->name ?? '-' }}</td>
-                <td style="border: 1px solid #000000; background-color: {{ $loop->odd % 2 == 0 ? '#FFFFFF' : '#DCE6F1' }};">{{ $product->supplier->name ?? '-' }}</td>
-                <td style="border: 1px solid #000000; background-color: {{ $loop->odd % 2 == 0 ? '#FFFFFF' : '#DCE6F1' }};">{{ $product->outlet->name ?? '-' }}</td>
                 <td style="border: 1px solid #000000; background-color: {{ $loop->odd % 2 == 0 ? '#FFFFFF' : '#DCE6F1' }};">{{ $product->detail }}</td>
                 <td style="border: 1px solid #000000; background-color: {{ $loop->odd % 2 == 0 ? '#FFFFFF' : '#DCE6F1' }}; text-align: center;">{{ ucfirst($product->status) }}</td>
             </tr>

@@ -15,8 +15,6 @@ return new class extends Migration {
             $table->string('name');
             $table->text('detail')->nullable();
             $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('set null');
-            $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->onDelete('set null');
-            $table->bigInteger('outlet_id')->nullable(); 
             $table->decimal('price', 15, 2)->nullable();
             $table->integer('stock')->nullable();
             $table->string('image')->nullable();

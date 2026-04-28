@@ -12,10 +12,6 @@
                 species_id</th>
             <th style="background-color: #4F81BD; color: #ffffff; border: 1px solid #000000; font-weight: bold;">
                 category_id</th>
-            <th style="background-color: #4F81BD; color: #ffffff; border: 1px solid #000000; font-weight: bold;">
-                supplier_id</th>
-            <th style="background-color: #4F81BD; color: #ffffff; border: 1px solid #000000; font-weight: bold;">
-                outlet_id</th>
             <th
                 style="background-color: #4F81BD; color: #ffffff; border: 1px solid #000000; font-weight: bold; width: 300px;">
                 detail</th>
@@ -34,14 +30,6 @@
                 <td
                     style="border: 1px solid #000000; background-color: {{ $i % 2 == 0 ? '#FFFFFF' : '#DCE6F1' }}; text-align: right;">
                     {{ 10 * $i }}
-                </td>
-                <td
-                    style="border: 1px solid #000000; background-color: {{ $i % 2 == 0 ? '#FFFFFF' : '#DCE6F1' }}; text-align: center;">
-                    1
-                </td>
-                <td
-                    style="border: 1px solid #000000; background-color: {{ $i % 2 == 0 ? '#FFFFFF' : '#DCE6F1' }}; text-align: center;">
-                    1
                 </td>
                 <td
                     style="border: 1px solid #000000; background-color: {{ $i % 2 == 0 ? '#FFFFFF' : '#DCE6F1' }}; text-align: center;">

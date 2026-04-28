@@ -144,19 +144,19 @@
     </li>
 
     {{-- GRUP LOGISTIK --}}
-    @canany(['category.index', 'product.index', 'supplier.index', 'outlet.index'])
+    @canany(['category.index', 'product.index', 'supplier.index'])
         <div class="sidebar-heading">Manajemen Stok</div>
         <li
-            class="nav-item {{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/outlets*', 'dashboard/suppliers*') ? 'active' : '' }}">
-            <a class="nav-link {{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/outlets*', 'dashboard/suppliers*') ? '' : 'collapsed' }}"
+            class="nav-item {{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/suppliers*') ? 'active' : '' }}">
+            <a class="nav-link {{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/suppliers*') ? '' : 'collapsed' }}"
                 href="#" data-toggle="collapse" data-target="#collapseLogistik"
-                aria-expanded="{{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/outlets*', 'dashboard/suppliers*') ? 'true' : 'false' }}"
+                aria-expanded="{{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/suppliers*') ? 'true' : 'false' }}"
                 aria-controls="collapseLogistik">
                 <i class="fas fa-fw fa-box"></i>
                 <span>Inventori</span>
             </a>
             <div id="collapseLogistik"
-                class="collapse {{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/outlets*', 'dashboard/suppliers*') ? 'show' : '' }}"
+                class="collapse {{ request()->is('dashboard/categories*', 'dashboard/products*', 'dashboard/suppliers*') ? 'show' : '' }}"
                 data-parent="#accordionSidebar">
                 <div class="py-2 collapse-inner">
                     @can('product.index')
@@ -173,11 +173,6 @@
                         <a class="collapse-item {{ request()->is('dashboard/suppliers*') ? 'active' : '' }}"
                             href="{{ route('dashboard.suppliers.index') }}">
                             <i class="fa-solid fa-truck-field fa-sm fa-fw mr-2"></i>Supplier</a>
-                    @endcan
-                    @can('outlet.index')
-                        <a class="collapse-item {{ request()->is('dashboard/outlets*') ? 'active' : '' }}"
-                            href="{{ route('dashboard.outlets.index') }}">
-                            <i class="fa-solid fa-shop fa-sm fa-fw mr-2"></i>Outlet</a>
                     @endcan
                 </div>
             </div>

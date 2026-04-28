@@ -21,9 +21,6 @@
                 Telepon</th>
             <th
                 style="background-color: #4F81BD; color: #ffffff; border: 1px solid #000000; text-align: center; font-weight: bold;">
-                Total Produk</th>
-            <th
-                style="background-color: #4F81BD; color: #ffffff; border: 1px solid #000000; text-align: center; font-weight: bold;">
                 Status</th>
             <th
                 style="background-color: #4F81BD; color: #ffffff; border: 1px solid #000000; text-align: center; font-weight: bold;">
@@ -46,8 +43,6 @@
                     {{ $supplier->address }}</td>
                 <td style="border: 1px solid #000000; background-color: {{ $loop->odd ? '#DCE6F1' : '#FFFFFF' }}; text-align: left;">
                     {{ $supplier->phone }}</td>
-                <td style="border: 1px solid #000000; background-color: {{ $loop->odd ? '#DCE6F1' : '#FFFFFF' }}; text-align: center;">
-                    {{ $supplier->products_count ?? 0 }}</td>
                 <td
                     style="border: 1px solid #000000; background-color: {{ $loop->odd ? '#DCE6F1' : '#FFFFFF' }}; text-align: center;">
                     {{ $supplier->status }}</td>

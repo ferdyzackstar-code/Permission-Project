@@ -21,13 +21,10 @@ class SupplierController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Supplier::withCount('products')->latest();
+            $data = Supplier::latest();
 
             return DataTables::of($data)
                 ->addIndexColumn()
-                ->addColumn('product_qty', function ($row) {
-                    return '<span class="badge badge-info shadow-sm">' . $row->products_count . ' Produk</span>';
-                })
                 ->addColumn('status', function ($row) {
                     $color = $row->status == 'active' ? 'success' : 'danger';
                     return '<span class="badge badge-' . $color . '">' . ucfirst($row->status) . '</span>';
@@ -56,11 +53,11 @@ class SupplierController extends Controller
                             </button>
                         </form>';
                 })
-                ->rawColumns(['product_qty', 'status', 'action'])
+                ->rawColumns(['status', 'action'])
                 ->make(true);
         }
 
-        $suppliers = Supplier::withCount('products')->get();
+        $suppliers = Supplier::all();
 
         return view('dashboard.suppliers.index', compact('suppliers'));
     }
@@ -127,7 +124,7 @@ class SupplierController extends Controller
 
     public function export()
     {
-        $suppliers = Supplier::withCount('products')->get();
+        $suppliers = Supplier::all();
 
         $fileName = 'data_suppliers_anda_petshop_' . date('Y-m-d_H-i-s') . '.xlsx';
         return Excel::download(new \App\Exports\SuppliersExport($suppliers), $fileName);

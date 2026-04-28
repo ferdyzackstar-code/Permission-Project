@@ -14,7 +14,7 @@ class ProductsExport implements FromView, ShouldAutoSize, WithTitle, WithColumnF
     public function view(): View
     {
         return view('dashboard.products.export_excel', [
-            'products' => Product::with(['category.parent', 'supplier', 'outlet'])->get(),
+            'products' => Product::with(['category.parent'])->get(),
         ]);
     }
 

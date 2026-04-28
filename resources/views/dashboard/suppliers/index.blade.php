@@ -49,7 +49,6 @@
                             <th>Email</th>
                             <th>Kota</th>
                             <th>Telepon</th>
-                            <th>Total Produk</th>
                             <th>Status</th>
                             <th>Aksi</th>
                         </tr>
@@ -135,13 +134,6 @@
                     {
                         data: 'phone',
                         name: 'phone'
-                    },
-                    {
-                        data: 'product_qty',
-                        name: 'product_qty',
-                        className: 'text-center',
-                        orderable: false,
-                        searchable: false
                     },
                     {
                         data: 'status',

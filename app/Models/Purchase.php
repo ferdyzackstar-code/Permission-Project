@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Purchase extends Model
 {
+    use HasFactory;
+
     protected $guarded = [];
 
     public function supplier()
@@ -18,4 +21,3 @@ class Purchase extends Model
         return $this->hasMany(PurchaseItem::class, 'purchase_id');
     }
 }
-    

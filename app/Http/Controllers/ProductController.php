@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\ProductsImportTemplateExport;
 use App\Models\Category;
-use App\Models\Outlet;
 use App\Models\Product;
-use App\Models\Supplier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -28,13 +26,10 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $products = Product::with(['category', 'outlet', 'supplier'])->select('products.*');
+            $products = Product::with(['category'])->select('products.*');
 
             return DataTables::eloquent($products)
                 ->addIndexColumn()
-                ->addColumn('supplier_name', function ($row) {
-                    return $row->supplier ? $row->supplier->name : '<span class="text-danger">No Supplier</span>';
-                })
                 ->addColumn('image', function (Product $product) {
                     $path = 'storage/uploads/products/' . $product->image;
                     $url = $product->image && file_exists(public_path($path)) ? asset($path) : asset('storage/uploads/products/default-product.jpg');
@@ -51,9 +46,6 @@ class ProductController extends Controller
                 ->addColumn('category', function (Product $product) {
                     return $product->category->name ?? '-';
                 })
-                ->addColumn('outlet_name', function (Product $product) {
-                    return $product->outlet->name ?? '-';
-                })
                 ->addColumn('price', function (Product $product) {
                     return 'Rp ' . number_format($product->price ?? 0, 0, ',', '.');
                 })
@@ -63,25 +55,21 @@ class ProductController extends Controller
                     $btn .= '<form action="' . route('dashboard.products.destroy', $product->id) . '" method="POST" style="display:inline">' . csrf_field() . method_field('DELETE') . '<button type="button" class="btn btn-danger btn-sm show_confirm"><i class="fa fa-trash"></i></button></form>';
                     return $btn;
                 })
-                ->rawColumns(['supplier_name', 'image', 'status', 'action'])
+                ->rawColumns(['image', 'status', 'action'])
                 ->make(true);
         }
 
-        $outlets = Outlet::all();
         $categories = Category::with('children')->whereNull('parent_id')->get();
         $products = Product::all();
-        $suppliers = Supplier::all();
 
-        return view('dashboard.products.index', compact('categories', 'products', 'outlets', 'suppliers'));
+        return view('dashboard.products.index', compact('categories', 'products'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'name' => 'required',
-            'supplier_id' => 'nullable|exists:suppliers,id',
             'category_id' => 'required',
-            'outlet_id' => 'required',
             'price' => 'required',
             'stock' => 'required|integer',
             'detail' => 'required',
@@ -113,9 +101,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'supplier_id' => 'nullable|exists:suppliers,id',
             'category_id' => 'required',
-            'outlet_id' => 'required',
             'price' => 'required',
             'stock' => 'required|integer',
             'detail' => 'required',
@@ -173,10 +159,8 @@ class ProductController extends Controller
     public function downloadImportTemplate()
     {
         $categories = \App\Models\Category::orderByRaw('COALESCE(parent_id, id), parent_id IS NOT NULL')->get();
-        $suppliers = \App\Models\Supplier::all();
-        $outlets = \App\Models\Outlet::all();
 
-        return Excel::download(new ProductsImportTemplateExport($categories, $suppliers, $outlets), 'template_import_data_products.xlsx');
+        return Excel::download(new ProductsImportTemplateExport($categories), 'template_import_data_products.xlsx');
     }
 
     public function import(Request $request)
@@ -185,17 +169,21 @@ class ProductController extends Controller
             'file' => 'required|mimes:xlsx,xls,csv',
         ]);
 
-        $file = $request->file('file');
         $import = new \App\Imports\ProductsImport();
+        $import->import($request->file('file'));
 
-        $import->import($file);
+        $failures = $import->getFailures();
+        $importedCount = $import->getImportedCount();
 
-        if ($import->failures()->isNotEmpty()) {
-            return back()->with('import_failures', $import->failures());
+        if (!empty($failures)) {
+            return back()->with('import_failures', $failures)->with('import_total_failed', count($failures))->with('import_total_success', $importedCount);
         }
 
-        return redirect()->route('dashboard.products.index')->with('success', 'Data berhasil diimport!');
+        return redirect()
+            ->route('dashboard.products.index')
+            ->with('success', "Import berhasil! {$importedCount} produk berhasil ditambahkan.");
     }
+
     public function export()
     {
         $fileName = 'data_products_anda_petshop_' . date('Y-m-d_H-i-s') . '.xlsx';

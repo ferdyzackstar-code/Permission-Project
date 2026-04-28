@@ -21,19 +21,35 @@
         </div>
     </div>
 
-    @if (session()->has('import_failures'))
-        <div class="alert alert-danger" role="alert">
-            <strong>Beberapa baris gagal diimport:</strong>
-            <ul>
-                @foreach (session()->get('import_failures') as $failure)
-                    <li>
-                        Baris ke-{{ $failure->row() }}:
-                        @foreach ($failure->errors() as $error)
-                            {{ $error }}
-                        @endforeach
-                    </li>
+    @if (session('import_failures'))
+        <div class="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
+            <div class="d-flex align-items-center mb-2">
+                <i class="fa fa-exclamation-triangle mr-2 text-warning"></i>
+                <strong>Import selesai dengan {{ session('import_total_failed') }} baris gagal:</strong>
+            </div>
+            <ul class="mb-0 pl-3" style="max-height: 200px; overflow-y: auto;">
+                @foreach (session('import_failures') as $error)
+                    <li class="small">{{ $error }}</li>
                 @endforeach
             </ul>
+            <hr class="my-2">
+            <p class="mb-0 small text-muted">
+                <i class="fa fa-info-circle"></i>
+                Baris yang valid tetap berhasil diimport. Perbaiki baris di atas lalu import ulang hanya baris tersebut.
+            </p>
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fa fa-check-circle mr-2"></i>
+            {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
         </div>
     @endif
 
@@ -54,7 +70,7 @@
     </div>
 
     <div class="card">
-        
+
         <div class="card-body">
             <div class="table-responsive mt-2">
                 <table class="table table-hover table-bordered" id="data-products">
@@ -63,7 +79,6 @@
                             <th width='1px' class="text-center text-white">No</th>
                             <th class="text-center text-white">Image</th>
                             <th class="text-center text-white">Name</th>
-                            <th class="text-center text-white">Supplier</th>
                             <th class="text-center text-white">Species</th>
                             <th class="text-center text-white">Category</th>
                             <th class="text-center text-white">Status</th>
@@ -135,9 +150,6 @@
                 autoWidth: false,
                 ajax: {
                     url: "{{ route('dashboard.products.index') }}",
-                    data: function(d) {
-                        d.outlet_id = new URLSearchParams(window.location.search).get('outlet_id');
-                    },
                     error: function(xhr, error, thrown) {
                         console.log("Error DataTable: ", xhr.responseText);
                     }
@@ -157,10 +169,6 @@
                     {
                         data: 'name',
                         name: 'name'
-                    },
-                    {
-                        data: 'supplier_name',
-                        name: 'supplier_name'
                     },
                     {
                         data: 'species',
@@ -190,11 +198,11 @@
                     },
                 ],
                 columnDefs: [{
-                        targets: [0, 1, 6, 8, 9],
+                        targets: [0, 1, 5, 7, 8],
                         className: "text-center align-middle"
                     },
                     {
-                        targets: 7,
+                        targets: 6,
                         className: "text-right align-middle"
                     }
                 ],

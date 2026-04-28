@@ -3,271 +3,210 @@
 namespace App\Http\Controllers;
 
 use App\Models\Purchase;
-use App\Models\PurchaseItem;
-use App\Models\Product;
 use App\Models\Supplier;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use Yajra\DataTables\Facades\DataTables;
 
 class PurchaseController extends Controller
 {
-    public function index()
+    /* function __construct()
     {
-        $purchases = Purchase::with('supplier')->latest()->get();
+        $this->middleware('permission:purchase.index|purchase.create|purchase.edit|purchase.delete', ['only' => ['index', 'show']]);
+        $this->middleware('permission:purchase.create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:purchase.edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:purchase.delete', ['only' => ['destroy']]);
+    } */
 
-        $suppliers = Supplier::all();
+    public function index(Request $request)
+    {
+        if ($request->ajax()) {
+            $purchases = Purchase::with(['supplier'])->select('purchases.*');
+
+            return DataTables::eloquent($purchases)
+                ->addIndexColumn()
+                ->addColumn('supplier_name', function ($row) {
+                    return $row->supplier ? $row->supplier->name : '<span class="text-danger">No Supplier</span>';
+                })
+                ->addColumn('purchase_date', function ($row) {
+                    return $row->purchase_date ? date('d-m-Y', strtotime($row->purchase_date)) : '-';
+                })
+                ->addColumn('total', function ($row) {
+                    return 'Rp ' . number_format($row->total_amount ?? 0, 0, ',', '.');
+                })
+                ->addColumn('status', function ($row) {
+                    $color = match ($row->status) {
+                        'pending' => 'warning',
+                        'received' => 'success',
+                        'cancelled' => 'danger',
+                        default => 'secondary',
+                    };
+                    return '<span class="badge badge-' . $color . '">' . ucfirst($row->status) . '</span>';
+                })
+                ->addColumn('action', function ($row) {
+                    $btn = '<button type="button" class="btn btn-info btn-sm mr-1" data-toggle="modal" data-target="#modalShowPurchase' . $row->id . '"><i class="fa fa-eye"></i></button>';
+                    $btn .= '<button type="button" class="btn btn-primary btn-sm mr-1" data-toggle="modal" data-target="#modalEditPurchase' . $row->id . '"><i class="fa fa-edit"></i></button>';
+                    $btn .= '<form action="' . route('dashboard.purchases.destroy', $row->id) . '" method="POST" style="display:inline">' . csrf_field() . method_field('DELETE') . '<button type="button" class="btn btn-danger btn-sm show_confirm"><i class="fa fa-trash"></i></button></form>';
+                    return $btn;
+                })
+                ->rawColumns(['supplier_name', 'status', 'action'])
+                ->make(true);
+        }
+
+        $purchases = Purchase::all();
+        return view('dashboard.purchases.index', compact('purchases'));
+    }
+
+    public function create()
+    {
+        // PENTING: Filter hanya active suppliers
+        $suppliers = Supplier::where('status', 'active')->get();
         $products = Product::all();
 
-        // Info Cards Data
-        $totalProducts = Product::count();
-        $pendingPurchases = Purchase::where('status', 'pending')->count();
-        $receivedPurchases = Purchase::where('status', 'received')->count();
-        $cancelledPurchases = Purchase::where('status', 'cancelled')->count();
-
-        return view('dashboard.purchases.index', compact('purchases', 'suppliers', 'products', 'totalProducts', 'pendingPurchases', 'receivedPurchases', 'cancelledPurchases'));
+        return view('dashboard.purchases.create', compact('suppliers', 'products'));
     }
 
     public function store(Request $request)
     {
+        // Validasi: supplier harus active
         $validated = $request->validate([
-            'supplier_id' => 'required|exists:suppliers,id',
+            'supplier_id' => [
+                'required',
+                'exists:suppliers,id',
+                function ($attribute, $value, $fail) {
+                    $supplier = Supplier::find($value);
+                    if ($supplier && $supplier->status !== 'active') {
+                        $fail('Supplier harus dalam status aktif untuk melakukan pembelian.');
+                    }
+                },
+            ],
             'purchase_date' => 'required|date',
+            'purchase_number' => 'required|unique:purchases,purchase_number',
             'notes' => 'nullable|string',
-            'product_id' => 'required|array',
-            'product_id.*' => 'required|exists:products,id',
-            'quantity' => 'required|array',
-            'quantity.*' => 'required|numeric|min:1',
-            'price' => 'required|array',
+            'status' => 'required|in:pending,received,cancelled',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.price' => 'required|numeric|min:0',
         ]);
 
-        $cleanPrices = array_map(function ($price) {
-            return (float) preg_replace('/[^0-9]/', '', $price);
-        }, $request->price);
-
-        DB::beginTransaction();
         try {
-            // Generate PO Number
-            $datePrefix = Carbon::parse($request->purchase_date)->format('Ymd');
-            $last = Purchase::whereDate('purchase_date', $request->purchase_date)->latest('id')->first();
-            $seq = $last ? intval(substr($last->purchase_number, -4)) + 1 : 1;
-            $poNumber = 'PO-' . $datePrefix . '-' . str_pad($seq, 4, '0', STR_PAD_LEFT);
-
-            // Calculate Grand Total
             $totalAmount = 0;
-            for ($i = 0; $i < count($request->product_id); $i++) {
-                $totalAmount += $request->quantity[$i] * $cleanPrices[$i];
+            foreach ($validated['items'] as $item) {
+                $totalAmount += $item['quantity'] * $item['price'];
             }
 
-            // Create Purchase Header - Status always 'pending' on create
             $purchase = Purchase::create([
-                'supplier_id' => $request->supplier_id,
-                'purchase_date' => $request->purchase_date,
-                'purchase_number' => $poNumber,
+                'supplier_id' => $validated['supplier_id'],
+                'purchase_date' => $validated['purchase_date'],
+                'purchase_number' => trim($validated['purchase_number']),
                 'total_amount' => $totalAmount,
-                'notes' => $request->notes,
-                'status' => 'pending', // Always pending on create
+                'notes' => $validated['notes'] ?? null,
+                'status' => $validated['status'] ?? 'pending',
             ]);
 
-            // Create Purchase Items - Stock NOT incremented yet
-            for ($i = 0; $i < count($request->product_id); $i++) {
-                $qty = $request->quantity[$i];
-                $price = $cleanPrices[$i];
-                $subtotal = $qty * $price;
-                $productId = $request->product_id[$i];
+            DB::transaction(function () use ($purchase, $validated) {
+                foreach ($validated['items'] as $item) {
+                    $subtotal = $item['quantity'] * $item['price'];
 
-                PurchaseItem::create([
-                    'purchase_id' => $purchase->id,
-                    'product_id' => $productId,
-                    'quantity' => $qty,
-                    'price' => $price,
-                    'subtotal' => $subtotal,
-                ]);
-            }
+                    \App\Models\PurchaseItem::create([
+                        'purchase_id' => $purchase->id,
+                        'product_id' => $item['product_id'],
+                        'quantity' => $item['quantity'],
+                        'price' => (float) $item['price'],
+                        'subtotal' => $subtotal,
+                    ]);
+                }
+            });
 
-            DB::commit();
-            return response()->json([
-                'success' => true,
-                'message' => 'Pesanan pembelian berhasil dibuat! Menunggu konfirmasi.',
-            ]);
+            return redirect()->route('dashboard.purchases.index')->with('success', 'Pembelian berhasil ditambahkan.');
         } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Error: ' . $e->getMessage(),
-                ],
-                500,
-            );
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat menyimpan pembelian: ' . $e->getMessage());
         }
     }
 
-    public function update(Request $request, $id)
+    public function edit(Purchase $purchase)
     {
-        $purchase = Purchase::with('items')->findOrFail($id);
+        // Filter hanya active suppliers (kecuali current supplier purchase)
+        $suppliers = Supplier::where('status', 'active')
+            ->orWhere('id', $purchase->supplier_id) // Include current supplier
+            ->get();
+        $products = Product::all();
 
-        // Only allow editing if status is 'pending'
-        if ($purchase->status !== 'pending') {
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Hanya pesanan dengan status Pending yang dapat diedit!',
-                ],
-                403,
-            );
-        }
+        return view('dashboard.purchases.edit', compact('purchase', 'suppliers', 'products'));
+    }
 
+    public function update(Request $request, Purchase $purchase)
+    {
         $validated = $request->validate([
-            'supplier_id' => 'required|exists:suppliers,id',
+            'supplier_id' => [
+                'required',
+                'exists:suppliers,id',
+                function ($attribute, $value, $fail) {
+                    $supplier = Supplier::find($value);
+                    if ($supplier && $supplier->status !== 'active') {
+                        $fail('Supplier harus dalam status aktif untuk melakukan pembelian.');
+                    }
+                },
+            ],
             'purchase_date' => 'required|date',
+            'purchase_number' => 'required|unique:purchases,purchase_number,' . $purchase->id,
             'notes' => 'nullable|string',
-            'product_id' => 'required|array',
-            'quantity' => 'required|array',
-            'price' => 'required|array',
+            'status' => 'required|in:pending,received,cancelled',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.price' => 'required|numeric|min:0',
         ]);
 
-        $cleanPrices = array_map(function ($price) {
-            return (float) preg_replace('/[^0-9]/', '', $price);
-        }, $request->price);
-
-        DB::beginTransaction();
         try {
-            // Delete old items
-            $purchase->items()->delete();
-
             $totalAmount = 0;
-            // Create new items
-            for ($i = 0; $i < count($request->product_id); $i++) {
-                $qty = $request->quantity[$i];
-                $price = $cleanPrices[$i];
-                $subtotal = $qty * $price;
-                $productId = $request->product_id[$i];
-                $totalAmount += $subtotal;
-
-                PurchaseItem::create([
-                    'purchase_id' => $purchase->id,
-                    'product_id' => $productId,
-                    'quantity' => $qty,
-                    'price' => $price,
-                    'subtotal' => $subtotal,
-                ]);
+            foreach ($validated['items'] as $item) {
+                $totalAmount += $item['quantity'] * $item['price'];
             }
 
-            // Update purchase header
             $purchase->update([
-                'supplier_id' => $request->supplier_id,
-                'purchase_date' => $request->purchase_date,
+                'supplier_id' => $validated['supplier_id'],
+                'purchase_date' => $validated['purchase_date'],
+                'purchase_number' => trim($validated['purchase_number']),
                 'total_amount' => $totalAmount,
-                'notes' => $request->notes,
+                'notes' => $validated['notes'] ?? null,
+                'status' => $validated['status'],
             ]);
 
-            DB::commit();
-            return response()->json([
-                'success' => true,
-                'message' => 'Pesanan pembelian berhasil diperbarui!',
-            ]);
+            DB::transaction(function () use ($purchase, $validated) {
+                // Hapus items lama
+                $purchase->items()->delete();
+
+                // Buat items baru
+                foreach ($validated['items'] as $item) {
+                    $subtotal = $item['quantity'] * $item['price'];
+
+                    \App\Models\PurchaseItem::create([
+                        'purchase_id' => $purchase->id,
+                        'product_id' => $item['product_id'],
+                        'quantity' => $item['quantity'],
+                        'price' => (float) $item['price'],
+                        'subtotal' => $subtotal,
+                    ]);
+                }
+            });
+
+            return redirect()->route('dashboard.purchases.index')->with('success', 'Pembelian berhasil diupdate.');
         } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Gagal update: ' . $e->getMessage(),
-                ],
-                500,
-            );
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat update pembelian: ' . $e->getMessage());
         }
     }
 
-    public function show($id)
+    public function destroy(Purchase $purchase)
     {
-        $purchase = Purchase::with(['supplier', 'items.product'])->findOrFail($id);
-        return response()->json($purchase);
-    }
-
-    // NEW: Confirmation Page
-    public function confirmation()
-    {
-        $pendingPurchases = Purchase::with('supplier')->where('status', 'pending')->latest()->get();
-
-        return view('dashboard.purchases.confirmation', compact('pendingPurchases'));
-    }
-
-    // NEW: Approve Purchase
-    public function approve($id)
-    {
-        $purchase = Purchase::with('items')->findOrFail($id);
-
-        if ($purchase->status !== 'pending') {
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Hanya pesanan Pending yang dapat disetujui!',
-                ],
-                403,
-            );
-        }
-
-        DB::beginTransaction();
-        try {
-            // Update status to received
-            $purchase->update(['status' => 'received']);
-
-            // Increment stock for all items
-            foreach ($purchase->items as $item) {
-                Product::where('id', $item->product_id)->increment('stock', $item->quantity);
-            }
-
-            DB::commit();
-            return response()->json([
-                'success' => true,
-                'message' => 'Pesanan berhasil disetujui! Stok produk telah ditambahkan.',
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Gagal menyetujui: ' . $e->getMessage(),
-                ],
-                500,
-            );
-        }
-    }
-
-    // NEW: Cancel Purchase
-    public function cancel($id)
-    {
-        $purchase = Purchase::findOrFail($id);
-
-        if ($purchase->status !== 'pending') {
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Hanya pesanan Pending yang dapat dibatalkan!',
-                ],
-                403,
-            );
-        }
-
-        DB::beginTransaction();
-        try {
-            // Update status to cancelled - Stock is NOT incremented
-            $purchase->update(['status' => 'cancelled']);
-
-            DB::commit();
-            return response()->json([
-                'success' => true,
-                'message' => 'Pesanan berhasil dibatalkan.',
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Gagal membatalkan: ' . $e->getMessage(),
-                ],
-                500,
-            );
-        }
+        $purchase->items()->delete();
+        $purchase->delete();
+        return redirect()->route('dashboard.purchases.index')->with('success', 'Pembelian berhasil dihapus.');
     }
 }

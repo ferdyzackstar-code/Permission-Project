@@ -5,14 +5,12 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Product;
 use App\Models\Category;
-use App\Models\Outlet;
 use App\Models\Supplier;
 
 class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        $outlets = Outlet::all();
         $suppliers = Supplier::all();
         $subCategories = Category::whereNotNull('parent_id')->get();
 
@@ -35,7 +33,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Drontal Cat (Obat Cacing)', 
                 'detail' => 'Obat cacing spektrum luas untuk kucing.',
-                'image' => '1774846607-drontal-cat-obat-cacing.jpg'
+                'image' => '1775704927-drontal-cat-obat-cacing.jpg'
             ],
             [
                 'name' => 'Kandang Besi Lipat Tingkat Size L', 
@@ -54,9 +52,7 @@ class ProductSeeder extends Seeder
                 'name' => $item['name'],
                 'detail' => $item['detail'],
                 'category_id' => $subCategories->random()->id,
-                'outlet_id' => $outlets->random()->id,
-                'supplier_id' => $suppliers->random()->id,
-                'price' => rand(35000, 350000), 
+                'price' => rand(20000, 100000), 
                 'stock' => rand(10, 100),
                 'image' => $item['image'] ?? 'default-product.jpg',
                 'status' => 'active', 

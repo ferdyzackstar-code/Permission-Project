@@ -1,53 +1,46 @@
+@php
+    // Pure table tanpa wrapping elements
+    // FromView Excel parser butuh table yang clean
+@endphp
+
 <table>
     <thead>
         <tr>
-            <th colspan="2"
-                style="background-color: #C0504D; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #000000;">
-                ID KATEGORI</th>
-            <th></th>
-            <th colspan="2"
-                style="background-color: #9BBB59; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #000000;">
-                ID SUPPLIER</th>
-            <th></th>
-            <th colspan="2"
-                style="background-color: #8064A2; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #000000;">
-                ID OUTLET</th>
+            <th
+                style="background-color: #C0504D; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #000000; padding: 8px; width: 80px;">
+                ID KATEGORI
+            </th>
+            <th
+                style="background-color: #C0504D; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #000000; padding: 8px;">
+                NAMA KATEGORI
+            </th>
         </tr>
     </thead>
     <tbody>
-        @php
-            $maxRows = max($categories->count(), $suppliers->count(), $outlets->count());
-        @endphp
-
-        @for ($i = 0; $i < $maxRows; $i++)
-            <tr> 
-                @php $category = $categories[$i] ?? null; @endphp
-
+        @foreach ($categories as $category)
+            <tr>
                 <td
-                    style="border: 1px solid #000000; text-align: center; {{ $category && is_null($category->parent_id) ? 'font-weight: bold; background-color: #F2DCDB;' : '' }}">
-                    {{ $category->id ?? '' }}
+                    style="border: 1px solid #000000; text-align: center; font-weight: bold; background-color: #F2DCDB; padding: 8px;">
+                    {{ $category->id }}
                 </td>
-
-                <td
-                    style="border: 1px solid #000000; 
-
-            {{ $category && !is_null($category->parent_id) ? 'padding-left: 20px; color: #595959; font-style: italic;' : 'font-weight: bold;' }}">
-
-                    @if ($category) 
-                        {{ is_null($category->parent_id) ? '— ' . $category->name : $category->name }}
-                    @endif
+                <td style="border: 1px solid #000000; padding: 8px; font-weight: bold;">
+                    — {{ $category->name }}
                 </td>
-
-                <td></td>
-
-                <td style="border: 1px solid #000000; text-align: center;">{{ $suppliers[$i]->id ?? '' }}</td>
-                <td style="border: 1px solid #000000;">{{ $suppliers[$i]->name ?? '' }}</td>
-
-                <td></td>
-
-                <td style="border: 1px solid #000000; text-align: center;">{{ $outlets[$i]->id ?? '' }}</td>
-                <td style="border: 1px solid #000000;">{{ $outlets[$i]->name ?? '' }}</td>
             </tr>
-        @endfor
+
+            @if ($category->children->count() > 0)
+                @foreach ($category->children as $child)
+                    <tr>
+                        <td style="border: 1px solid #000000; text-align: center; padding: 8px;">
+                            {{ $child->id }}
+                        </td>
+                        <td
+                            style="border: 1px solid #000000; padding: 8px; padding-left: 20px; color: #595959; font-style: italic;">
+                            {{ $child->name }}
+                        </td>
+                    </tr>
+                @endforeach
+            @endif
+        @endforeach
     </tbody>
 </table>

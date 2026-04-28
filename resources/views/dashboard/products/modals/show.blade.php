@@ -24,10 +24,6 @@
                         </td>
                     </tr>
                     <tr>
-                        <th class="bg-light">SUPPLIER</th>
-                        <td>{{ $product->supplier->name ?? '-' }}</td>
-                    </tr>
-                    <tr>
                         <th class="bg-light">STATUS</th>
                         <td>
                             <span class="badge badge-{{ $product->status == 'active' ? 'success' : 'danger' }}">
@@ -46,10 +42,6 @@
                             <i class="fa fa-angle-right mx-1"></i>
                             {{ $product->category->name ?? '-' }}
                         </td>
-                    </tr>
-                    <tr>
-                        <th class="bg-light">CABANG</th>
-                        <td>{{ $product->outlet->name ?? 'Tidak ada cabang' }}</td>
                     </tr>
                     <tr>
                         <th class="bg-light">HARGA</th>
