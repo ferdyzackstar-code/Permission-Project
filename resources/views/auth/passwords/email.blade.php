@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 
 <head>
     <meta charset="UTF-8">
@@ -7,48 +7,77 @@
     <title>Lupa Password | {{ \App\Models\SettingApp::get('app_name', 'Anda Petshop') }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=Poppins:wght@300;400;500;600&display=swap');
+
+        :root {
+            --purple-dark: #3b1f8c;
+            --purple-main: #512da8;
+            --purple-mid: #6a3fc4;
+            --purple-light: #7c5cbf;
+            --purple-soft: #ede7f6;
+            --input-bg: #eeedf5;
+            --text-dark: #2d2640;
+            --text-muted: #7a7290;
+            --white: #ffffff;
+            --shadow: 0 20px 60px rgba(81, 45, 168, .18);
+            --radius-card: 28px;
+            --radius-input: 12px;
+        }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Montserrat', sans-serif;
         }
 
         body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            background: linear-gradient(to right, #e2e2e2, #c9d6ff);
+            background: #f4f4f8;
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(81, 45, 168, .08) 0%, transparent 50%),
+                radial-gradient(circle at 85% 20%, rgba(255, 143, 0, .06) 0%, transparent 40%);
+            padding: 20px;
         }
 
-        .wrapper {
+        .card-auth {
             display: flex;
-            border-radius: 30px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
-            width: 640px;
+            background: var(--white);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow);
+            width: 700px;
             max-width: 100%;
-            min-height: 360px;
+            min-height: 420px;
+            overflow: hidden;
         }
 
-        /* Panel kiri: foto / gradient ungu */
+        /* Panel kiri */
         .panel-left {
-            width: 45%;
+            width: 42%;
+            flex-shrink: 0;
             position: relative;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
+            padding: 36px 28px;
             text-align: center;
-            padding: 30px;
-            color: #fff;
-            background: linear-gradient(to bottom, #5c6bc0, #512da8);
+            color: var(--white);
+            overflow: hidden;
         }
 
-        .panel-left.has-image {
+        .panel-left .bg-layer {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(145deg, var(--purple-mid), var(--purple-dark));
+        }
+
+        .panel-left .bg-photo {
+            position: absolute;
+            inset: 0;
             background-size: cover;
             background-position: center;
         }
@@ -56,100 +85,231 @@
         .panel-left .overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to bottom, rgba(92, 107, 192, 0.83), rgba(81, 45, 168, 0.87));
+            background: linear-gradient(145deg, rgba(59, 31, 140, .78), rgba(81, 45, 168, .72));
         }
 
         .panel-left .content {
             position: relative;
-            z-index: 1;
+            z-index: 2;
         }
 
-        .panel-left h2 {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .panel-left p {
-            font-size: 13px;
-            opacity: .9;
-            line-height: 1.5;
-        }
-
-        /* Panel kanan: form */
-        .panel-right {
-            width: 55%;
-            background: #fff;
+        .shop-logo {
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, .15);
+            border: 2px solid rgba(255, 255, 255, .25);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px 35px;
-            flex-direction: column;
+            margin: 0 auto 14px;
+            overflow: hidden;
         }
 
-        .panel-right h1 {
-            font-size: 22px;
-            margin-bottom: 8px;
-            color: #333;
+        .shop-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        .panel-right p {
-            font-size: 13px;
-            color: #888;
+        .shop-logo i {
+            font-size: 26px;
+            color: rgba(255, 255, 255, .9);
+        }
+
+        .shop-name {
+            font-family: 'Nunito', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
             margin-bottom: 20px;
         }
 
-        input {
-            background: #eee;
-            border: none;
-            padding: 11px 15px;
-            font-size: 13px;
-            border-radius: 8px;
-            width: 100%;
-            outline: none;
-            margin-bottom: 10px;
+        .paw-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, .12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
         }
 
-        button {
-            background: #512da8;
-            color: #fff;
-            font-size: 12px;
-            padding: 11px 0;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            letter-spacing: .5px;
-            text-transform: uppercase;
-            width: 100%;
-            cursor: pointer;
-            margin-top: 10px;
+        .paw-icon i {
+            font-size: 22px;
         }
 
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 12px;
-            margin-bottom: 15px;
-            width: 100%;
-            text-align: center;
+        .panel-left h2 {
+            font-family: 'Nunito', sans-serif;
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .panel-left p {
+            font-size: 12.5px;
+            opacity: .85;
+            line-height: 1.6;
+        }
+
+        .paw-decor {
+            position: absolute;
+            opacity: .07;
+            font-size: 70px;
+            color: var(--white);
+            pointer-events: none;
+        }
+
+        .paw-decor.tr {
+            top: -15px;
+            right: -15px;
+            transform: rotate(25deg);
+        }
+
+        .paw-decor.bl {
+            bottom: -15px;
+            left: -15px;
+            transform: rotate(-20deg);
+            font-size: 50px;
+        }
+
+        /* Panel kanan */
+        .panel-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 44px 40px;
         }
 
         .back-link {
-            display: block;
-            margin-top: 18px;
-            font-size: 13px;
-            color: #512da8;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
             text-decoration: none;
-            font-weight: 600;
+            margin-bottom: 24px;
+            font-weight: 500;
+            transition: color .2s;
         }
 
-        .error-msg {
-            color: red;
+        .back-link:hover {
+            color: var(--purple-main);
+        }
+
+        .panel-right h1 {
+            font-family: 'Nunito', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+
+        .panel-right .subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+        }
+
+        .input-wrap {
+            position: relative;
+            margin-bottom: 14px;
+        }
+
+        .input-wrap i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--purple-light);
+            font-size: 14px;
+            width: 16px;
+            text-align: center;
+        }
+
+        .input-wrap input {
+            width: 100%;
+            background: var(--input-bg);
+            border: 2px solid transparent;
+            border-radius: var(--radius-input);
+            padding: 12px 14px 12px 40px;
+            font-size: 13px;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-dark);
+            outline: none;
+            transition: border-color .25s, background .25s;
+        }
+
+        .input-wrap input:focus {
+            border-color: var(--purple-main);
+            background: #fff;
+        }
+
+        .input-wrap input.is-invalid {
+            border-color: #e53935 !important;
+        }
+
+        .input-wrap input::placeholder {
+            color: #b0aac8;
+        }
+
+        .error-text {
             font-size: 11px;
+            color: #e53935;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            padding-left: 4px;
             display: block;
-            margin-bottom: 6px;
+        }
+
+        .alert-success-box {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            border-left: 3px solid #43a047;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--purple-mid), var(--purple-dark));
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius-input);
+            padding: 13px;
+            font-size: 13px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: opacity .25s, transform .2s, box-shadow .25s;
+            box-shadow: 0 6px 20px rgba(81, 45, 168, .35);
+            margin-top: 4px;
+        }
+
+        .btn-submit:hover {
+            opacity: .92;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 28px rgba(81, 45, 168, .4);
+        }
+
+        @media (max-width: 600px) {
+            .card-auth {
+                flex-direction: column;
+            }
+
+            .panel-left {
+                width: 100%;
+                min-height: 180px;
+            }
+
+            .panel-right {
+                padding: 28px 24px;
+            }
         }
     </style>
 </head>
@@ -160,44 +320,70 @@
         $appImage = \App\Models\SettingApp::get('app_image');
         $appName = \App\Models\SettingApp::get('app_name', 'Anda Petshop');
         $hasImage = $appImage && \Illuminate\Support\Facades\Storage::disk('public')->exists($appImage);
+        $imgUrl = $hasImage ? Storage::url($appImage) : null;
     @endphp
 
-    <div class="wrapper">
+    <div class="card-auth">
+
         {{-- Panel kiri --}}
-        <div class="panel-left {{ $hasImage ? 'has-image' : '' }}"
-            @if ($hasImage) style="background-image:url('{{ Storage::url($appImage) }}')" @endif>
+        <div class="panel-left">
+            <div class="bg-layer"></div>
             @if ($hasImage)
-                <div class="overlay"></div>
+                <div class="bg-photo" style="background-image:url('{{ $imgUrl }}')"></div>
             @endif
+            <div class="overlay"></div>
+            <i class="fas fa-paw paw-decor tr"></i>
+            <i class="fas fa-paw paw-decor bl"></i>
+
             <div class="content">
-                <i class="fas fa-paw fa-3x mb-3" style="opacity:.85"></i>
-                <h2>{{ $appName }}</h2>
-                <p>Masukkan email Anda dan kami akan mengirimkan link reset password.</p>
+                <div class="shop-logo">
+                    @if ($hasImage)
+                        <img src="{{ $imgUrl }}" alt="{{ $appName }}">
+                    @else
+                        <i class="fas fa-cat"></i>
+                    @endif
+                </div>
+                <div class="shop-name">{{ $appName }}</div>
+
+                <div class="paw-icon">
+                    <i class="fas fa-key"></i>
+                </div>
+                <h2>Reset Password</h2>
+                <p>Masukkan email terdaftar Anda, kami akan mengirimkan link untuk reset password.</p>
             </div>
         </div>
 
-        {{-- Panel kanan: form --}}
+        {{-- Panel kanan --}}
         <div class="panel-right">
+            <a href="{{ route('login') }}" class="back-link">
+                <i class="fas fa-arrow-left fa-sm"></i> Kembali ke Halaman Login
+            </a>
+
             <h1>Lupa Password?</h1>
-            <p>Kami kirimkan link reset ke email Anda</p>
+            <p class="subtitle">Tenang, kami bantu reset password Anda</p>
 
             @if (session('status'))
-                <div class="alert-success">{{ session('status') }}</div>
+                <div class="alert-success-box">
+                    <i class="fas fa-check-circle" style="margin-right:6px"></i>{{ session('status') }}
+                </div>
             @endif
 
-            <form method="POST" action="{{ route('password.email') }}" style="width:100%">
+            <form method="POST" action="{{ route('password.email') }}">
                 @csrf
-                <input type="email" name="email" value="{{ old('email') }}" placeholder="Alamat Email" required
-                    autocomplete="email" autofocus class="@error('email') is-invalid @enderror">
+                <div class="input-wrap">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="email" value="{{ old('email') }}"
+                        placeholder="Masukkan alamat email Anda" class="{{ $errors->has('email') ? 'is-invalid' : '' }}"
+                        required autocomplete="email" autofocus>
+                </div>
                 @error('email')
-                    <span class="error-msg">{{ $message }}</span>
+                    <span class="error-text"><i class="fas fa-exclamation-circle"
+                            style="margin-right:3px"></i>{{ $message }}</span>
                 @enderror
 
-                <button type="submit">Kirim Link Reset</button>
-
-                <a href="{{ route('login') }}" class="back-link">
-                    <i class="fas fa-arrow-left fa-sm"></i> Kembali ke Login
-                </a>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-paper-plane" style="margin-right:8px"></i>Kirim Link Reset
+                </button>
             </form>
         </div>
     </div>

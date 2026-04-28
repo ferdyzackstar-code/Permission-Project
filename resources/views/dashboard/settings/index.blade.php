@@ -38,7 +38,6 @@
                             Foto ini dipakai di: <strong>Sidebar</strong>, <strong>Login</strong>,
                             <strong>Register</strong>, dan <strong>Lupa Password</strong>.
                         </small>
-                        <input type="file" name="app_image" class="form-control-file" accept="image/*"
                             onchange="previewImage(this)">
                         <div class="mt-3">
                             @if (!empty($settings['app_image']))

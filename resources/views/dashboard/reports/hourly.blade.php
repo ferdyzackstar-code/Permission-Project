@@ -162,7 +162,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-0 pt-3">
                 <h6 class="font-weight-bold mb-0"><i class="fa-solid fa-table-list text-primary"></i> Rincian Laporan
-                    Harian</h6>
+                    Per-Jam</h6>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">

@@ -181,8 +181,8 @@
 
         <!-- Table Purchases -->
         <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">
+            <div class="card-header py-3 bg-primary">
+                <h6 class="m-0 font-weight-bold text-white">
                     <i class="fas fa-list"></i> Riwayat Pembelian
                 </h6>
             </div>
