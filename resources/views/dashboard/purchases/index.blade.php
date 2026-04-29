@@ -1,7 +1,6 @@
 @extends('dashboard.layouts.admin')
 
 @section('content')
-
     @push('styles')
         <link rel="stylesheet" href="{{ asset('asset/css/purchases-style.css') }}">
     @endpush
@@ -12,8 +11,8 @@
             <h2 class="h3 mb-0 text-gray-800">Manajemen Pembelian Barang</h2>
             <a href="{{ route('dashboard.purchases.confirmation') }}" class="btn btn-warning">
                 <i class="fas fa-clock"></i> Konfirmasi Pembelian
-                @if ($pendingPurchases > 0)
-                    <span class="badge badge-light">{{ $pendingPurchases }}</span>
+                @if ($pendingCount > 0)
+                    <span class="badge badge-light">{{ $pendingCount }}</span>
                 @endif
             </a>
         </div>
@@ -43,7 +42,7 @@
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Dalam Perjalanan
                                 </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $pendingPurchases }}</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $pendingCount }}</div>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-clock fa-2x text-gray-300"></i>
@@ -60,7 +59,7 @@
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Pembelian Selesai
                                 </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $receivedPurchases }}</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $completedCount }}</div>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-check-circle fa-2x text-gray-300"></i>
@@ -76,7 +75,7 @@
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Pembelian Batal</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $cancelledPurchases }}</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $cancelledCount }}</div>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-times-circle fa-2x text-gray-300"></i>
@@ -152,9 +151,7 @@
                         </button>
                     </div>
 
-                    <div id="productItemsContainer">
-                        <!-- Product items will be added here -->
-                    </div>
+                    <div id="productItemsContainer"></div>
 
                     <div class="row mt-4">
                         <div class="col-md-12 text-right">
@@ -197,7 +194,7 @@
                                 <th>Supplier</th>
                                 <th>Total</th>
                                 <th class="text-center">Status</th>
-                                <th width="20%">Aksi</th>
+                                <th width="20%" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -209,18 +206,22 @@
                                         {{ \Carbon\Carbon::parse($purchase->purchase_date)->isoFormat('dddd, DD MMMM YYYY') }}
                                     </td>
                                     <td>{{ $purchase->supplier->name }}</td>
-                                    <td class="font-weight-bold">Rp
-                                        {{ number_format($purchase->total_amount, 0, ',', '.') }}</td>
+                                    <td class="font-weight-bold">
+                                        Rp {{ number_format($purchase->total_amount, 0, ',', '.') }}
+                                    </td>
                                     <td class="text-center">
                                         @if ($purchase->status == 'received')
-                                            <span class="badge badge-success text-white"><i class="fas fa-check"></i>
-                                                Selesai</span>
-                                        @elseif($purchase->status == 'cancelled')
-                                            <span class="badge badge-danger text-white"><i class="fas fa-times"></i>
-                                                Batal</span>
+                                            <span class="badge badge-success text-white">
+                                                <i class="fas fa-check"></i> Selesai
+                                            </span>
+                                        @elseif ($purchase->status == 'cancelled')
+                                            <span class="badge badge-danger text-white">
+                                                <i class="fas fa-times"></i> Batal
+                                            </span>
                                         @else
-                                            <span class="badge badge-warning text-white"><i class="fas fa-clock"></i>
-                                                Pending</span>
+                                            <span class="badge badge-warning text-white">
+                                                <i class="fas fa-clock"></i> Pending
+                                            </span>
                                         @endif
                                     </td>
                                     <td class="text-center action-buttons">
@@ -363,106 +364,126 @@
             height: 35px;
             padding: 0;
         }
+
+        .detail-info {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: flex-start;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e3e6f0;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+            width: 40%;
+            margin: 0;
+            padding-right: 15px;
+        }
+
+        .detail-value {
+            color: #212529;
+            flex: 1;
+            word-break: break-word;
+        }
+
+        td.action-buttons {
+            white-space: nowrap !important;
+        }
+
+        td.action-buttons button {
+            margin: 0 3px;
+        }
     </style>
 
     <script>
         let productRowIndex = 0;
         const products = @json($products);
 
-        // Format Rupiah Function
         function formatRupiah(angka) {
             if (angka === undefined || angka === null) return '0';
             let number = Math.round(parseFloat(angka));
             if (isNaN(number)) return '0';
-            let number_string = number.toString();
-            let sisa = number_string.length % 3;
-            let rupiah = number_string.substr(0, sisa);
-            let ribuan = number_string.substr(sisa).match(/\d{3}/gi);
-            if (ribuan) {
-                let separator = sisa ? '.' : '';
-                rupiah += separator + ribuan.join('.');
-            }
+            let s = number.toString();
+            let sisa = s.length % 3;
+            let rupiah = s.substr(0, sisa);
+            let ribuan = s.substr(sisa).match(/\d{3}/gi);
+            if (ribuan) rupiah += (sisa ? '.' : '') + ribuan.join('.');
             return rupiah;
         }
 
-        // Calculate Grand Total
         function calculateGrandTotal() {
             let total = 0;
             $('.product-item-row').each(function() {
                 let qty = parseInt($(this).find('.qty-input').val()) || 0;
-                let priceRaw = $(this).find('.price-input').val().replace(/\./g, '');
-                let price = parseFloat(priceRaw) || 0;
-                let subtotal = qty * price;
-                $(this).find('.subtotal-display').text('Rp ' + formatRupiah(subtotal));
-                total += subtotal;
+                let price = parseFloat($(this).find('.price-input').val().replace(/\./g, '')) || 0;
+                let sub = qty * price;
+                $(this).find('.subtotal-display').text('Rp ' + formatRupiah(sub));
+                total += sub;
             });
             $('#grandTotal').text('Rp ' + formatRupiah(total));
         }
 
-        // Add Product Row
         function addProductRow(product_id = '', quantity = 1, price = '') {
             productRowIndex++;
-            let productOptions = '<option value="">-- Pilih Produk --</option>';
+            let opts = '<option value="">-- Pilih Produk --</option>';
             products.forEach(p => {
-                let selected = p.id == product_id ? 'selected' : '';
-                productOptions += `<option value="${p.id}" ${selected}>${p.name}</option>`;
+                opts += `<option value="${p.id}" ${p.id == product_id ? 'selected' : ''}>${p.name}</option>`;
             });
-
-            let row = `
+            $('#productItemsContainer').append(`
                 <div class="product-item-row" data-index="${productRowIndex}">
                     <div class="row align-items-end">
                         <div class="col-md-5">
                             <label class="font-weight-bold">Produk</label>
-                            <select name="product_id[]" class="form-control" required>
-                                ${productOptions}
-                            </select>
+                            <select name="product_id[]" class="form-control" required>${opts}</select>
                         </div>
                         <div class="col-md-2">
                             <label class="font-weight-bold">Jumlah</label>
                             <div class="qty-control">
-                                <button type="button" class="btn btn-sm btn-outline-secondary qty-minus">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                                <input type="number" name="quantity[]" class="form-control qty-input" 
-                                    value="${quantity}" min="1" required>
-                                <button type="button" class="btn btn-sm btn-outline-secondary qty-plus">
-                                    <i class="fas fa-plus"></i>
-                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary qty-minus"><i class="fas fa-minus"></i></button>
+                                <input type="number" name="quantity[]" class="form-control qty-input" value="${quantity}" min="1" required>
+                                <button type="button" class="btn btn-sm btn-outline-secondary qty-plus"><i class="fas fa-plus"></i></button>
                             </div>
                         </div>
                         <div class="col-md-2">
                             <label class="font-weight-bold">Harga Satuan</label>
-                            <input type="text" name="price[]" class="form-control price-input" 
-                                value="${price}" placeholder="0" required>
+                            <input type="text" name="price[]" class="form-control price-input" value="${price}" placeholder="0" required>
                         </div>
                         <div class="col-md-2">
                             <label class="font-weight-bold">Subtotal</label>
                             <div class="form-control bg-light subtotal-display">Rp 0</div>
                         </div>
                         <div class="col-md-1 text-center">
-                            <button type="button" class="btn btn-danger btn-sm remove-product">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <button type="button" class="btn btn-danger btn-sm remove-product"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
-            `;
-            $('#productItemsContainer').append(row);
+            `);
             calculateGrandTotal();
         }
 
         $(document).ready(function() {
-            // DataTable
+
             $('#purchaseTable').DataTable({
-                "order": [
-                    [2, "desc"]
+                order: [
+                    [2, 'desc']
                 ],
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/id.json"
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/id.json'
                 }
             });
 
-            // Supplier Selection
+            // Supplier card selection
             $(document).on('click', '.supplier-card', function() {
                 $('.supplier-option').removeClass('selected');
                 $(this).find('.supplier-option').addClass('selected');
@@ -470,15 +491,10 @@
                 $('#supplierError').hide();
             });
 
-            // Add initial product row
             addProductRow();
 
-            // Add Product Button
-            $('#addProductBtn').on('click', function() {
-                addProductRow();
-            });
+            $('#addProductBtn').on('click', () => addProductRow());
 
-            // Remove Product Row
             $(document).on('click', '.remove-product', function() {
                 if ($('.product-item-row').length > 1) {
                     $(this).closest('.product-item-row').remove();
@@ -488,55 +504,39 @@
                 }
             });
 
-            // Quantity Plus/Minus
             $(document).on('click', '.qty-plus', function() {
-                let input = $(this).siblings('.qty-input');
-                let val = parseInt(input.val()) || 0;
-                input.val(val + 1);
+                let inp = $(this).siblings('.qty-input');
+                inp.val(parseInt(inp.val()) + 1);
                 calculateGrandTotal();
             });
 
             $(document).on('click', '.qty-minus', function() {
-                let input = $(this).siblings('.qty-input');
-                let val = parseInt(input.val()) || 0;
+                let inp = $(this).siblings('.qty-input');
+                let val = parseInt(inp.val()) || 0;
                 if (val > 1) {
-                    input.val(val - 1);
+                    inp.val(val - 1);
                     calculateGrandTotal();
                 }
             });
 
-            // Price Input Formatting - Fixed untuk max digit
             $(document).on('input', '.price-input', function() {
-                let val = $(this).val();
-                // Remove non-digit characters
-                let digitsOnly = val.replace(/[^0-9]/g, '');
-                // Limit to 15 digits (max Rp 999.999.999.999.999)
-                if (digitsOnly.length > 15) {
-                    digitsOnly = digitsOnly.substring(0, 15);
-                }
-                let formatted = formatRupiah(digitsOnly);
-                $(this).val(formatted);
-                let len = formatted.length;
-                this.setSelectionRange(len, len);
+                let d = $(this).val().replace(/[^0-9]/g, '').substring(0, 15);
+                let f = formatRupiah(d);
+                $(this).val(f);
+                this.setSelectionRange(f.length, f.length);
                 calculateGrandTotal();
             });
 
-            // Quantity Change
-            $(document).on('input change', '.qty-input', function() {
-                calculateGrandTotal();
-            });
+            $(document).on('input change', '.qty-input', () => calculateGrandTotal());
 
-            // Submit Form
+            // ── FORM SUBMIT ──
             $('#purchaseForm').submit(function(e) {
                 e.preventDefault();
-
-                // Validate supplier
                 if (!$('#supplier_id').val()) {
                     $('#supplierError').show();
                     Swal.fire('Error!', 'Pilih supplier terlebih dahulu!', 'error');
                     return;
                 }
-
                 $('.btn-submit').addClass('d-none');
                 $('.btn-loading').removeClass('d-none');
 
@@ -546,110 +546,82 @@
                     "{{ route('dashboard.purchases.store') }}";
 
                 $.ajax({
-                    url: url,
-                    type: "POST",
+                    url,
+                    type: 'POST',
                     data: $(this).serialize() + (method === 'PUT' ? '&_method=PUT' : ''),
-                    success: function(res) {
-                        Swal.fire('Berhasil!', res.message, 'success').then(() => {
-                            location.reload();
-                        });
-                    },
-                    error: function(xhr) {
-                        let msg = xhr.responseJSON?.message || 'Gagal menyimpan data!';
-                        Swal.fire('Error!', msg, 'error');
+                    success: res => Swal.fire('Berhasil!', res.message, 'success').then(() =>
+                        location.reload()),
+                    error: xhr => {
+                        Swal.fire('Error!', xhr.responseJSON?.message || 'Gagal menyimpan!',
+                            'error');
                         $('.btn-submit').removeClass('d-none');
                         $('.btn-loading').addClass('d-none');
                     }
                 });
             });
 
-            // Detail Button
+            // ── DETAIL ──
             $(document).on('click', '.detail-btn', function() {
                 let id = $(this).data('id');
                 $.get("{{ url('dashboard/purchases') }}/" + id, function(data) {
                     $('#detail_po').text(data.purchase_number);
-
-                    // Format date as: Hari, Tanggal Bulan Tahun
-                    let dateObj = new Date(data.purchase_date);
-                    let options = {
+                    let d = new Date(data.purchase_date);
+                    $('#detail_date').text(d.toLocaleDateString('id-ID', {
                         weekday: 'long',
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric'
-                    };
-                    let formattedDate = dateObj.toLocaleDateString('id-ID', options);
-                    $('#detail_date').text(formattedDate);
-
+                    }));
                     $('#detail_supplier').text(data.supplier.name);
                     $('#detail_notes').text(data.notes || '-');
                     $('#detail_total').text('Rp ' + formatRupiah(data.total_amount));
 
-                    let statusBadge = '';
-                    if (data.status === 'received') {
-                        statusBadge =
-                            '<span class="badge badge-success"><i class="fas fa-check"></i> Selesai</span>';
-                    } else if (data.status === 'cancelled') {
-                        statusBadge =
-                            '<span class="badge badge-danger"><i class="fas fa-times"></i> Batal</span>';
-                    } else {
-                        statusBadge =
-                            '<span class="badge badge-warning"><i class="fas fa-clock"></i> Pending</span>';
-                    }
-                    $('#detail_status').html(statusBadge);
+                    let badge = data.status === 'received' ?
+                        '<span class="badge badge-success text-white"><i class="fas fa-check"></i> Selesai</span>' :
+                        data.status === 'cancelled' ?
+                        '<span class="badge badge-danger text-white"><i class="fas fa-times"></i> Batal</span>' :
+                        '<span class="badge badge-warning text-white"><i class="fas fa-clock"></i> Pending</span>';
+                    $('#detail_status').html(badge);
 
-                    let itemsHtml = '';
+                    let html = '';
                     data.items.forEach(item => {
-                        itemsHtml += `
-                            <tr>
-                                <td>${item.product.name}</td>
-                                <td>Rp ${formatRupiah(item.price)}</td>
-                                <td>${item.quantity}</td>
-                                <td class="font-weight-bold">Rp ${formatRupiah(item.subtotal)}</td>
-                            </tr>
-                        `;
+                        html += `<tr>
+                            <td>${item.product.name}</td>
+                            <td class="text-right">Rp ${formatRupiah(item.price)}</td>
+                            <td class="text-center">${item.quantity}</td>
+                            <td class="text-right font-weight-bold">Rp ${formatRupiah(item.subtotal)}</td>
+                        </tr>`;
                     });
-                    $('#detail_items').html(itemsHtml);
+                    $('#detail_items').html(html);
                     $('#detailModal').modal('show');
                 });
             });
 
-            // Edit Button
+            // ── EDIT ──
             $(document).on('click', '.edit-btn', function() {
                 let id = $(this).data('id');
                 $.get("{{ url('dashboard/purchases') }}/" + id, function(data) {
-                    // Scroll to form
                     $('html, body').animate({
-                        scrollTop: $("#purchaseFormCard").offset().top - 100
+                        scrollTop: $('#purchaseFormCard').offset().top - 100
                     }, 500);
-
-                    // Change form mode
                     $('#formTitle').html('<i class="fas fa-edit"></i> Edit Pesanan Pembelian');
                     $('#form_method').val('PUT');
                     $('#purchase_id').val(data.id);
                     $('.btn-submit').html('<i class="fas fa-save"></i> Update Pesanan');
                     $('#resetFormBtn').show();
-
-                    // Set supplier
                     $(`.supplier-card[data-supplier-id="${data.supplier_id}"]`).find(
                         '.supplier-option').addClass('selected');
                     $('#supplier_id').val(data.supplier_id);
-
-                    // Set date and notes
                     $('#purchase_date').val(data.purchase_date);
                     $('#notes').val(data.notes);
-
-                    // Clear and add product rows
                     $('#productItemsContainer').empty();
-                    data.items.forEach(item => {
-                        addProductRow(item.product_id, item.quantity, formatRupiah(item
-                            .price));
-                    });
-
+                    data.items.forEach(item => addProductRow(item.product_id, item.quantity,
+                        formatRupiah(item.price)));
                     calculateGrandTotal();
                 });
             });
 
-            // Reset Form Button
+            // ── RESET ──
             $('#resetFormBtn').on('click', function() {
                 $('#formTitle').html('<i class="fas fa-plus-circle"></i> Tambah Pesanan Pembelian Baru');
                 $('#form_method').val('POST');
@@ -659,11 +631,11 @@
                 $('#supplier_id').val('');
                 $('.btn-submit').html('<i class="fas fa-save"></i> Buat Pesanan');
                 $(this).hide();
-
                 $('#productItemsContainer').empty();
                 addProductRow();
                 calculateGrandTotal();
             });
+
         });
     </script>
 @endpush

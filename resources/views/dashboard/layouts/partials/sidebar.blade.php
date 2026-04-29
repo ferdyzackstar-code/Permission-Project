@@ -182,8 +182,7 @@
 
 
     {{-- GRUP ANALISIS --}}
-    @canany(['order.pos', 'order.history'])
-        {{-- Menyesuaikan izin laporan --}}
+    @canany(['report.hourly', 'report.daily', 'report.monthly'])
         <div class="sidebar-heading">Laporan</div>
         <li class="nav-item {{ request()->is('dashboard/reports*') ? 'active' : '' }}">
             <a class="nav-link {{ request()->is('dashboard/reports*') ? '' : 'collapsed' }}" href="#"
@@ -196,17 +195,21 @@
             <div id="collapseLaporan" class="collapse {{ request()->is('dashboard/reports*') ? 'show' : '' }}"
                 data-parent="#accordionSidebar">
                 <div class="py-2 collapse-inner">
+                    @can('report.hourly')
                     <a class="collapse-item {{ request()->is('dashboard/reports/hourly') ? 'active' : '' }}"
                         href="{{ route('dashboard.reports.hourly') }}">
                         <i class="fa-solid fa-clock fa-sm fa-fw mr-2"></i>Per Jam</a>
-
+                    @endcan
+                    @can('report.daily')
                     <a class="collapse-item {{ request()->is('dashboard/reports/daily') ? 'active' : '' }}"
                         href="{{ route('dashboard.reports.daily') }}">
                         <i class="fa-solid fa-calendar-days fa-sm fa-fw mr-2"></i>Harian</a>
-
+                    @endcan
+                    @can('report.monthly')
                     <a class="collapse-item {{ request()->is('dashboard/reports/monthly') ? 'active' : '' }}"
                         href="{{ route('dashboard.reports.monthly') }}">
                         <i class="fa-solid fa-calendar-week fa-sm fa-fw mr-2"></i>Bulanan</a>
+                    @endcan
                 </div>
             </div>
         </li>

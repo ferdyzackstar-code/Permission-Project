@@ -34,10 +34,36 @@ class SupplierSeeder extends Seeder
                 'city' => 'Bandung',
                 'status' => 'active',
             ],
+            [
+                'name' => 'PT Royal Canin Indonesia',
+                'phone' => '021-7654321',
+                'address' => 'Jl. TB Simatupang No. 88, Pasar Minggu',
+                'email' => 'order@royalcanin.co.id',
+                'city' => 'Jakarta Selatan',
+                'status' => 'active',
+            ],
+            [
+                'name' => 'CV Mitra Pakan Hewan',
+                'phone' => '031-3334455',
+                'address' => 'Jl. Raya Darmo Permai III No. 22',
+                'email' => 'sales@mitrapakan.com',
+                'city' => 'Surabaya',
+                'status' => 'active',
+            ],
+            [
+                'name' => 'PT Drh Farma Veteriner',
+                'phone' => '021-6661122',
+                'address' => 'Jl. Letjen Suprapto No. 37, Cempaka Putih',
+                'email' => 'info@drhfarma.co.id',
+                'city' => 'Jakarta Pusat',
+                'status' => 'active',
+            ],
         ];
 
         foreach ($suppliers as $supplier) {
             Supplier::create($supplier);
         }
+
+        $this->command->info('✅ SupplierSeeder berhasil di-seed! Total: ' . count($suppliers) . ' supplier.');
     }
 }
