@@ -69,12 +69,12 @@ class DashboardController extends Controller
         $lowStockProducts = Product::with('category')->where('status', 'active')->where('stock', '<=', 10)->orderBy('stock', 'asc')->take(8)->get();
 
         // ── SUPPLIER PALING BANYAK SUPPLY BULAN INI ──────────────────────
-        $topSuppliers = DB::table('purchase_items')
-            ->join('purchases', 'purchase_items.purchase_id', '=', 'purchases.id')
+        // Count langsung dari purchases, GROUP BY supplier_id — simple & akurat
+        $topSuppliers = DB::table('purchases')
             ->join('suppliers', 'purchases.supplier_id', '=', 'suppliers.id')
             ->where('purchases.status', 'received')
             ->whereBetween('purchases.purchase_date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
-            ->select('suppliers.id', 'suppliers.name', DB::raw('COUNT(DISTINCT purchases.id) as total_purchases'), DB::raw('SUM(purchase_items.subtotal) as total_value'))
+            ->select('suppliers.id', 'suppliers.name', DB::raw('COUNT(purchases.id) as total_purchases'), DB::raw('SUM(purchases.total_amount) as total_value'))
             ->groupBy('suppliers.id', 'suppliers.name')
             ->orderByDesc('total_purchases')
             ->take(5)

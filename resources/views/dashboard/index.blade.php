@@ -25,35 +25,35 @@
 
         /* ── WELCOME BANNER ────────────────────────────────────────── */
         .welcome-banner {
-            background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #388E3C 100%);
+            background: linear-gradient(135deg, #0D47A1 0%, #1565C0 40%, #1976D2 75%, #42A5F5 100%);
             border-radius: var(--card-radius);
             padding: 28px 32px;
             color: #fff;
             position: relative;
             overflow: hidden;
             margin-bottom: 28px;
-            box-shadow: 0 6px 24px rgba(46, 125, 50, .35);
+            box-shadow: 0 6px 28px rgba(21, 101, 192, .40);
         }
 
         .welcome-banner::before {
             content: '';
             position: absolute;
-            top: -40px;
-            right: -40px;
-            width: 200px;
-            height: 200px;
-            background: rgba(255, 255, 255, .07);
+            top: -50px;
+            right: -50px;
+            width: 220px;
+            height: 220px;
+            background: rgba(255, 255, 255, .08);
             border-radius: 50%;
         }
 
         .welcome-banner::after {
             content: '';
             position: absolute;
-            bottom: -60px;
-            right: 80px;
-            width: 140px;
-            height: 140px;
-            background: rgba(249, 168, 37, .12);
+            bottom: -70px;
+            right: 90px;
+            width: 160px;
+            height: 160px;
+            background: rgba(66, 165, 245, .18);
             border-radius: 50%;
         }
 
@@ -735,14 +735,19 @@
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center gap-2">
-                                                    @if ($order->user && $order->user->image && $order->user->image !== 'default-user.jpg')
-                                                        <img src="{{ Storage::url('uploads/users/' . $order->user->image) }}"
-                                                            alt="{{ $order->user->name }}" class="avatar-sm">
-                                                    @else
-                                                        <div class="avatar-initial bg-pet-green">
-                                                            {{ strtoupper(substr($order->user->name ?? 'U', 0, 1)) }}
-                                                        </div>
-                                                    @endif
+                                                    @php
+                                                        $imgPath =
+                                                            'storage/uploads/users/' .
+                                                            ($order->user->image ?? 'default-user.jpg');
+                                                        $imgUrl =
+                                                            $order->user &&
+                                                            $order->user->image &&
+                                                            file_exists(public_path($imgPath))
+                                                                ? asset($imgPath)
+                                                                : asset('storage/uploads/users/default-user.jpg');
+                                                    @endphp
+                                                    <img src="{{ $imgUrl }}"
+                                                        alt="{{ $order->user->name ?? 'User' }}" class="avatar-sm">
                                                     <span style="font-size:.82rem; font-weight:600;">
                                                         {{ $order->user->name ?? '-' }}
                                                     </span>
@@ -838,8 +843,16 @@
                                 class="rank-num {{ $i === 0 ? 'top1' : ($i === 1 ? 'top2' : ($i === 2 ? 'top3' : '')) }}">
                                 {{ $i + 1 }}
                             </div>
-                            <div class="avatar-initial bg-pet-green" style="font-size:.7rem;">
-                                {{ strtoupper(substr($kasir->name, 0, 1)) }}
+                            <div class="d-flex align-items-center gap-2">
+                                @php
+                                    $imgPath = 'storage/uploads/users/' . ($order->user->image ?? 'default-user.jpg');
+                                    $imgUrl =
+                                        $order->user && $order->user->image && file_exists(public_path($imgPath))
+                                            ? asset($imgPath)
+                                            : asset('storage/uploads/users/default-user.jpg');
+                                @endphp
+                                <img src="{{ $imgUrl }}" alt="{{ $order->user->name ?? 'User' }}"
+                                    class="avatar-sm">
                             </div>
                             <div class="rank-info">
                                 <div class="rank-name">{{ $kasir->name }}</div>
@@ -994,7 +1007,7 @@
                                 <div class="rank-sub">Rp {{ number_format($supplier->total_value, 0, ',', '.') }}</div>
                             </div>
                             <div class="rank-value">
-                                {{ $supplier->total_purchases }}x supply
+                                {{ $supplier->total_purchases }}x pesanan
                             </div>
                         </div>
                     @empty
@@ -1011,230 +1024,236 @@
 @endsection
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
     <script>
-        // ── GLOBAL CHART DEFAULTS ──────────────────────────────────────
-        Chart.defaults.font.family = "'Nunito', sans-serif";
-        Chart.defaults.font.size = 12;
-        Chart.defaults.color = '#888';
+        document.addEventListener('DOMContentLoaded', function() {
 
-        const PET_COLORS = {
-            green: '#2E7D32',
-            lime: '#66BB6A',
-            yellow: '#F9A825',
-            blue: '#0288D1',
-            red: '#E53935',
-            purple: '#6A1B9A',
-            teal: '#00897B',
-            orange: '#F4511E',
-        };
+            // ── GLOBAL CHART DEFAULTS ──────────────────────────────────────
+            Chart.defaults.font.family = "'Nunito', sans-serif";
+            Chart.defaults.font.size = 12;
+            Chart.defaults.color = '#888';
+            Chart.defaults.font.size = 12;
+            Chart.defaults.color = '#888';
 
-        // ── 1. LINE CHART: Tren Penjualan 30 Hari ─────────────────────
-        new Chart(document.getElementById('chartSalesTrend'), {
-            type: 'line',
-            data: {
-                labels: @json($salesChartLabels),
-                datasets: [{
-                        label: 'Jumlah Order',
-                        data: @json($salesChartOrders),
-                        borderColor: PET_COLORS.green,
-                        backgroundColor: 'rgba(46,125,50,.1)',
-                        borderWidth: 2.5,
-                        pointRadius: 3,
-                        pointHoverRadius: 6,
-                        tension: .4,
-                        fill: true,
-                        yAxisID: 'y',
-                    },
-                    {
-                        label: 'Revenue (Rp)',
-                        data: @json($salesChartRevenue),
-                        borderColor: PET_COLORS.yellow,
-                        backgroundColor: 'rgba(249,168,37,.08)',
-                        borderWidth: 2,
-                        pointRadius: 3,
-                        pointHoverRadius: 6,
-                        tension: .4,
-                        fill: true,
-                        yAxisID: 'y1',
-                        borderDash: [4, 3],
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                interaction: {
-                    mode: 'index',
-                    intersect: false
+            const PET_COLORS = {
+                green: '#2E7D32',
+                lime: '#66BB6A',
+                yellow: '#F9A825',
+                blue: '#0288D1',
+                red: '#E53935',
+                purple: '#6A1B9A',
+                teal: '#00897B',
+                orange: '#F4511E',
+            };
+
+            // ── 1. LINE CHART: Tren Penjualan 30 Hari ─────────────────────
+            new Chart(document.getElementById('chartSalesTrend'), {
+                type: 'line',
+                data: {
+                    labels: @json($salesChartLabels),
+                    datasets: [{
+                            label: 'Jumlah Order',
+                            data: @json($salesChartOrders),
+                            borderColor: PET_COLORS.green,
+                            backgroundColor: 'rgba(46,125,50,.1)',
+                            borderWidth: 2.5,
+                            pointRadius: 3,
+                            pointHoverRadius: 6,
+                            tension: .4,
+                            fill: true,
+                            yAxisID: 'y',
+                        },
+                        {
+                            label: 'Revenue (Rp)',
+                            data: @json($salesChartRevenue),
+                            borderColor: PET_COLORS.yellow,
+                            backgroundColor: 'rgba(249,168,37,.08)',
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            pointHoverRadius: 6,
+                            tension: .4,
+                            fill: true,
+                            yAxisID: 'y1',
+                            borderDash: [4, 3],
+                        },
+                    ],
                 },
-                plugins: {
-                    legend: {
-                        position: 'top'
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => {
-                                if (ctx.datasetIndex === 1) {
-                                    return ' Rp ' + ctx.raw.toLocaleString('id-ID');
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => {
+                                    if (ctx.datasetIndex === 1) {
+                                        return ' Rp ' + ctx.raw.toLocaleString('id-ID');
+                                    }
+                                    return ' ' + ctx.raw + ' order';
                                 }
-                                return ' ' + ctx.raw + ' order';
                             }
                         }
-                    }
-                },
-                scales: {
-                    y: {
-                        position: 'left',
-                        title: {
-                            display: true,
-                            text: 'Jumlah Order'
-                        }
                     },
-                    y1: {
-                        position: 'right',
-                        title: {
-                            display: true,
-                            text: 'Revenue (Rp)'
+                    scales: {
+                        y: {
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Jumlah Order'
+                            }
                         },
-                        grid: {
-                            drawOnChartArea: false
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            maxTicksLimit: 10
-                        }
+                        y1: {
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Revenue (Rp)'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxTicksLimit: 10
+                            }
+                        },
                     },
                 },
-            },
-        });
+            });
 
-        // ── 2. PIE CHART: Distribusi Status Order ─────────────────────
-        const orderStatusData = @json($orderStatusData);
-        new Chart(document.getElementById('chartOrderStatus'), {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(orderStatusData).map(s => s.charAt(0).toUpperCase() + s.slice(1)),
-                datasets: [{
-                    data: Object.values(orderStatusData),
-                    backgroundColor: [PET_COLORS.green, PET_COLORS.yellow, PET_COLORS.red],
-                    borderWidth: 2,
-                    borderColor: '#fff',
-                    hoverOffset: 6,
-                }],
-            },
-            options: {
-                responsive: true,
-                cutout: '65%',
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => ` ${ctx.label}: ${ctx.raw} order`
-                        }
-                    }
+            // ── 2. PIE CHART: Distribusi Status Order ─────────────────────
+            const orderStatusData = @json($orderStatusData);
+            new Chart(document.getElementById('chartOrderStatus'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(orderStatusData).map(s => s.charAt(0).toUpperCase() + s.slice(1)),
+                    datasets: [{
+                        data: Object.values(orderStatusData),
+                        backgroundColor: [PET_COLORS.green, PET_COLORS.yellow, PET_COLORS.red],
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                        hoverOffset: 6,
+                    }],
                 },
-            },
-        });
+                options: {
+                    responsive: true,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ` ${ctx.label}: ${ctx.raw} order`
+                            }
+                        }
+                    },
+                },
+            });
 
-        // ── 3. BAR CHART: Stok per Spesies ────────────────────────────
-        const stockData = @json($stockByCategory);
-        new Chart(document.getElementById('chartStockByCategory'), {
-            type: 'bar',
-            data: {
-                labels: stockData.map(d => d.category_name),
-                datasets: [{
-                    label: 'Total Stok',
-                    data: stockData.map(d => d.total_stock),
-                    backgroundColor: [
-                        'rgba(46,125,50,.8)',
-                        'rgba(2,136,209,.8)',
-                        'rgba(249,168,37,.8)',
-                        'rgba(229,57,53,.8)',
-                    ],
-                    borderRadius: 8,
-                    borderSkipped: false,
-                }],
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => ` Stok: ${ctx.raw} unit`
-                        }
-                    }
+            // ── 3. BAR CHART: Stok per Spesies ────────────────────────────
+            const stockData = @json($stockByCategory);
+            new Chart(document.getElementById('chartStockByCategory'), {
+                type: 'bar',
+                data: {
+                    labels: stockData.map(d => d.category_name),
+                    datasets: [{
+                        label: 'Total Stok',
+                        data: stockData.map(d => d.total_stock),
+                        backgroundColor: [
+                            'rgba(46,125,50,.8)',
+                            'rgba(2,136,209,.8)',
+                            'rgba(249,168,37,.8)',
+                            'rgba(229,57,53,.8)',
+                        ],
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }],
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Jumlah Stok (unit)'
-                        }
-                    },
-                    x: {
-                        grid: {
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
                             display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ` Stok: ${ctx.raw} unit`
+                            }
                         }
                     },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Jumlah Stok (unit)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                    },
                 },
-            },
-        });
+            });
 
-        // ── 4. HORIZONTAL BAR: Pembelian per Supplier ─────────────────
-        const supplierData = @json($purchaseBySupplier);
-        new Chart(document.getElementById('chartPurchaseBySupplier'), {
-            type: 'bar',
-            data: {
-                labels: supplierData.map(d => d.name),
-                datasets: [{
-                    label: 'Total Nilai Pembelian (Rp)',
-                    data: supplierData.map(d => d.total_value),
-                    backgroundColor: [
-                        'rgba(2,136,209,.85)',
-                        'rgba(0,137,123,.85)',
-                        'rgba(106,27,154,.85)',
-                        'rgba(229,57,53,.85)',
-                        'rgba(249,168,37,.85)',
-                        'rgba(46,125,50,.85)',
-                    ],
-                    borderRadius: 6,
-                    borderSkipped: false,
-                }],
-            },
-            options: {
-                indexAxis: 'y', // ← HORIZONTAL
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => ' Rp ' + ctx.raw.toLocaleString('id-ID')
-                        }
-                    }
+            // ── 4. HORIZONTAL BAR: Pembelian per Supplier ─────────────────
+            const supplierData = @json($purchaseBySupplier);
+            new Chart(document.getElementById('chartPurchaseBySupplier'), {
+                type: 'bar',
+                data: {
+                    labels: supplierData.map(d => d.name),
+                    datasets: [{
+                        label: 'Total Nilai Pembelian (Rp)',
+                        data: supplierData.map(d => d.total_value),
+                        backgroundColor: [
+                            'rgba(2,136,209,.85)',
+                            'rgba(0,137,123,.85)',
+                            'rgba(106,27,154,.85)',
+                            'rgba(229,57,53,.85)',
+                            'rgba(249,168,37,.85)',
+                            'rgba(46,125,50,.85)',
+                        ],
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    }],
                 },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: val => 'Rp ' + (val / 1000000).toFixed(1) + 'jt'
-                        }
-                    },
-                    y: {
-                        grid: {
+                options: {
+                    indexAxis: 'y', // ← HORIZONTAL
+                    responsive: true,
+                    plugins: {
+                        legend: {
                             display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ' Rp ' + ctx.raw.toLocaleString('id-ID')
+                            }
                         }
                     },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: val => 'Rp ' + (val / 1000000).toFixed(1) + 'jt'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                    },
                 },
-            },
-        });
+            });
+
+        }); // end DOMContentLoaded
     </script>
 @endpush
