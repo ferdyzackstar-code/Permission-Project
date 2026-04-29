@@ -8,11 +8,11 @@ use Illuminate\Database\Seeder;
 class SettingAppSeeder extends Seeder
 {
     public function run(): void
-    {
+    {   
         $settings = [
             // ─── Identitas & Tampilan ──────────────────────────────────────
             ['setting_key' => 'app_name', 'setting_value' => 'Anda Petshop'],
-            ['setting_key' => 'app_image', 'setting_value' => 'storage/uploads/settings/default-logo.jpg'],
+            ['setting_key' => 'app_image', 'setting_value' => 'uploads/settings/default-logo.jpg'],
 
             // ─── Auth Panel — Login ────────────────────────────────────────
             ['setting_key' => 'auth_title_login', 'setting_value' => 'Selamat Datang Kembali!'],

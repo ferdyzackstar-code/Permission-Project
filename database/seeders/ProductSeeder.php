@@ -112,7 +112,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Pakan Burung Gold Coin 250g',
                 'detail' => 'Pakan harian bernutrisi tinggi untuk burung kicau, campuran biji-bijian pilihan premium.',
-                'image' => '1774846555-pakan-burung-gold-coin-250g.jpg',
+                'image' => '1777360301-pakan-burung-gold-coin-250g.jpg',
                 'category_id' => $getCategoryId('Burung', 'Makanan'),
                 'price' => 22000,
                 'stock' => 50,

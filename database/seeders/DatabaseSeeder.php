@@ -12,13 +12,15 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            SettingAppSeeder::class, // 2. Setting aplikasi (tidak ada dependency)
-            PermissionSeeder::class, // 3. Permission harus ada sebelum Role
-            RoleSeeder::class, // 4. Role assign permission → butuh Permission
-            UserSeeder::class, // 5. User assign role → butuh Role
-            CategorySeeder::class, // 6. Category (parent dulu, lalu sub)
-            SupplierSeeder::class, // 7. Supplier (tidak ada dependency)
-            ProductSeeder::class, // 8. Product → butuh Category (category_id)
+            SettingAppSeeder::class,    
+            PermissionSeeder::class,
+            RoleSeeder::class,
+            UserSeeder::class,
+            CategorySeeder::class, 
+            SupplierSeeder::class, 
+            ProductSeeder::class, 
+            PurchaseSeeder::class,
+            OrderSeeder::class
         ]);
     }
 }
