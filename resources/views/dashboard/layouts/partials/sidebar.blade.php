@@ -1,435 +1,441 @@
 <style>
     /* ============================================================
-       SMART SIDEBAR - Icon-only collapsed, hover expand (overlay),
-       Lock mode: expand + push content
+       SMART SIDEBAR v2 - Fixed: narrower collapse, mobile toggle,
+       topbar alignment, locked push content
     ============================================================ */
 
     :root {
-        --sidebar-collapsed-w: 70px;
-        --sidebar-expanded-w: 260px;
-        --sidebar-transition: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-        --sidebar-bg: linear-gradient(180deg, #4e73df 0%, #224abe 100%);
-        --sidebar-text: rgba(255, 255, 255, 0.75);
-        --sidebar-text-hover: #ffffff;
-        --sidebar-active-bg: rgba(255, 255, 255, 0.18);
-        --sidebar-hover-item-bg: rgba(255, 255, 255, 0.10);
-        --topbar-h: 60px;
+        --sb-w-col: 54px;
+        --sb-w-exp: 240px;
+        --sb-ease: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        --topbar-h: 56px;
     }
 
-    /* ── Layout wrapper ── */
+    /* ── Prevent sb-admin-2 overrides ── */
     body {
-        overflow-x: hidden;
+        overflow-x: hidden !important;
     }
 
+    #wrapper {
+        display: flex !important;
+        overflow: hidden !important;
+    }
+
+    /* ══ SIDEBAR ══ */
     #sidebar-wrapper {
         position: fixed;
         top: 0;
         left: 0;
         height: 100vh;
-        width: var(--sidebar-collapsed-w);
+        width: var(--sb-w-col);
         z-index: 1050;
-        transition: width var(--sidebar-transition);
-        background: var(--sidebar-bg);
-        box-shadow: 3px 0 20px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(180deg, #4e73df 0%, #224abe 100%);
+        box-shadow: 2px 0 18px rgba(0, 0, 0, 0.16);
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        transition: width var(--sb-ease);
+        will-change: width;
     }
 
-    /* Hover expand (overlay mode) */
-    #sidebar-wrapper:hover,
-    #sidebar-wrapper.sidebar-locked {
-        width: var(--sidebar-expanded-w);
+    /* Hover → overlay expand (desktop only) */
+    @media (min-width: 768px) {
+        #sidebar-wrapper:hover {
+            width: var(--sb-w-exp);
+        }
     }
 
-    /* ── Content wrapper adjusts when locked ── */
+    /* Locked → push content */
+    #sidebar-wrapper.sb-locked {
+        width: var(--sb-w-exp);
+    }
+
+    /* ══ CONTENT ══ */
     #content-wrapper {
-        margin-left: var(--sidebar-collapsed-w);
-        transition: margin-left var(--sidebar-transition);
-        min-height: 100vh;
+        margin-left: var(--sb-w-col) !important;
+        transition: margin-left var(--sb-ease);
+        min-width: 0;
+        flex: 1;
     }
 
-    #content-wrapper.sidebar-pushed {
-        margin-left: var(--sidebar-expanded-w);
+    #content-wrapper.sb-pushed {
+        margin-left: var(--sb-w-exp) !important;
     }
 
-    /* ── Brand area ── */
-    .sidebar-brand-area {
-        display: flex;
-        align-items: center;
-        padding: 0;
+    /* ══ TOPBAR ══
+       Lives inside #content-wrapper → inherits width automatically.
+       Only need sticky + proper height.
+    ══ */
+    .topbar-main {
+        position: sticky;
+        top: 0;
+        z-index: 1040;
         height: var(--topbar-h);
         min-height: var(--topbar-h);
-        overflow: hidden;
-        text-decoration: none;
-        flex-shrink: 0;
-        position: relative;
+        background: #fff;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+        display: flex;
+        align-items: center;
+        padding: 0 1.25rem;
+        width: 100%;
+        /* kill sb-admin mb-4 */
+        margin-bottom: 0 !important;
     }
 
-    .sidebar-brand-icon-wrap {
-        width: var(--sidebar-collapsed-w);
-        min-width: var(--sidebar-collapsed-w);
+    /* ══ BRAND ══ */
+    .sb-brand {
+        display: flex;
+        align-items: center;
+        height: var(--topbar-h);
+        min-height: var(--topbar-h);
+        text-decoration: none !important;
+        overflow: hidden;
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .sb-brand-icon {
+        width: var(--sb-w-col);
+        min-width: var(--sb-w-col);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.4rem;
+        font-size: 1.25rem;
         color: #fff;
         flex-shrink: 0;
     }
 
-    .sidebar-brand-icon-wrap img {
-        height: 36px;
-        width: 36px;
+    .sb-brand-icon img {
+        height: 30px;
+        width: 30px;
         border-radius: 50%;
         object-fit: cover;
-        border: 2px solid rgba(255, 255, 255, 0.4);
+        border: 2px solid rgba(255, 255, 255, 0.38);
     }
 
-    .sidebar-brand-text-wrap {
+    .sb-brand-text {
         opacity: 0;
-        width: 0;
+        max-width: 0;
         white-space: nowrap;
         overflow: hidden;
-        transition: opacity var(--sidebar-transition), width var(--sidebar-transition);
-        font-size: 1rem;
+        font-size: 0.92rem;
         font-weight: 800;
         color: #fff;
         letter-spacing: 0.02em;
-        padding-right: 36px;
-        /* space for lock btn */
+        padding-right: 30px;
+        /* room for lock btn */
+        transition: opacity var(--sb-ease), max-width var(--sb-ease);
     }
 
-    #sidebar-wrapper:hover .sidebar-brand-text-wrap,
-    #sidebar-wrapper.sidebar-locked .sidebar-brand-text-wrap {
+    #sidebar-wrapper:hover .sb-brand-text,
+    #sidebar-wrapper.sb-locked .sb-brand-text {
         opacity: 1;
-        width: calc(var(--sidebar-expanded-w) - var(--sidebar-collapsed-w) - 10px);
+        max-width: 200px;
     }
 
-    /* ── Lock button ── */
-    #sidebar-lock-btn {
+    /* ══ LOCK BTN ══ */
+    #sb-lock-btn {
         position: absolute;
-        right: 8px;
+        right: 5px;
         top: 50%;
         transform: translateY(-50%);
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        color: rgba(255, 255, 255, 0.7);
-        border-radius: 6px;
-        width: 26px;
-        height: 26px;
+        background: rgba(255, 255, 255, 0.10);
+        border: 1px solid rgba(255, 255, 255, 0.20);
+        color: rgba(255, 255, 255, 0.60);
+        border-radius: 5px;
+        width: 22px;
+        height: 22px;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        font-size: 0.7rem;
+        font-size: 0.60rem;
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.2s ease, background 0.2s ease, color 0.2s ease;
-        z-index: 10;
-        flex-shrink: 0;
+        transition: opacity 0.18s, background 0.18s, color 0.18s;
+        z-index: 6;
     }
 
-    #sidebar-wrapper:hover #sidebar-lock-btn {
+    #sidebar-wrapper:hover #sb-lock-btn {
         opacity: 1;
         pointer-events: all;
     }
 
-    #sidebar-lock-btn.locked {
-        background: rgba(255, 255, 255, 0.28);
+    #sidebar-wrapper.sb-locked #sb-lock-btn {
+        opacity: 1;
+        pointer-events: all;
+        background: rgba(255, 255, 255, 0.20);
         color: #fff;
-        border-color: rgba(255, 255, 255, 0.5);
     }
 
-    /* ── Divider ── */
-    .sidebar-divider-line {
+    /* ══ DIVIDER ══ */
+    .sb-div {
         border: 0;
-        border-top: 1px solid rgba(255, 255, 255, 0.15);
-        margin: 4px 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        margin: 3px 8px;
         flex-shrink: 0;
     }
 
-    /* ── Scrollable nav area ── */
-    .sidebar-nav-area {
+    /* ══ SCROLLABLE NAV ══ */
+    .sb-nav {
         flex: 1;
         overflow-y: auto;
         overflow-x: hidden;
         scrollbar-width: thin;
-        scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+        scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
         padding-bottom: 12px;
     }
 
-    .sidebar-nav-area::-webkit-scrollbar {
-        width: 3px;
+    .sb-nav::-webkit-scrollbar {
+        width: 2px;
     }
 
-    .sidebar-nav-area::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .sidebar-nav-area::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
+    .sb-nav::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
         border-radius: 2px;
     }
 
-    /* ── Section headings ── */
-    .sidebar-section-heading {
-        font-size: 0.6rem;
+    /* ══ SECTION LABELS ══ */
+    .sb-section {
+        font-size: 0.54rem;
         font-weight: 700;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.13em;
         text-transform: uppercase;
-        color: rgba(255, 255, 255, 0.4);
-        padding: 10px 0 4px 0;
+        color: rgba(255, 255, 255, 0.35);
+        padding: 10px 0 3px;
         text-align: center;
         white-space: nowrap;
         overflow: hidden;
-        transition: opacity var(--sidebar-transition), text-align var(--sidebar-transition), padding var(--sidebar-transition);
+        transition: text-align var(--sb-ease), padding var(--sb-ease);
     }
 
-    #sidebar-wrapper:hover .sidebar-section-heading,
-    #sidebar-wrapper.sidebar-locked .sidebar-section-heading {
+    #sidebar-wrapper:hover .sb-section,
+    #sidebar-wrapper.sb-locked .sb-section {
         text-align: left;
-        padding: 10px 16px 4px 16px;
+        padding: 10px 14px 3px;
     }
 
-    .sidebar-section-heading .heading-short {
+    .sb-section .ss {
         display: inline;
     }
 
-    .sidebar-section-heading .heading-full {
+    .sb-section .sf {
         display: none;
     }
 
-    #sidebar-wrapper:hover .sidebar-section-heading .heading-short,
-    #sidebar-wrapper.sidebar-locked .sidebar-section-heading .heading-short {
+    #sidebar-wrapper:hover .sb-section .ss,
+    #sidebar-wrapper.sb-locked .sb-section .ss {
         display: none;
     }
 
-    #sidebar-wrapper:hover .sidebar-section-heading .heading-full,
-    #sidebar-wrapper.sidebar-locked .sidebar-section-heading .heading-full {
+    #sidebar-wrapper:hover .sb-section .sf,
+    #sidebar-wrapper.sb-locked .sb-section .sf {
         display: inline;
     }
 
-    /* ── Nav items ── */
-    .sidebar-nav-item {
+    /* ══ NAV ITEMS ══ */
+    .sb-item {
         list-style: none;
         margin: 1px 0;
     }
 
-    .sidebar-nav-link {
+    .sb-link {
         display: flex;
         align-items: center;
-        height: 44px;
-        padding: 0;
-        color: var(--sidebar-text) !important;
+        height: 42px;
+        color: rgba(255, 255, 255, 0.72) !important;
         text-decoration: none !important;
-        border-radius: 0;
-        transition: background 0.18s ease, color 0.18s ease;
-        cursor: pointer;
-        white-space: nowrap;
-        overflow: hidden;
         border-left: 3px solid transparent;
+        transition: background 0.14s, color 0.14s;
+        cursor: pointer;
+        overflow: hidden;
+        white-space: nowrap;
     }
 
-    .sidebar-nav-link:hover {
-        background: var(--sidebar-hover-item-bg);
-        color: var(--sidebar-text-hover) !important;
+    .sb-link:hover {
+        background: rgba(255, 255, 255, 0.09);
+        color: #fff !important;
     }
 
-    .sidebar-nav-link.active {
-        background: var(--sidebar-active-bg);
-        color: var(--sidebar-text-hover) !important;
-        border-left-color: rgba(255, 255, 255, 0.7);
+    .sb-link.active {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff !important;
+        border-left-color: rgba(255, 255, 255, 0.65);
     }
 
-    .sidebar-nav-icon {
-        width: var(--sidebar-collapsed-w);
-        min-width: var(--sidebar-collapsed-w);
+    .sb-icon {
+        width: var(--sb-w-col);
+        min-width: var(--sb-w-col);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1rem;
+        font-size: 0.92rem;
         flex-shrink: 0;
     }
 
-    .sidebar-nav-label {
+    .sb-label {
         flex: 1;
-        font-size: 0.845rem;
+        font-size: 0.82rem;
         font-weight: 500;
         opacity: 0;
-        transition: opacity var(--sidebar-transition);
+        transition: opacity var(--sb-ease);
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
-    .sidebar-nav-arrow {
-        width: 24px;
-        min-width: 24px;
-        margin-right: 12px;
-        font-size: 0.65rem;
+    .sb-arrow {
+        width: 20px;
+        min-width: 20px;
+        margin-right: 8px;
+        font-size: 0.58rem;
         opacity: 0;
-        transition: opacity var(--sidebar-transition), transform 0.2s ease;
-        color: rgba(255, 255, 255, 0.5);
+        transition: opacity var(--sb-ease), transform 0.2s;
+        color: rgba(255, 255, 255, 0.42);
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
-    #sidebar-wrapper:hover .sidebar-nav-label,
-    #sidebar-wrapper.sidebar-locked .sidebar-nav-label {
+    #sidebar-wrapper:hover .sb-label,
+    #sidebar-wrapper.sb-locked .sb-label {
         opacity: 1;
     }
 
-    #sidebar-wrapper:hover .sidebar-nav-arrow,
-    #sidebar-wrapper.sidebar-locked .sidebar-nav-arrow {
+    #sidebar-wrapper:hover .sb-arrow,
+    #sidebar-wrapper.sb-locked .sb-arrow {
         opacity: 1;
     }
 
-    .sidebar-nav-arrow.open {
+    .sb-arrow.open {
         transform: rotate(90deg);
     }
 
-    /* ── Submenu (collapse inner) ── */
-    .sidebar-submenu {
-        max-height: 0;
+    /* ══ SUBMENU ══ */
+    .sb-sub {
         overflow: hidden;
+        max-height: 0;
         transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: rgba(0, 0, 0, 0.12);
+        background: rgba(0, 0, 0, 0.09);
     }
 
-    .sidebar-submenu.open {
-        max-height: 400px;
+    .sb-sub.open {
+        max-height: 500px;
     }
 
-    .sidebar-submenu-item {
+    /* Force close when sidebar collapsed (not hovered, not locked) */
+    #sidebar-wrapper:not(:hover):not(.sb-locked) .sb-sub {
+        max-height: 0 !important;
+    }
+
+    /* On mobile: when not mobile-open, also force close */
+    @media (max-width: 767.98px) {
+        #sidebar-wrapper:not(.mobile-open) .sb-sub {
+            max-height: 0 !important;
+        }
+    }
+
+    .sb-sub-link {
         display: flex;
         align-items: center;
-        padding: 9px 12px 9px 0;
-        color: rgba(255, 255, 255, 0.7) !important;
+        height: 37px;
+        color: rgba(255, 255, 255, 0.62) !important;
         text-decoration: none !important;
-        font-size: 0.82rem;
-        transition: background 0.15s ease, color 0.15s ease;
+        font-size: 0.79rem;
+        border-left: 3px solid transparent;
+        transition: background 0.13s, color 0.13s;
         white-space: nowrap;
         overflow: hidden;
-        border-left: 3px solid transparent;
     }
 
-    .sidebar-submenu-item:hover {
-        background: rgba(255, 255, 255, 0.08);
+    .sb-sub-link:hover {
+        background: rgba(255, 255, 255, 0.07);
         color: #fff !important;
     }
 
-    .sidebar-submenu-item.active {
-        background: rgba(255, 255, 255, 0.12);
+    .sb-sub-link.active {
+        background: rgba(255, 255, 255, 0.10);
         color: #fff !important;
         font-weight: 600;
-        border-left-color: rgba(255, 255, 255, 0.5);
+        border-left-color: rgba(255, 255, 255, 0.42);
     }
 
-    .sidebar-submenu-icon {
-        width: var(--sidebar-collapsed-w);
-        min-width: var(--sidebar-collapsed-w);
+    .sb-sub-icon {
+        width: var(--sb-w-col);
+        min-width: var(--sb-w-col);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.78rem;
-        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.70rem;
+        color: rgba(255, 255, 255, 0.42);
         flex-shrink: 0;
     }
 
-    .sidebar-submenu-label {
+    .sb-sub-label {
         flex: 1;
         opacity: 0;
-        transition: opacity var(--sidebar-transition);
+        transition: opacity var(--sb-ease);
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
-    #sidebar-wrapper:hover .sidebar-submenu-label,
-    #sidebar-wrapper.sidebar-locked .sidebar-submenu-label {
+    #sidebar-wrapper:hover .sb-sub-label,
+    #sidebar-wrapper.sb-locked .sb-sub-label {
         opacity: 1;
     }
 
-    /* When sidebar is collapsed (not hovered, not locked),
-       submenu should be hidden even if open state is stored */
-    #sidebar-wrapper:not(:hover):not(.sidebar-locked) .sidebar-submenu {
-        max-height: 0 !important;
+    /* On mobile: show labels when open */
+    #sidebar-wrapper.mobile-open .sb-label,
+    #sidebar-wrapper.mobile-open .sb-arrow,
+    #sidebar-wrapper.mobile-open .sb-sub-label,
+    #sidebar-wrapper.mobile-open .sb-brand-text,
+    #sidebar-wrapper.mobile-open .sb-section .sf {
+        opacity: 1;
     }
 
-    /* ── Sidebar bottom toggle (collapse button for mobile / desktop) ── */
-    .sidebar-bottom-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 10px 0;
-        flex-shrink: 0;
+    #sidebar-wrapper.mobile-open .sb-section .ss {
+        display: none;
     }
 
-    #sidebarToggleCircle {
-        background: rgba(255, 255, 255, 0.15);
-        border: none;
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
-        color: rgba(255, 255, 255, 0.6);
-        cursor: pointer;
-        font-size: 0.8rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.2s;
+    #sidebar-wrapper.mobile-open .sb-section {
+        text-align: left;
+        padding: 10px 14px 3px;
     }
 
-    #sidebarToggleCircle:hover {
-        background: rgba(255, 255, 255, 0.25);
-        color: #fff;
-    }
-
-    /* ── Topbar adjustment ── */
-    .topbar-nav {
-        margin-left: var(--sidebar-collapsed-w);
-        transition: margin-left var(--sidebar-transition);
-    }
-
-    .topbar-nav.sidebar-pushed {
-        margin-left: var(--sidebar-expanded-w);
-    }
-
-    /* ── Mobile: hide sidebar default, overlay on toggle ── */
-    @media (max-width: 768px) {
+    /* ══ MOBILE ══ */
+    @media (max-width: 767.98px) {
         #sidebar-wrapper {
-            width: 0;
-            overflow: hidden;
+            width: 0 !important;
+            transition: width var(--sb-ease) !important;
         }
 
         #sidebar-wrapper.mobile-open {
-            width: var(--sidebar-expanded-w);
+            width: var(--sb-w-exp) !important;
         }
 
         #content-wrapper,
-        .topbar-nav {
+        #content-wrapper.sb-pushed {
             margin-left: 0 !important;
         }
+    }
 
-        #sidebar-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: 1040;
-        }
+    /* ══ MOBILE BACKDROP ══ */
+    #sb-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.40);
+        z-index: 1049;
+    }
 
-        #sidebar-overlay.active {
-            display: block;
-        }
+    #sb-backdrop.active {
+        display: block;
     }
 </style>
 
-{{-- ── MOBILE OVERLAY ── --}}
-<div id="sidebar-overlay"></div>
+{{-- Backdrop --}}
+<div id="sb-backdrop"></div>
 
-{{-- ═══════════════════════════════════════════════════════════
-     SIDEBAR
-═══════════════════════════════════════════════════════════ --}}
+{{-- ════════════ SIDEBAR ════════════ --}}
 <div id="sidebar-wrapper">
 
     @php
@@ -438,348 +444,319 @@
         $hasImage = $appImage && \Illuminate\Support\Facades\Storage::disk('public')->exists($appImage);
     @endphp
 
-    {{-- Brand --}}
-    <a class="sidebar-brand-area" href="{{ route('dashboard.index') }}">
-        <div class="sidebar-brand-icon-wrap">
+    <a class="sb-brand" href="{{ route('dashboard.index') }}">
+        <div class="sb-brand-icon">
             @if ($hasImage)
                 <img src="{{ Storage::url($appImage) }}" alt="{{ $appName }}">
             @else
                 <i class="fas fa-cat"></i>
             @endif
         </div>
-        <span class="sidebar-brand-text-wrap">{{ $appName }}</span>
-        {{-- Lock button --}}
-        <button id="sidebar-lock-btn" title="Lock Sidebar">
-            <i class="fas fa-thumbtack" id="lock-icon"></i>
+        <span class="sb-brand-text">{{ $appName }}</span>
+        <button id="sb-lock-btn" title="Kunci Sidebar" onclick="sbLock(event)">
+            <i class="fas fa-thumbtack" id="sb-lock-icon"></i>
         </button>
     </a>
 
-    <hr class="sidebar-divider-line">
+    <hr class="sb-div">
 
-    {{-- ── Scrollable nav ── --}}
-    <nav class="sidebar-nav-area">
-        <ul style="list-style:none; margin:0; padding:0;">
+    <nav class="sb-nav">
+        <ul style="list-style:none;margin:0;padding:0;">
 
-            {{-- Dashboard --}}
-            <li class="sidebar-nav-item">
-                <a class="sidebar-nav-link {{ request()->routeIs('dashboard.index') ? 'active' : '' }}"
+            <li class="sb-item">
+                <a class="sb-link {{ request()->routeIs('dashboard.index') ? 'active' : '' }}"
                     href="{{ route('dashboard.index') }}">
-                    <span class="sidebar-nav-icon"><i class="fas fa-tachometer-alt"></i></span>
-                    <span class="sidebar-nav-label">Dashboard</span>
+                    <span class="sb-icon"><i class="fas fa-tachometer-alt"></i></span>
+                    <span class="sb-label">Dashboard</span>
                 </a>
             </li>
 
-            <hr class="sidebar-divider-line">
+            <hr class="sb-div">
 
-            {{-- ── OPERASIONAL ── --}}
             <li>
-                <div class="sidebar-section-heading">
-                    <span class="heading-short">—</span>
-                    <span class="heading-full">Operasional</span>
-                </div>
+                <div class="sb-section"><span class="ss">—</span><span class="sf">Operasional</span></div>
             </li>
 
             @can('order.pos')
-                <li class="sidebar-nav-item">
-                    <a class="sidebar-nav-link {{ request()->routeIs('dashboard.orders.pos') ? 'active' : '' }}"
+                <li class="sb-item">
+                    <a class="sb-link {{ request()->routeIs('dashboard.orders.pos') ? 'active' : '' }}"
                         href="{{ route('dashboard.orders.pos') }}">
-                        <span class="sidebar-nav-icon"><i class="fas fa-cash-register"></i></span>
-                        <span class="sidebar-nav-label">Point of Sales (POS)</span>
+                        <span class="sb-icon"><i class="fas fa-cash-register"></i></span>
+                        <span class="sb-label">Point of Sales</span>
                     </a>
                 </li>
             @endcan
 
             @canany(['order.history', 'order.confirm'])
-                @php $penjualanActive = request()->routeIs('dashboard.orders.index*','dashboard.orders.confirmation*'); @endphp
-                <li class="sidebar-nav-item" data-submenu="penjualan">
-                    <div class="sidebar-nav-link {{ $penjualanActive ? 'active' : '' }}"
-                        onclick="toggleSubmenu('penjualan', this)">
-                        <span class="sidebar-nav-icon"><i class="fas fa-bag-shopping"></i></span>
-                        <span class="sidebar-nav-label">Penjualan</span>
-                        <span class="sidebar-nav-arrow {{ $penjualanActive ? 'open' : '' }}"><i
-                                class="fas fa-chevron-right"></i></span>
+                @php $pjA = request()->routeIs('dashboard.orders.index*','dashboard.orders.confirmation*'); @endphp
+                <li class="sb-item">
+                    <div class="sb-link {{ $pjA ? 'active' : '' }}" onclick="sbSub('penjualan',this)">
+                        <span class="sb-icon"><i class="fas fa-bag-shopping"></i></span>
+                        <span class="sb-label">Penjualan</span>
+                        <span class="sb-arrow {{ $pjA ? 'open' : '' }}"><i class="fas fa-chevron-right"></i></span>
                     </div>
-                    <div class="sidebar-submenu {{ $penjualanActive ? 'open' : '' }}" id="submenu-penjualan">
+                    <div class="sb-sub {{ $pjA ? 'open' : '' }}" id="sub-penjualan">
                         @can('order.history')
-                            <a class="sidebar-submenu-item {{ request()->routeIs('dashboard.orders.index*') ? 'active' : '' }}"
+                            <a class="sb-sub-link {{ request()->routeIs('dashboard.orders.index*') ? 'active' : '' }}"
                                 href="{{ route('dashboard.orders.index') }}">
-                                <span class="sidebar-submenu-icon"><i class="fas fa-history"></i></span>
-                                <span class="sidebar-submenu-label">Riwayat Pesanan</span>
+                                <span class="sb-sub-icon"><i class="fas fa-history"></i></span><span
+                                    class="sb-sub-label">Riwayat Pesanan</span>
                             </a>
                         @endcan
                         @can('order.confirm')
-                            <a class="sidebar-submenu-item {{ request()->routeIs('dashboard.orders.confirmation*') ? 'active' : '' }}"
+                            <a class="sb-sub-link {{ request()->routeIs('dashboard.orders.confirmation*') ? 'active' : '' }}"
                                 href="{{ route('dashboard.orders.confirmation') }}">
-                                <span class="sidebar-submenu-icon"><i class="fas fa-check-circle"></i></span>
-                                <span class="sidebar-submenu-label">Konfirmasi Bayar</span>
+                                <span class="sb-sub-icon"><i class="fas fa-check-circle"></i></span><span
+                                    class="sb-sub-label">Konfirmasi Bayar</span>
                             </a>
                         @endcan
                     </div>
                 </li>
             @endcanany
 
-            {{-- Pembelian --}}
-            @php $pembelianActive = request()->routeIs('dashboard.purchases.index*','dashboard.purchases.confirmation*'); @endphp
-            <li class="sidebar-nav-item" data-submenu="pembelian">
-                <div class="sidebar-nav-link {{ $pembelianActive ? 'active' : '' }}"
-                    onclick="toggleSubmenu('pembelian', this)">
-                    <span class="sidebar-nav-icon"><i class="fas fa-cart-plus"></i></span>
-                    <span class="sidebar-nav-label">Pembelian</span>
-                    <span class="sidebar-nav-arrow {{ $pembelianActive ? 'open' : '' }}"><i
-                            class="fas fa-chevron-right"></i></span>
+            @php $pbA = request()->routeIs('dashboard.purchases.index*','dashboard.purchases.confirmation*'); @endphp
+            <li class="sb-item">
+                <div class="sb-link {{ $pbA ? 'active' : '' }}" onclick="sbSub('pembelian',this)">
+                    <span class="sb-icon"><i class="fas fa-cart-plus"></i></span>
+                    <span class="sb-label">Pembelian</span>
+                    <span class="sb-arrow {{ $pbA ? 'open' : '' }}"><i class="fas fa-chevron-right"></i></span>
                 </div>
-                <div class="sidebar-submenu {{ $pembelianActive ? 'open' : '' }}" id="submenu-pembelian">
-                    <a class="sidebar-submenu-item {{ request()->routeIs('dashboard.purchases.index*') ? 'active' : '' }}"
+                <div class="sb-sub {{ $pbA ? 'open' : '' }}" id="sub-pembelian">
+                    <a class="sb-sub-link {{ request()->routeIs('dashboard.purchases.index*') ? 'active' : '' }}"
                         href="{{ route('dashboard.purchases.index') }}">
-                        <span class="sidebar-submenu-icon"><i class="fas fa-history"></i></span>
-                        <span class="sidebar-submenu-label">Riwayat Pembelian</span>
+                        <span class="sb-sub-icon"><i class="fas fa-history"></i></span><span
+                            class="sb-sub-label">Riwayat Pembelian</span>
                     </a>
-                    <a class="sidebar-submenu-item {{ request()->routeIs('dashboard.purchases.confirmation*') ? 'active' : '' }}"
+                    <a class="sb-sub-link {{ request()->routeIs('dashboard.purchases.confirmation*') ? 'active' : '' }}"
                         href="{{ route('dashboard.purchases.confirmation') }}">
-                        <span class="sidebar-submenu-icon"><i class="fas fa-check-circle"></i></span>
-                        <span class="sidebar-submenu-label">Konfirmasi Beli</span>
+                        <span class="sb-sub-icon"><i class="fas fa-check-circle"></i></span><span
+                            class="sb-sub-label">Konfirmasi Beli</span>
                     </a>
                 </div>
             </li>
 
-            <hr class="sidebar-divider-line">
+            <hr class="sb-div">
 
-            {{-- ── MANAJEMEN STOK ── --}}
             @canany(['category.index', 'product.index', 'supplier.index'])
                 <li>
-                    <div class="sidebar-section-heading">
-                        <span class="heading-short">—</span>
-                        <span class="heading-full">Manajemen Stok</span>
-                    </div>
+                    <div class="sb-section"><span class="ss">—</span><span class="sf">Manajemen Stok</span></div>
                 </li>
-                @php $inventoriActive = request()->is('dashboard/categories*','dashboard/products*','dashboard/suppliers*'); @endphp
-                <li class="sidebar-nav-item" data-submenu="inventori">
-                    <div class="sidebar-nav-link {{ $inventoriActive ? 'active' : '' }}"
-                        onclick="toggleSubmenu('inventori', this)">
-                        <span class="sidebar-nav-icon"><i class="fas fa-box"></i></span>
-                        <span class="sidebar-nav-label">Inventori</span>
-                        <span class="sidebar-nav-arrow {{ $inventoriActive ? 'open' : '' }}"><i
-                                class="fas fa-chevron-right"></i></span>
+                @php $invA = request()->is('dashboard/categories*','dashboard/products*','dashboard/suppliers*'); @endphp
+                <li class="sb-item">
+                    <div class="sb-link {{ $invA ? 'active' : '' }}" onclick="sbSub('inventori',this)">
+                        <span class="sb-icon"><i class="fas fa-box"></i></span>
+                        <span class="sb-label">Inventori</span>
+                        <span class="sb-arrow {{ $invA ? 'open' : '' }}"><i class="fas fa-chevron-right"></i></span>
                     </div>
-                    <div class="sidebar-submenu {{ $inventoriActive ? 'open' : '' }}" id="submenu-inventori">
+                    <div class="sb-sub {{ $invA ? 'open' : '' }}" id="sub-inventori">
                         @can('product.index')
-                            <a class="sidebar-submenu-item {{ request()->is('dashboard/products*') ? 'active' : '' }}"
+                            <a class="sb-sub-link {{ request()->is('dashboard/products*') ? 'active' : '' }}"
                                 href="{{ route('dashboard.products.index') }}">
-                                <span class="sidebar-submenu-icon"><i class="fas fa-boxes-stacked"></i></span>
-                                <span class="sidebar-submenu-label">Daftar Produk</span>
+                                <span class="sb-sub-icon"><i class="fas fa-boxes-stacked"></i></span><span
+                                    class="sb-sub-label">Daftar Produk</span>
                             </a>
                         @endcan
                         @can('category.index')
-                            <a class="sidebar-submenu-item {{ request()->is('dashboard/categories*') ? 'active' : '' }}"
+                            <a class="sb-sub-link {{ request()->is('dashboard/categories*') ? 'active' : '' }}"
                                 href="{{ route('dashboard.categories.index') }}">
-                                <span class="sidebar-submenu-icon"><i class="fas fa-layer-group"></i></span>
-                                <span class="sidebar-submenu-label">Kategori</span>
+                                <span class="sb-sub-icon"><i class="fas fa-layer-group"></i></span><span
+                                    class="sb-sub-label">Kategori</span>
                             </a>
                         @endcan
                         @can('supplier.index')
-                            <a class="sidebar-submenu-item {{ request()->is('dashboard/suppliers*') ? 'active' : '' }}"
+                            <a class="sb-sub-link {{ request()->is('dashboard/suppliers*') ? 'active' : '' }}"
                                 href="{{ route('dashboard.suppliers.index') }}">
-                                <span class="sidebar-submenu-icon"><i class="fas fa-truck-field"></i></span>
-                                <span class="sidebar-submenu-label">Supplier</span>
+                                <span class="sb-sub-icon"><i class="fas fa-truck-field"></i></span><span
+                                    class="sb-sub-label">Supplier</span>
                             </a>
                         @endcan
                     </div>
                 </li>
-                <hr class="sidebar-divider-line">
+                <hr class="sb-div">
             @endcanany
 
-            {{-- ── LAPORAN ── --}}
             @canany(['report.hourly', 'report.daily', 'report.monthly'])
                 <li>
-                    <div class="sidebar-section-heading">
-                        <span class="heading-short">—</span>
-                        <span class="heading-full">Laporan</span>
-                    </div>
+                    <div class="sb-section"><span class="ss">—</span><span class="sf">Laporan</span></div>
                 </li>
-                @php $laporanActive = request()->is('dashboard/reports*'); @endphp
-                <li class="sidebar-nav-item" data-submenu="laporan">
-                    <div class="sidebar-nav-link {{ $laporanActive ? 'active' : '' }}"
-                        onclick="toggleSubmenu('laporan', this)">
-                        <span class="sidebar-nav-icon"><i class="fas fa-chart-line"></i></span>
-                        <span class="sidebar-nav-label">Analisis Penjualan</span>
-                        <span class="sidebar-nav-arrow {{ $laporanActive ? 'open' : '' }}"><i
-                                class="fas fa-chevron-right"></i></span>
+                @php $lapA = request()->is('dashboard/reports*'); @endphp
+                <li class="sb-item">
+                    <div class="sb-link {{ $lapA ? 'active' : '' }}" onclick="sbSub('laporan',this)">
+                        <span class="sb-icon"><i class="fas fa-chart-line"></i></span>
+                        <span class="sb-label">Analisis Penjualan</span>
+                        <span class="sb-arrow {{ $lapA ? 'open' : '' }}"><i class="fas fa-chevron-right"></i></span>
                     </div>
-                    <div class="sidebar-submenu {{ $laporanActive ? 'open' : '' }}" id="submenu-laporan">
+                    <div class="sb-sub {{ $lapA ? 'open' : '' }}" id="sub-laporan">
                         @can('report.hourly')
-                            <a class="sidebar-submenu-item {{ request()->is('dashboard/reports/hourly') ? 'active' : '' }}"
+                            <a class="sb-sub-link {{ request()->is('dashboard/reports/hourly') ? 'active' : '' }}"
                                 href="{{ route('dashboard.reports.hourly') }}">
-                                <span class="sidebar-submenu-icon"><i class="fas fa-clock"></i></span>
-                                <span class="sidebar-submenu-label">Per Jam</span>
+                                <span class="sb-sub-icon"><i class="fas fa-clock"></i></span><span class="sb-sub-label">Per
+                                    Jam</span>
                             </a>
                         @endcan
                         @can('report.daily')
-                            <a class="sidebar-submenu-item {{ request()->is('dashboard/reports/daily') ? 'active' : '' }}"
+                            <a class="sb-sub-link {{ request()->is('dashboard/reports/daily') ? 'active' : '' }}"
                                 href="{{ route('dashboard.reports.daily') }}">
-                                <span class="sidebar-submenu-icon"><i class="fas fa-calendar-days"></i></span>
-                                <span class="sidebar-submenu-label">Harian</span>
+                                <span class="sb-sub-icon"><i class="fas fa-calendar-days"></i></span><span
+                                    class="sb-sub-label">Harian</span>
                             </a>
                         @endcan
                         @can('report.monthly')
-                            <a class="sidebar-submenu-item {{ request()->is('dashboard/reports/monthly') ? 'active' : '' }}"
+                            <a class="sb-sub-link {{ request()->is('dashboard/reports/monthly') ? 'active' : '' }}"
                                 href="{{ route('dashboard.reports.monthly') }}">
-                                <span class="sidebar-submenu-icon"><i class="fas fa-calendar-week"></i></span>
-                                <span class="sidebar-submenu-label">Bulanan</span>
+                                <span class="sb-sub-icon"><i class="fas fa-calendar-week"></i></span><span
+                                    class="sb-sub-label">Bulanan</span>
                             </a>
                         @endcan
                     </div>
                 </li>
-                <hr class="sidebar-divider-line">
+                <hr class="sb-div">
             @endcanany
 
-            {{-- ── ADMINISTRATOR ── --}}
             @canany(['user.index', 'role.index', 'permission.index'])
                 <li>
-                    <div class="sidebar-section-heading">
-                        <span class="heading-short">—</span>
-                        <span class="heading-full">Administrator</span>
-                    </div>
+                    <div class="sb-section"><span class="ss">—</span><span class="sf">Administrator</span></div>
                 </li>
-                @php $akseActive = request()->is('dashboard/users*','dashboard/roles*','dashboard/permissions*'); @endphp
-                <li class="sidebar-nav-item" data-submenu="akses">
-                    <div class="sidebar-nav-link {{ $akseActive ? 'active' : '' }}"
-                        onclick="toggleSubmenu('akses', this)">
-                        <span class="sidebar-nav-icon"><i class="fas fa-user-shield"></i></span>
-                        <span class="sidebar-nav-label">Kontrol Akses</span>
-                        <span class="sidebar-nav-arrow {{ $akseActive ? 'open' : '' }}"><i
-                                class="fas fa-chevron-right"></i></span>
+                @php $admA = request()->is('dashboard/users*','dashboard/roles*','dashboard/permissions*'); @endphp
+                <li class="sb-item">
+                    <div class="sb-link {{ $admA ? 'active' : '' }}" onclick="sbSub('akses',this)">
+                        <span class="sb-icon"><i class="fas fa-user-shield"></i></span>
+                        <span class="sb-label">Kontrol Akses</span>
+                        <span class="sb-arrow {{ $admA ? 'open' : '' }}"><i class="fas fa-chevron-right"></i></span>
                     </div>
-                    <div class="sidebar-submenu {{ $akseActive ? 'open' : '' }}" id="submenu-akses">
+                    <div class="sb-sub {{ $admA ? 'open' : '' }}" id="sub-akses">
                         @can('user.index')
-                            <a class="sidebar-submenu-item {{ request()->is('dashboard/users*') ? 'active' : '' }}"
+                            <a class="sb-sub-link {{ request()->is('dashboard/users*') ? 'active' : '' }}"
                                 href="{{ route('dashboard.users.index') }}">
-                                <span class="sidebar-submenu-icon"><i class="fas fa-users-gear"></i></span>
-                                <span class="sidebar-submenu-label">Pengguna</span>
+                                <span class="sb-sub-icon"><i class="fas fa-users-gear"></i></span><span
+                                    class="sb-sub-label">Pengguna</span>
                             </a>
                         @endcan
                         @can('role.index')
-                            <a class="sidebar-submenu-item {{ request()->is('dashboard/roles*') ? 'active' : '' }}"
+                            <a class="sb-sub-link {{ request()->is('dashboard/roles*') ? 'active' : '' }}"
                                 href="{{ route('dashboard.roles.index') }}">
-                                <span class="sidebar-submenu-icon"><i class="fas fa-address-card"></i></span>
-                                <span class="sidebar-submenu-label">Peran (Role)</span>
+                                <span class="sb-sub-icon"><i class="fas fa-address-card"></i></span><span
+                                    class="sb-sub-label">Peran (Role)</span>
                             </a>
                         @endcan
                         @can('permission.index')
-                            <a class="sidebar-submenu-item {{ request()->is('dashboard/permissions*') ? 'active' : '' }}"
+                            <a class="sb-sub-link {{ request()->is('dashboard/permissions*') ? 'active' : '' }}"
                                 href="{{ route('dashboard.permissions.index') }}">
-                                <span class="sidebar-submenu-icon"><i class="fas fa-key"></i></span>
-                                <span class="sidebar-submenu-label">Hak Akses</span>
+                                <span class="sb-sub-icon"><i class="fas fa-key"></i></span><span class="sb-sub-label">Hak
+                                    Akses</span>
                             </a>
                         @endcan
                     </div>
                 </li>
-                <hr class="sidebar-divider-line">
+                <hr class="sb-div">
             @endcanany
 
-            {{-- ── SISTEM ── --}}
             <li>
-                <div class="sidebar-section-heading">
-                    <span class="heading-short">—</span>
-                    <span class="heading-full">Sistem</span>
-                </div>
+                <div class="sb-section"><span class="ss">—</span><span class="sf">Sistem</span></div>
             </li>
-            <li class="sidebar-nav-item">
-                <a class="sidebar-nav-link {{ request()->is('dashboard/settings*') ? 'active' : '' }}"
+            <li class="sb-item">
+                <a class="sb-link {{ request()->is('dashboard/settings*') ? 'active' : '' }}"
                     href="{{ route('dashboard.settings.index') }}">
-                    <span class="sidebar-nav-icon"><i class="fas fa-cog"></i></span>
-                    <span class="sidebar-nav-label">Pengaturan Aplikasi</span>
+                    <span class="sb-icon"><i class="fas fa-cog"></i></span>
+                    <span class="sb-label">Pengaturan Aplikasi</span>
                 </a>
             </li>
 
         </ul>
     </nav>
-
-    {{-- Bottom toggle circle --}}
-    <div class="sidebar-bottom-toggle d-none d-md-flex">
-        <button id="sidebarToggleCircle" title="Toggle Sidebar">
-            <i class="fas fa-bars"></i>
-        </button>
-    </div>
-
 </div>
 
-{{-- ═══════════════════════════════════════════════════════════
-     JAVASCRIPT
-═══════════════════════════════════════════════════════════ --}}
+{{-- ════════════ JS ════════════ --}}
 <script>
     (function() {
         'use strict';
 
-        const sidebar = document.getElementById('sidebar-wrapper');
-        const lockBtn = document.getElementById('sidebar-lock-btn');
-        const lockIcon = document.getElementById('lock-icon');
-        const contentWrapper = document.getElementById('content-wrapper');
-        const topbarNav = document.querySelector('.topbar-nav');
-        const overlay = document.getElementById('sidebar-overlay');
+        const sb = document.getElementById('sidebar-wrapper');
+        const content = document.getElementById('content-wrapper');
+        const backdrop = document.getElementById('sb-backdrop');
+        const lockIcon = document.getElementById('sb-lock-icon');
+        const isMobile = () => window.innerWidth < 768;
 
-        // ── Restore lock state from localStorage ──
-        let isLocked = localStorage.getItem('sidebarLocked') === 'true';
+        /* ── Lock ── */
+        let locked = localStorage.getItem('sbLocked') === 'true';
 
-        function applyLockState(locked, animate) {
-            isLocked = locked;
+        function setLock(val) {
+            locked = val;
+            localStorage.setItem('sbLocked', val);
             if (locked) {
-                sidebar.classList.add('sidebar-locked');
-                lockBtn.classList.add('locked');
-                lockIcon.className = 'fas fa-thumbtack';
-                if (contentWrapper) contentWrapper.classList.add('sidebar-pushed');
-                if (topbarNav) topbarNav.classList.add('sidebar-pushed');
+                sb.classList.add('sb-locked');
+                lockIcon.style.transform = 'rotate(-45deg)';
+                if (!isMobile() && content) content.classList.add('sb-pushed');
             } else {
-                sidebar.classList.remove('sidebar-locked');
-                lockBtn.classList.remove('locked');
-                lockIcon.className = 'fas fa-thumbtack';
-                if (contentWrapper) contentWrapper.classList.remove('sidebar-pushed');
-                if (topbarNav) topbarNav.classList.remove('sidebar-pushed');
+                sb.classList.remove('sb-locked');
+                lockIcon.style.transform = '';
+                if (content) content.classList.remove('sb-pushed');
             }
-            localStorage.setItem('sidebarLocked', locked);
         }
 
-        applyLockState(isLocked, false);
+        setLock(locked);
 
-        lockBtn.addEventListener('click', function(e) {
+        window.sbLock = function(e) {
             e.preventDefault();
             e.stopPropagation();
-            applyLockState(!isLocked, true);
-        });
-
-        // ── Submenu toggle ──
-        window.toggleSubmenu = function(name, triggerEl) {
-            // Only works when sidebar is expanded (hovered or locked)
-            const isExpanded = sidebar.matches(':hover') || sidebar.classList.contains('sidebar-locked');
-            if (!isExpanded) return;
-
-            const submenu = document.getElementById('submenu-' + name);
-            const arrow = triggerEl.querySelector('.sidebar-nav-arrow');
-
-            const isOpen = submenu.classList.contains('open');
-            submenu.classList.toggle('open', !isOpen);
-            if (arrow) arrow.classList.toggle('open', !isOpen);
+            if (!isMobile()) setLock(!locked);
         };
 
-        // ── Mobile toggle (topbar burger button) ──
-        const topbarToggle = document.getElementById('sidebarToggleTop');
-        if (topbarToggle) {
-            topbarToggle.addEventListener('click', function() {
-                sidebar.classList.toggle('mobile-open');
-                overlay.classList.toggle('active');
+        /* ── Submenu ── */
+        window.sbSub = function(name, el) {
+            const expanded = isMobile() ?
+                sb.classList.contains('mobile-open') :
+                (sb.matches(':hover') || locked);
+            if (!expanded) return;
+
+            const sub = document.getElementById('sub-' + name);
+            const arrow = el.querySelector('.sb-arrow');
+            const open = sub.classList.contains('open');
+            sub.classList.toggle('open', !open);
+            if (arrow) arrow.classList.toggle('open', !open);
+        };
+
+        /* ── Mobile open/close ── */
+        function mobileOpen() {
+            sb.classList.add('mobile-open');
+            backdrop.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function mobileClose() {
+            sb.classList.remove('mobile-open');
+            backdrop.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        backdrop.addEventListener('click', mobileClose);
+
+        /* Bind burger — defer so topbar partial is in DOM */
+        function bindBurger() {
+            const burger = document.getElementById('sidebarToggleTop');
+            if (!burger) return;
+            const clone = burger.cloneNode(true);
+            burger.replaceWith(clone);
+            clone.addEventListener('click', function(e) {
+                e.preventDefault();
+                sb.classList.contains('mobile-open') ? mobileClose() : mobileOpen();
             });
         }
 
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('mobile-open');
-            overlay.classList.remove('active');
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bindBurger);
+        } else {
+            // slight delay ensures topbar partial rendered
+            setTimeout(bindBurger, 0);
+        }
+
+        window.addEventListener('resize', function() {
+            if (!isMobile()) {
+                mobileClose();
+                setLock(locked);
+            } else {
+                if (content) content.classList.remove('sb-pushed');
+            }
         });
-
-        // ── Desktop bottom toggle (optional, only visual hint) ──
-        const circleBtn = document.getElementById('sidebarToggleCircle');
-        if (circleBtn) {
-            circleBtn.addEventListener('click', function() {
-                applyLockState(!isLocked, true);
-            });
-        }
     })();
 </script>

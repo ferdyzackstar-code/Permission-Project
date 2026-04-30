@@ -1,267 +1,269 @@
+/**
+ * pos-logic.js — Anda Petshop POS
+ * Compatible dengan pos.blade.php versi baru
+ */
+
 let cart = [];
 let totalAmount = 0;
 
-// --- 1. FITUR SEARCH & FILTER ---
-document
-    .getElementById("product-search")
-    .addEventListener("input", filterProducts);
+// ── SEARCH ──────────────────────────────────────────────────────
+document.getElementById('product-search').addEventListener('input', function () {
+    const keyword = this.value.toLowerCase().trim();
+    const items   = document.querySelectorAll('.product-item');
+    const empty   = document.getElementById('search-empty');
+    let visible   = 0;
 
-document.querySelectorAll(".btn-category").forEach((btn) => {
-    btn.addEventListener("click", function () {
-        document
-            .querySelectorAll(".btn-category")
-            .forEach((b) => b.classList.remove("active"));
-        this.classList.add("active");
-        filterProducts();
+    items.forEach(item => {
+        const match = item.dataset.name.includes(keyword);
+        item.style.display = match ? '' : 'none';
+        if (match) visible++;
     });
+
+    empty.style.display = (visible === 0 && keyword !== '') ? 'flex' : 'none';
 });
 
-document.getElementById('product-search').addEventListener('input', function() {
-    // 1. Ambil kata kunci pencarian dan ubah ke huruf kecil
-    let keyword = this.value.toLowerCase();
-    
-    // 2. Ambil semua elemen produk
-    let products = document.querySelectorAll('.product-item');
-
-    products.forEach(function(product) {
-        // 3. Ambil nama produk dari atribut data-name
-        let productName = product.getAttribute('data-name');
-
-        // 4. Cek apakah kata kunci ada di dalam nama produk
-        if (productName.includes(keyword)) {
-            product.style.display = "block"; // Tampilkan jika cocok
-        } else {
-            product.style.display = "none";  // Sembunyikan jika tidak cocok
-        }
-    });
-});
-
-function filterProducts() {
-    const searchTerm = document
-        .getElementById("product-search")
-        .value.toLowerCase();
-    const activeCategory = document.querySelector(".btn-category.active")
-        .dataset.category;
-
-    document.querySelectorAll(".product-item").forEach((item) => {
-        const name = item.dataset.name;
-        const species = item.dataset.species;
-        const category = item.dataset.category;
-
-        const matchesSearch =
-            name.includes(searchTerm) || species.includes(searchTerm);
-        const matchesCategory =
-            activeCategory === "all" || category === activeCategory;
-
-        item.style.display =
-            matchesSearch && matchesCategory ? "block" : "none";
-    });
-}
-
-// --- 2. LOGIKA KERANJANG ---
+// ── ADD TO CART ──────────────────────────────────────────────────
 function addToCart(product) {
-    const existing = cart.find((item) => item.id === product.id);
+    const existing = cart.find(i => i.id === product.id);
+
     if (existing) {
         if (existing.qty < product.stock) {
             existing.qty++;
         } else {
-            Swal.fire("Oops!", "Stok tidak mencukupi!", "warning");
+            Swal.fire({
+                icon: 'warning',
+                title: 'Stok Habis',
+                text: `Stok ${product.name} hanya ${product.stock} unit.`,
+                confirmButtonColor: '#1565C0',
+                timer: 2000,
+                showConfirmButton: false,
+            });
+            return;
         }
     } else {
         cart.push({
-            id: product.id,
-            name: product.name,
+            id:    product.id,
+            name:  product.name,
             price: product.price,
-            qty: 1,
-            max: product.stock,
+            image: product.image,
+            qty:   1,
+            max:   product.stock,
         });
     }
+
+    // Animasi badge
+    const badge = document.getElementById('cart-count');
+    badge.classList.remove('pop');
+    void badge.offsetWidth; // reflow
+    badge.classList.add('pop');
+
     renderCart();
 }
 
+// ── UPDATE QTY ───────────────────────────────────────────────────
 function updateQty(index, delta) {
     const newQty = cart[index].qty + delta;
-    if (newQty > 0) {
-        if (newQty <= cart[index].max) {
-            cart[index].qty = newQty;
-        } else {
-            Swal.fire("Maksimal", "Maksimal stok tercapai", "info");
-        }
-    } else {
+
+    if (newQty <= 0) {
         cart.splice(index, 1);
+    } else if (newQty > cart[index].max) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Batas Stok',
+            text: `Maksimal ${cart[index].max} unit.`,
+            confirmButtonColor: '#1565C0',
+            timer: 1800,
+            showConfirmButton: false,
+        });
+        return;
+    } else {
+        cart[index].qty = newQty;
     }
+
     renderCart();
 }
 
-// FUNGSI BARU: KOSONGKAN KERANJANG
+// ── CLEAR CART ───────────────────────────────────────────────────
 function clearCart() {
     if (cart.length === 0) return;
 
     Swal.fire({
-        title: "Kosongkan Keranjang?",
-        text: "Semua barang di keranjang akan dihapus.",
-        icon: "warning",
+        title: 'Kosongkan Keranjang?',
+        text: 'Semua produk di keranjang akan dihapus.',
+        icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#6c757d",
-        confirmButtonText: "Ya, Kosongkan!",
-        cancelButtonText: "Batal",
-    }).then((result) => {
+        confirmButtonColor: '#C62828',
+        cancelButtonColor: '#78909C',
+        confirmButtonText: 'Ya, Kosongkan',
+        cancelButtonText: 'Batal',
+    }).then(result => {
         if (result.isConfirmed) {
             cart = [];
+            document.getElementById('paid_amount_format').value = '';
+            document.getElementById('paid_amount').value = '0';
             renderCart();
-            document.getElementById("paid_amount_format").value = "";
-            document.getElementById("paid_amount").value = "";
-            Swal.fire("Dihapus!", "Keranjang berhasil dikosongkan.", "success");
         }
     });
 }
 
+// ── RENDER CART ──────────────────────────────────────────────────
 function renderCart() {
-    const tbody = document.getElementById("cart-table-body");
-    const cartCount = document.getElementById("cart-count");
+    const wrap       = document.getElementById('cart-table-body');
+    const emptyState = document.getElementById('cart-empty-state');
+    const badge      = document.getElementById('cart-count');
 
-    tbody.innerHTML = "";
-    totalAmount = 0;
+    wrap.innerHTML = '';
+    totalAmount    = 0;
     let totalItems = 0;
 
-    cart.forEach((item, index) => {
-        let subtotal = item.price * item.qty;
-        totalAmount += subtotal;
-        totalItems += item.qty;
+    if (cart.length === 0) {
+        emptyState.style.display = 'flex';
+        badge.textContent = '0 Item';
+        document.getElementById('total-display').textContent = 'Rp0';
+        calculateChange();
+        return;
+    }
 
-        tbody.innerHTML += `
-        <tr class="border-bottom">
-            <td class="p-2" style="width: 50%">
-                <div class="fw-bold small text-truncate">${item.name}</div>
-                <div class="text-muted tiny">Rp${formatRupiah(Math.floor(item.price))}</div>
-            </td>
-            <td class="p-2 text-center" style="width: 30%">
-                <div class="d-flex align-items-center justify-content-center">
-                    <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="updateQty(${index}, -1)">-</button>
-                    <span class="fw-bold small mx-3">${item.qty}</span> 
-                    <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="updateQty(${index}, 1)">+</button>
-                </div>
-            </td>
-            <td class="p-2 text-end fw-bold small" style="width: 20%">
-                Rp${formatRupiah(Math.floor(subtotal))}
-            </td>
-        </tr>`;
+    emptyState.style.display = 'none';
+
+    cart.forEach((item, index) => {
+        const subtotal  = item.price * item.qty;
+        totalAmount    += subtotal;
+        totalItems     += item.qty;
+
+        const imgUrl = item.image
+            ? `${window.posConfig.assetUrl}/${item.image}`
+            : `${window.posConfig.assetUrl}/default-product.jpg`;
+
+        wrap.innerHTML += `
+        <div class="cart-item">
+            <img class="cart-item-img"
+                 src="${imgUrl}"
+                 alt="${item.name}"
+                 onerror="this.src='${window.posConfig.assetUrl}/default-product.jpg'">
+            <div class="cart-item-info">
+                <div class="cart-item-name" title="${item.name}">${item.name}</div>
+                <div class="cart-item-price">Rp${formatRupiah(item.price)}</div>
+            </div>
+            <div class="qty-ctrl">
+                <button class="qty-btn minus" onclick="updateQty(${index}, -1)">
+                    <i class="fas fa-minus" style="font-size:.6rem;"></i>
+                </button>
+                <span class="qty-num">${item.qty}</span>
+                <button class="qty-btn plus" onclick="updateQty(${index}, 1)">
+                    <i class="fas fa-plus" style="font-size:.6rem;"></i>
+                </button>
+            </div>
+            <div class="cart-item-subtotal">Rp${formatRupiah(subtotal)}</div>
+        </div>`;
     });
 
-    if (cartCount) cartCount.innerText = `${totalItems} Item`;
-    document.getElementById("total-display").innerText =
-        "Rp" + formatRupiah(totalAmount);
+    badge.textContent = `${totalItems} Item`;
+    document.getElementById('total-display').textContent = 'Rp' + formatRupiah(totalAmount);
     calculateChange();
 }
 
-// --- 3. FORMAT RUPIAH & KEMBALIAN (DIBERSIHKAN DARI DOUBLE LISTENER) ---
-const inputFormat = document.getElementById("paid_amount_format");
-const inputReal = document.getElementById("paid_amount");
-
+// ── FORMAT & KEMBALIAN ───────────────────────────────────────────
 function formatRupiah(angka) {
-    if (angka === undefined || angka === null || angka === "") return "";
-    let number_string = angka.toString().replace(/[^0-9]/g, "");
-    if (!number_string) return "0";
-    return new Intl.NumberFormat("id-ID").format(number_string);
+    if (!angka && angka !== 0) return '0';
+    return new Intl.NumberFormat('id-ID').format(Math.floor(angka));
 }
 
-// Hanya SATU listener untuk input uang
-inputFormat.addEventListener("input", function (e) {
-    let rawValue = this.value.replace(/[^0-9]/g, "");
-    inputReal.value = rawValue;
-    this.value = rawValue ? formatRupiah(rawValue) : "";
+const inputFormat = document.getElementById('paid_amount_format');
+const inputReal   = document.getElementById('paid_amount');
+
+inputFormat.addEventListener('input', function () {
+    const raw = this.value.replace(/[^0-9]/g, '');
+    inputReal.value = raw || '0';
+    this.value = raw ? formatRupiah(raw) : '';
     calculateChange();
 });
 
 function calculateChange() {
-    const method = document.getElementById("payment_method").value;
+    const method = document.getElementById('payment_method').value;
+    if (method === 'transfer') {
+        document.getElementById('change_amount').textContent = 'Rp0';
+        return;
+    }
+    const paid   = parseInt(inputReal.value) || 0;
+    const change = paid - totalAmount;
+    document.getElementById('change_amount').textContent =
+        'Rp' + (change > 0 ? formatRupiah(change) : '0');
+}
 
-    if (method === "transfer") {
-        document.getElementById("change_amount").innerText = "Rp0";
+// ── SUBMIT TRANSAKSI ─────────────────────────────────────────────
+async function submitTransaction() {
+    if (cart.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Keranjang Kosong',
+            text: 'Tambahkan produk terlebih dahulu.',
+            confirmButtonColor: '#1565C0',
+        });
         return;
     }
 
-    const paid = parseInt(inputReal.value) || 0;
-    const change = paid - totalAmount;
-    const displayChange = change > 0 ? formatRupiah(change) : "0";
-    document.getElementById("change_amount").innerText = "Rp" + displayChange;
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-    const payment_method = document.getElementById("payment_method");
-    const cash_input_group = document.getElementById("cash-input-group");
-
-    function togglePaymentFields() {
-        if (payment_method.value === "transfer") {
-            cash_input_group.style.display = "none";
-            inputReal.value = totalAmount;
-            inputFormat.value = "";
-        } else {
-            cash_input_group.style.display = "block";
-            inputReal.value = "0";
-            inputFormat.value = "";
-        }
-        calculateChange();
-    }
-
-    payment_method.addEventListener("change", togglePaymentFields);
-    togglePaymentFields();
-});
-
-// --- 4. SUBMIT TRANSAKSI ---
-async function submitTransaction() {
-    if (cart.length === 0)
-        return Swal.fire("Peringatan", "Keranjang masih kosong!", "warning");
-
-    const method = document.getElementById("payment_method").value;
+    const method    = document.getElementById('payment_method').value;
     const paidValue = parseInt(inputReal.value) || 0;
 
-    if (method === "cash" && paidValue < totalAmount) {
-        return Swal.fire(
-            "Uang Kurang!",
-            "Nominal bayar lebih kecil dari total belanja.",
-            "error",
-        );
+    if (method === 'cash' && paidValue < totalAmount) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Uang Kurang!',
+            text: `Kurang Rp${formatRupiah(totalAmount - paidValue)} dari total belanja.`,
+            confirmButtonColor: '#1565C0',
+        });
+        return;
     }
 
-    const btn = document.getElementById("btn-submit");
+    const btn = document.getElementById('btn-submit');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> MEMPROSES...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>MEMPROSES...';
 
     const payload = {
-        cart: cart,
+        cart:           cart,
         payment_method: method,
-        total_amount: totalAmount,
-        paid_amount: method === "transfer" ? totalAmount : paidValue,
+        total_amount:   totalAmount,
+        paid_amount:    method === 'transfer' ? totalAmount : paidValue,
     };
 
     try {
         const response = await fetch(window.posConfig.storeUrl, {
-            method: "POST",
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-                "X-CSRF-TOKEN": window.posConfig.csrfToken,
+                'Content-Type':  'application/json',
+                'Accept':        'application/json',
+                'X-CSRF-TOKEN':  window.posConfig.csrfToken,
             },
             body: JSON.stringify(payload),
         });
 
         const result = await response.json();
+
         if (result.success) {
-            window.location.href = 
-                result.receipt_url + 
-                "?status=success&invoice=" + 
-                result.invoice_number;  
+            window.location.href =
+                result.receipt_url +
+                '?status=success&invoice=' +
+                result.invoice_number;
         } else {
-            Swal.fire("Gagal", result.message, "error");
+            Swal.fire({
+                icon: 'error',
+                title: 'Transaksi Gagal',
+                text: result.message,
+                confirmButtonColor: '#1565C0',
+            });
             btn.disabled = false;
-            btn.innerText = "PROSES TRANSAKSI";
+            btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>PROSES TRANSAKSI';
         }
-    } catch (error) {
-        console.error(error);
-        Swal.fire("Error", "Terjadi kesalahan koneksi ke server.", "error");
+    } catch (err) {
+        console.error(err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Koneksi Error',
+            text: 'Terjadi kesalahan koneksi ke server.',
+            confirmButtonColor: '#1565C0',
+        });
         btn.disabled = false;
-        btn.innerText = "PROSES TRANSAKSI";
+        btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>PROSES TRANSAKSI';
     }
 }

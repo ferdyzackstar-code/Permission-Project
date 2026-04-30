@@ -1,64 +1,243 @@
 @extends('dashboard.layouts.admin')
 
-@section('content')
+@section('title', 'Riwayat Transaksi')
+
+@push('styles')
     <style>
-        #orders-table {
-            width: 100% !important;
+        :root {
+            --ord-primary: #1565C0;
+            --ord-accent: #42A5F5;
+            --ord-bg: #F0F4F8;
+            --ord-radius: 12px;
         }
 
-        #orders-table th,
-        #orders-table td {
+        .ord-header-card {
+            background: linear-gradient(135deg, #0D47A1 0%, #1565C0 60%, #1976D2 100%);
+            border-radius: var(--ord-radius);
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(21, 101, 192, .25);
+        }
+
+        .ord-header-card h4 {
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .ord-header-card p {
+            color: rgba(255, 255, 255, .7);
+            font-size: .82rem;
+            margin: 2px 0 0;
+        }
+
+        .btn-new-trx {
+            background: rgba(255, 255, 255, .15);
+            border: 1.5px solid rgba(255, 255, 255, .35);
+            color: #fff;
+            font-size: .82rem;
+            font-weight: 700;
+            padding: 9px 20px;
+            border-radius: 8px;
+            backdrop-filter: blur(4px);
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-new-trx:hover {
+            background: rgba(255, 255, 255, .28);
+            color: #fff;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+
+        /* Table Card */
+        .ord-table-card {
+            background: #fff;
+            border-radius: var(--ord-radius);
+            box-shadow: 0 2px 16px rgba(21, 101, 192, .07);
+            overflow: hidden;
+        }
+
+        .ord-table-card .card-body {
+            padding: 20px;
+        }
+
+        /* DataTable overrides */
+        #orders-table thead th {
+            background: #F0F4F8 !important;
+            color: #546E7A;
+            font-size: .75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            border: none !important;
+            padding: 12px 14px !important;
             white-space: nowrap;
-            vertical-align: middle;
-            padding: 12px 8px !important;
+        }
+
+        #orders-table tbody td {
+            padding: 12px 14px !important;
+            vertical-align: middle !important;
+            border-top: 1px solid #F0F4F8 !important;
+            font-size: .84rem;
+            color: #2C3E50;
+        }
+
+        #orders-table tbody tr:hover {
+            background: #F8FAFD;
+        }
+
+        #orders-table {
+            border-collapse: collapse !important;
+        }
+
+        .invoice-code {
+            font-family: monospace;
+            font-size: .78rem;
+            background: #EEF2FF;
+            color: #3949AB;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: 700;
+        }
+
+        .badge-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .4px;
+        }
+
+        .badge-status.completed {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .badge-status.pending {
+            background: #FFF8E1;
+            color: #F57F17;
+        }
+
+        .badge-status.cancelled {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        .badge-method {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: .72rem;
+            font-weight: 700;
+        }
+
+        .badge-method.cash {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .badge-method.transfer {
+            background: #E3F2FD;
+            color: #1565C0;
+        }
+
+        .btn-struk {
+            background: linear-gradient(135deg, #1565C0, #1976D2);
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 7px;
+            font-size: .78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 8px rgba(21, 101, 192, .2);
+        }
+
+        .btn-struk:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(21, 101, 192, .3);
         }
     </style>
+@endpush
+
+@section('content')
     <div class="container-fluid">
-        <div class="card border-0 shadow-sm pt-2">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 text-dark">
-                    <i class="fa-solid fa-clock-rotate-left mr-1"></i> Riwayat Transaksi
-                </h5>
-                <a href="{{ route('dashboard.orders.pos') }}" class="btn btn-primary btn-sm px-5">
-                    <i class="fa fa-plus mr-1"></i> Transaksi Baru
-                </a>
+
+        {{-- Header Banner --}}
+        <div class="ord-header-card">
+            <div>
+                <h4><i class="fas fa-clock-rotate-left mr-2"></i>Riwayat Transaksi</h4>
+                <p>Semua transaksi penjualan Anda Petshop</p>
             </div>
+            <a href="{{ route('dashboard.orders.pos') }}" class="btn-new-trx">
+                <i class="fas fa-plus-circle"></i> Transaksi Baru
+            </a>
+        </div>
+
+        {{-- Table --}}
+        <div class="ord-table-card">
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover table-bordered table-striped" id="orders-table">
+                    <table id="orders-table" class="table table-hover w-100">
                         <thead>
-                            <tr class="bg-primary border-bottom">
-                                <th width='1%' class="text-center text-white border-start border-end">No</th>
-                                <th class="text-center text-white border-start border-end">Invoice</th>
-                                <th class="text-center text-white border-start border-end">Kasir</th>
-                                <th class="text-center text-white border-start border-end">Tanggal</th>
-                                <th class="text-center text-white border-start border-end">Metode</th>
-                                <th class="text-center text-white border-start border-end">Total</th>
-                                <th class="text-center text-white border-start border-end">Status</th>
-                                <th width='120px' class="text-center text-white border-start border-end">Actions</th>
+                            <tr>
+                                <th width="40px">No</th>
+                                <th>Invoice</th>
+                                <th>Kasir</th>
+                                <th>Tanggal</th>
+                                <th>Metode</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th width="90px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="table-border-bottom-0"></tbody>
+                        <tbody></tbody>
                     </table>
                 </div>
             </div>
         </div>
+
     </div>
 @endsection
 
 @push('scripts')
-    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap4.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap4.min.js"></script>
-
     <script>
         $(document).ready(function() {
-            let table = $('#orders-table').DataTable({
+            $('#orders-table').DataTable({
                 autoWidth: false,
                 processing: true,
                 serverSide: true,
                 ajax: "{{ route('dashboard.orders.index') }}",
+                language: {
+                    processing: '<div class="text-center py-3"><i class="fas fa-spinner fa-spin text-primary mr-2"></i>Memuat data...</div>',
+                    emptyTable: '<div class="text-center py-4 text-muted"><i class="fas fa-receipt d-block mb-2" style="font-size:1.8rem;opacity:.3;"></i>Belum ada transaksi</div>',
+                    search: '',
+                    searchPlaceholder: 'Cari invoice, kasir...',
+                    lengthMenu: 'Tampilkan _MENU_ data',
+                    info: 'Menampilkan _START_–_END_ dari _TOTAL_ transaksi',
+                    paginate: {
+                        previous: '‹',
+                        next: '›'
+                    },
+                },
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -79,7 +258,8 @@
                     },
                     {
                         data: 'payment_method',
-                        name: 'payment_method'
+                        name: 'payment_method',
+                        orderable: false
                     },
                     {
                         data: 'total_amount',
@@ -87,7 +267,7 @@
                     },
                     {
                         data: 'status',
-                        name: 'status',
+                        name: 'status'
                     },
                     {
                         data: 'action',
@@ -98,58 +278,19 @@
                 ],
                 columnDefs: [{
                     targets: [0, 4, 6, 7],
-                    className: "text-center align-middle"
-                }, ]
+                    className: 'text-center align-middle'
+                }, ],
+                order: [
+                    [3, 'desc']
+                ],
+                dom: '<"row align-items-center mb-3"<"col-sm-6"l><"col-sm-6 text-right"f>>rt<"row align-items-center mt-3"<"col-sm-6"i><"col-sm-6"p>>',
             });
 
-            // 1. Aksi Tombol Detail
-            $(document).on('click', '.btn-detail', function() {
-                let id = $(this).data('id');
-                // Arahkan ke halaman show
-                let url = "{{ route('dashboard.orders.receipt', ':id') }}".replace(':id', id);
+            // Struk
+            $(document).on('click', '.btn-struk', function() {
+                const id = $(this).data('id');
+                const url = "{{ route('dashboard.orders.receipt', ':id') }}".replace(':id', id);
                 window.location.href = url;
-            });
-
-            // 2. Aksi Tombol Approve
-            $(document).on('click', '.btn-approve', function() {
-                let id = $(this).data('id');
-                // Pastikan kamu punya route untuk approve ini (bisa arahkan ke method approve yang sudah kamu buat)
-                let url = "{{ route('dashboard.orders.approve', ':id') }}".replace(':id', id);
-
-                Swal.fire({
-                    title: "Konfirmasi Pembayaran?",
-                    text: "Pastikan dana sudah masuk ke rekening toko.",
-                    icon: "info",
-                    showCancelButton: true,
-                    confirmButtonColor: "#28a745",
-                    cancelButtonColor: "#6c757d",
-                    confirmButtonText: "Ya, Approve!",
-                    cancelButtonText: "Batal"
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: url,
-                            type: 'POST', // Ingat, method approve kamu pakai POST
-                            data: {
-                                _token: "{{ csrf_token() }}" // Wajib ada untuk keamanan Laravel
-                            },
-                            success: function(response) {
-                                if (response.success) {
-                                    Swal.fire("Berhasil!", "Pembayaran disetujui.",
-                                        "success");
-                                    // Reload tabel tanpa memindahkan halaman pagination
-                                    table.ajax.reload(null, false);
-                                }
-                            },
-                            error: function(xhr) {
-                                console.log(xhr.responseText);
-                                Swal.fire("Error!",
-                                    "Terjadi kesalahan saat menyetujui pembayaran.",
-                                    "error");
-                            }
-                        });
-                    }
-                });
             });
         });
     </script>

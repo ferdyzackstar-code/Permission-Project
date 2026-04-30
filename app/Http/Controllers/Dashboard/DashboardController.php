@@ -104,13 +104,30 @@ class DashboardController extends Controller
         }
 
         // ── CHART: Distribusi Status Order (Pie Chart) ────────────────────
-        $orderStatusData = DB::table('orders')->select('status', DB::raw('COUNT(id) as total'))->groupBy('status')->pluck('total', 'status');
+        $orderStatusData = DB::table('orders')
+        ->select('status', DB::raw('COUNT(id) as total'))
+        ->groupBy('status')
+        ->pluck('total', 'status');
 
         // ── CHART: Pembelian per Supplier (Horizontal Bar) ────────────────
-        $purchaseBySupplier = DB::table('purchases')->join('suppliers', 'purchases.supplier_id', '=', 'suppliers.id')->where('purchases.status', 'received')->select('suppliers.name', DB::raw('SUM(purchases.total_amount) as total_value'))->groupBy('suppliers.name')->orderByDesc('total_value')->take(6)->get();
+        $purchaseBySupplier = DB::table('purchases')
+        ->join('suppliers', 'purchases.supplier_id', '=', 'suppliers.id')
+        ->where('purchases.status', 'received')
+        ->select('suppliers.name', DB::raw('SUM(purchases.total_amount) as total_value'))
+        ->groupBy('suppliers.name')
+        ->orderByDesc('total_value')
+        ->take(6)
+        ->get();
 
         // ── CHART: Stok per Kategori (Bar Chart) ─────────────────────────
-        $stockByCategory = DB::table('products')->join('categories', 'products.category_id', '=', 'categories.id')->join('categories as parent', 'categories.parent_id', '=', 'parent.id')->where('products.status', 'active')->select('parent.name as category_name', DB::raw('SUM(products.stock) as total_stock'))->groupBy('parent.name')->orderByDesc('total_stock')->get();
+        $stockByCategory = DB::table('products')
+        ->join('categories', 'products.category_id', '=', 'categories.id')
+        ->join('categories as parent', 'categories.parent_id', '=', 'parent.id')
+        ->where('products.status', 'active')
+        ->select('parent.name as category_name', DB::raw('SUM(products.stock) as total_stock'))
+        ->groupBy('parent.name')
+        ->orderByDesc('total_stock')
+        ->get();
 
         return view(
             'dashboard.index',

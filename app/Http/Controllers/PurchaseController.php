@@ -22,10 +22,10 @@ class PurchaseController extends Controller
         $products = Product::all();
         $totalProducts = Product::count();
         $pendingCount = Purchase::where('status', 'pending')->count();
-        $completedCount = Purchase::where('status', 'completed')->count();
+        $receivedCount = Purchase::where('status', 'received')->count();
         $cancelledCount = Purchase::where('status', 'cancelled')->count();
 
-        return view('dashboard.purchases.index', compact('purchases', 'suppliers', 'products', 'totalProducts', 'pendingCount', 'completedCount', 'cancelledCount'));
+        return view('dashboard.purchases.index', compact('purchases', 'suppliers', 'products', 'totalProducts', 'pendingCount', 'receivedCount', 'cancelledCount'));
     }
 
     // =========================================================

@@ -59,7 +59,7 @@
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Pembelian Selesai
                                 </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $completedCount }}</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $receivedCount }}</div>
                             </div>
                             <div class="col-auto">
                                 <i class="fas fa-check-circle fa-2x text-gray-300"></i>
