@@ -2,7 +2,7 @@
 
 @php
     $appName = \App\Models\SettingApp::get('app_name', 'Anda Petshop');
-    $topbarTitle = 'MANAJEMEN ' . strtoupper($appName);
+    $topbarTitle = 'MANAJEMEN SISTEM INFORMASI RETAIL ' . strtoupper($appName);
     $user = Auth::user();
     $userPhoto =
         $user->image && file_exists(public_path('storage/uploads/users/' . $user->image))
