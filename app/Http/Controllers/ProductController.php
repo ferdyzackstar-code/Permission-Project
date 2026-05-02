@@ -15,7 +15,7 @@ use Yajra\DataTables\Facades\DataTables;
 
 class ProductController extends Controller
 {
-    function __construct()
+    public function __construct()
     {
         $this->middleware('permission:product.index|product.create|product.edit|product.delete', ['only' => ['index', 'show']]);
         $this->middleware('permission:product.create', ['only' => ['create', 'store']]);
@@ -23,150 +23,253 @@ class ProductController extends Controller
         $this->middleware('permission:product.delete', ['only' => ['destroy']]);
     }
 
+    /* ══════════════════════════════════════════
+       INDEX — DataTable server-side
+    ══════════════════════════════════════════ */
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $products = Product::with(['category'])->select('products.*');
+            $products = Product::with(['category.parent'])->select('products.*');
 
             return DataTables::eloquent($products)
                 ->addIndexColumn()
+
+                // ── Foto produk ───────────────────────────
                 ->addColumn('image', function (Product $product) {
                     $path = 'storage/uploads/products/' . $product->image;
                     $url = $product->image && file_exists(public_path($path)) ? asset($path) : asset('storage/uploads/products/default-product.jpg');
 
-                    return '<img src="' . $url . '" width="50" class="img-thumbnail shadow-sm">';
+                    return '<img src="' . $url . '" class="tbl-product-img" alt="' . e($product->name) . '">';
                 })
-                ->addColumn('status', function (Product $product) {
-                    $badge = $product->status == 'active' ? 'success' : 'danger';
-                    return '<span class="badge badge-' . $badge . '">' . ucfirst($product->status) . '</span>';
-                })
+
+                // ── Species (parent category) ─────────────
                 ->addColumn('species', function (Product $product) {
-                    return $product->category->parent->name ?? '-';
+                    $name = optional(optional($product->category)->parent)->name ?? '—';
+                    return '<span style="
+                        display:inline-block;font-size:.72rem;font-weight:700;
+                        padding:.28em .75em;border-radius:2rem;
+                        background:rgba(78,115,223,.1);color:#4e73df;
+                        border:1px solid rgba(78,115,223,.2)">' .
+                        e($name) .
+                        '</span>';
                 })
+
+                // ── Category (child) ──────────────────────
                 ->addColumn('category', function (Product $product) {
-                    return $product->category->name ?? '-';
+                    $name = optional($product->category)->name ?? '—';
+                    return '<span style="
+                        display:inline-block;font-size:.72rem;font-weight:700;
+                        padding:.28em .75em;border-radius:2rem;
+                        background:rgba(54,185,204,.1);color:#258391;
+                        border:1px solid rgba(54,185,204,.2)">' .
+                        e($name) .
+                        '</span>';
                 })
+
+                // ── Status badge ──────────────────────────
+                ->addColumn('status', function (Product $product) {
+                    $isActive = $product->status === 'active';
+                    [$cls, $dot] = $isActive ? ['badge-active', '🟢'] : ['badge-inactive', '🔴'];
+
+                    return '<span class="badge-status ' . $cls . '">' . $dot . ' ' . ucfirst($product->status) . '</span>';
+                })
+
+                // ── Harga ─────────────────────────────────
                 ->addColumn('price', function (Product $product) {
-                    return 'Rp ' . number_format($product->price ?? 0, 0, ',', '.');
+                    return '<span style="font-weight:700;color:#1cc88a;white-space:nowrap">Rp ' . number_format($product->price ?? 0, 0, ',', '.') . '</span>';
                 })
+
+                // ── Stok indicator ────────────────────────
+                ->addColumn('stock', function (Product $product) {
+                    $stock = $product->stock ?? 0;
+
+                    if ($stock === 0) {
+                        $cls = 'stock-zero';
+                        $icon = 'fa-times-circle';
+                    } elseif ($stock <= 5) {
+                        $cls = 'stock-low';
+                        $icon = 'fa-exclamation-circle';
+                    } else {
+                        $cls = 'stock-ok';
+                        $icon = 'fa-check-circle';
+                    }
+
+                    return '<span class="stock-pill ' .
+                        $cls .
+                        '">
+                                <i class="fas ' .
+                        $icon .
+                        '"></i> ' .
+                        $stock .
+                        ' Pcs
+                            </span>';
+                })
+
+                // ── Action buttons ────────────────────────
                 ->addColumn('action', function (Product $product) {
-                    $btn = '<button type="button" class="btn btn-info btn-sm mr-1" data-toggle="modal" data-target="#modalShowProduct' . $product->id . '"><i class="fa fa-eye"></i></button>';
-                    $btn .= '<button type="button" class="btn btn-primary btn-sm mr-1" data-toggle="modal" data-target="#modalEditProduct' . $product->id . '"><i class="fa fa-edit"></i></button>';
-                    $btn .= '<form action="' . route('dashboard.products.destroy', $product->id) . '" method="POST" style="display:inline">' . csrf_field() . method_field('DELETE') . '<button type="button" class="btn btn-danger btn-sm show_confirm"><i class="fa fa-trash"></i></button></form>';
+                    $btn = '<div class="tbl-actions">';
+
+                    // View
+                    if (auth()->user()->can('product.show')) {
+                        $btn .=
+                            '<button type="button"
+                                    class="tbl-btn tbl-btn-view"
+                                    data-toggle="modal"
+                                    data-target="#modalShowProduct' .
+                            $product->id .
+                            '"
+                                    title="Lihat Detail">
+                                    <i class="fas fa-eye"></i>
+                                 </button>';
+                    }
+
+                    // Edit
+                    if (auth()->user()->can('product.edit')) {
+                        $btn .=
+                            '<button type="button"
+                                    class="tbl-btn tbl-btn-edit"
+                                    data-toggle="modal"
+                                    data-target="#modalEditProduct' .
+                            $product->id .
+                            '"
+                                    title="Edit Produk">
+                                    <i class="fas fa-pencil-alt"></i>
+                                 </button>';
+                    }
+
+                    // Delete
+                    if (auth()->user()->can('product.delete')) {
+                        $btn .=
+                            '<form action="' .
+                            route('dashboard.products.destroy', $product->id) .
+                            '"
+                                       method="POST" style="display:inline">
+                                    ' .
+                            csrf_field() .
+                            method_field('DELETE') .
+                            '
+                                    <button type="button"
+                                        class="tbl-btn tbl-btn-delete btn-delete-product"
+                                        data-name="' .
+                            e($product->name) .
+                            '"
+                                        title="Hapus Produk">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                 </form>';
+                    }
+
+                    $btn .= '</div>';
                     return $btn;
                 })
-                ->rawColumns(['image', 'status', 'action'])
+
+                ->rawColumns(['image', 'species', 'category', 'status', 'price', 'stock', 'action'])
                 ->make(true);
         }
 
+        // Non-AJAX: pass data untuk modal & dropdown
         $categories = Category::with('children')->whereNull('parent_id')->get();
-        $products = Product::all();
+        $products = Product::with(['category.parent'])->get();
 
         return view('dashboard.products.index', compact('categories', 'products'));
     }
 
+    /* ══════════════════════════════════════════
+       STORE
+    ══════════════════════════════════════════ */
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => 'required',
-            'category_id' => 'required',
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
             'price' => 'required',
-            'stock' => 'required|integer',
-            'detail' => 'required',
+            'stock' => 'required|integer|min:0',
+            'detail' => 'required|string',
             'status' => 'required|in:active,inactive',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         $data = $request->all();
-        $data['price'] = str_replace('.', '', $request->price);
+        $data['price'] = (int) str_replace('.', '', $request->price);
 
         if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $filename = time() . '-' . Str::slug($request->name) . '.' . $file->getClientOriginalExtension();
-            $destinationPath = public_path('storage/uploads/products');
-
-            if (!File::isDirectory($destinationPath)) {
-                File::makeDirectory($destinationPath, 0755, true, true);
-            }
-
-            $file->move($destinationPath, $filename);
-            $data['image'] = $filename;
+            $data['image'] = $this->uploadImage($request->file('image'), $request->name);
         }
 
         Product::create($data);
-        return redirect()->route('dashboard.products.index')->with('success', 'Produk berhasil ditambahkan.');
+
+        return redirect()
+            ->route('dashboard.products.index')
+            ->with('success', 'Produk <strong>' . e($request->name) . '</strong> berhasil ditambahkan.');
     }
 
+    /* ══════════════════════════════════════════
+       UPDATE
+    ══════════════════════════════════════════ */
     public function update(Request $request, Product $product): RedirectResponse
     {
         $request->validate([
-            'name' => 'required',
-            'category_id' => 'required',
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
             'price' => 'required',
-            'stock' => 'required|integer',
-            'detail' => 'required',
-            'status' => 'required',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'stock' => 'required|integer|min:0',
+            'detail' => 'required|string',
+            'status' => 'required|in:active,inactive',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         $data = $request->all();
-        $data['price'] = str_replace('.', '', $request->price);
+        $data['price'] = (int) str_replace('.', '', $request->price);
 
         if ($request->hasFile('image')) {
-            $destinationPath = public_path('storage/uploads/products');
-
-            if ($product->image && File::exists($destinationPath . '/' . $product->image)) {
-                File::delete($destinationPath . '/' . $product->image);
-            }
-
-            $file = $request->file('image');
-            $filename = time() . '-' . Str::slug($request->name) . '.' . $file->getClientOriginalExtension();
-
-            if (!File::isDirectory($destinationPath)) {
-                File::makeDirectory($destinationPath, 0755, true, true);
-            }
-
-            $file->move($destinationPath, $filename);
-            $data['image'] = $filename;
+            // Hapus foto lama
+            $this->deleteImage($product->image);
+            $data['image'] = $this->uploadImage($request->file('image'), $request->name);
         }
 
         $product->update($data);
-        return redirect()->route('dashboard.products.index')->with('success', 'Product updated successfully');
+
+        return redirect()
+            ->route('dashboard.products.index')
+            ->with('success', 'Produk <strong>' . e($product->name) . '</strong> berhasil diperbarui.');
     }
 
+    /* ══════════════════════════════════════════
+       DESTROY
+    ══════════════════════════════════════════ */
     public function destroy(Product $product): RedirectResponse
     {
-        if ($product->image) {
-            $oldFilePath = public_path('storage/uploads/products/' . $product->image);
-            if (File::exists($oldFilePath)) {
-                File::delete($oldFilePath);
-            }
-        }
-
+        $this->deleteImage($product->image);
         $product->delete();
-        return redirect()->route('dashboard.products.index')->with('success', 'Product deleted successfully');
+
+        return redirect()->route('dashboard.products.index')->with('success', 'Produk berhasil dihapus.');
     }
 
-    public function getSubCategories($parentId)
+    /* ══════════════════════════════════════════
+       GET SUB-CATEGORIES (AJAX)
+    ══════════════════════════════════════════ */
+    public function getSubCategories(int $parentId)
     {
-        $subCategories = \App\Models\Category::where('parent_id', $parentId)
+        $subCategories = Category::where('parent_id', $parentId)
             ->where('status', 'active')
             ->get(['id', 'name']);
 
         return response()->json($subCategories);
     }
 
+    /* ══════════════════════════════════════════
+       IMPORT / EXPORT / TEMPLATE
+    ══════════════════════════════════════════ */
     public function downloadImportTemplate()
     {
-        $categories = \App\Models\Category::orderByRaw('COALESCE(parent_id, id), parent_id IS NOT NULL')->get();
-
+        $categories = Category::orderByRaw('COALESCE(parent_id, id), parent_id IS NOT NULL')->get();
         return Excel::download(new ProductsImportTemplateExport($categories), 'template_import_data_products.xlsx');
     }
 
-    public function import(Request $request)
+    public function import(Request $request): RedirectResponse
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv',
+            'file' => 'required|mimes:xlsx,xls,csv|max:5120',
         ]);
 
         $import = new \App\Imports\ProductsImport();
@@ -181,12 +284,48 @@ class ProductController extends Controller
 
         return redirect()
             ->route('dashboard.products.index')
-            ->with('success', "Import berhasil! {$importedCount} produk berhasil ditambahkan.");
+            ->with('success', "Import berhasil! <strong>{$importedCount}</strong> produk berhasil ditambahkan.");
     }
 
     public function export()
     {
         $fileName = 'data_products_anda_petshop_' . date('Y-m-d_H-i-s') . '.xlsx';
         return Excel::download(new \App\Exports\ProductsExport(), $fileName);
+    }
+
+    /* ══════════════════════════════════════════
+       PRIVATE HELPERS
+    ══════════════════════════════════════════ */
+
+    /**
+     * Upload foto produk dan kembalikan filename.
+     */
+    private function uploadImage($file, string $productName): string
+    {
+        $destinationPath = public_path('storage/uploads/products');
+
+        if (!File::isDirectory($destinationPath)) {
+            File::makeDirectory($destinationPath, 0755, true, true);
+        }
+
+        $filename = time() . '-' . Str::slug($productName) . '.' . $file->getClientOriginalExtension();
+        $file->move($destinationPath, $filename);
+
+        return $filename;
+    }
+
+    /**
+     * Hapus foto produk dari storage (jika ada).
+     */
+    private function deleteImage(?string $image): void
+    {
+        if (!$image) {
+            return;
+        }
+
+        $filePath = public_path('storage/uploads/products/' . $image);
+        if (File::exists($filePath)) {
+            File::delete($filePath);
+        }
     }
 }
