@@ -4,14 +4,13 @@
 
 @push('styles')
     <style>
-        /* ── ROOT VARIABLES ─────────────────────────────────────────── */
+        /* ── ROOT ───────────────────────────────────────────────────── */
         :root {
             --pos-primary: #1565C0;
             --pos-primary-lt: #1976D2;
             --pos-accent: #42A5F5;
             --pos-success: #2E7D32;
             --pos-danger: #C62828;
-            --pos-warning: #F57F17;
             --pos-bg: #F0F4F8;
             --pos-card: #FFFFFF;
             --pos-border: #E3EAF2;
@@ -19,14 +18,13 @@
             --pos-muted: #7B8FA6;
             --pos-radius: 14px;
             --pos-radius-sm: 8px;
-            --cart-height: calc(100vh - 280px);
         }
 
-        /* ── LAYOUT ─────────────────────────────────────────────────── */
         body {
             background: var(--pos-bg);
         }
 
+        /* ── LAYOUT ─────────────────────────────────────────────────── */
         .pos-wrapper {
             display: flex;
             gap: 20px;
@@ -34,7 +32,7 @@
             padding: 0 8px 8px;
         }
 
-        /* ── LEFT PANEL: PRODUK ─────────────────────────────────────── */
+        /* ── LEFT PANEL ─────────────────────────────────────────────── */
         .pos-left {
             flex: 1;
             display: flex;
@@ -47,9 +45,8 @@
         }
 
         .pos-left-header {
-            padding: 16px 20px 12px;
+            padding: 16px 20px 14px;
             border-bottom: 1px solid var(--pos-border);
-            background: var(--pos-card);
             flex-shrink: 0;
         }
 
@@ -65,26 +62,26 @@
             position: relative;
         }
 
-        .pos-search-wrap .search-icon {
+        .pos-search-wrap .si {
             position: absolute;
-            left: 14px;
+            left: 13px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--pos-muted);
-            font-size: .85rem;
+            font-size: .82rem;
             pointer-events: none;
         }
 
         .pos-search-wrap input {
             width: 100%;
-            padding: 10px 14px 10px 38px;
+            padding: 10px 14px 10px 36px;
             border: 1.5px solid var(--pos-border);
             border-radius: var(--pos-radius-sm);
             font-size: .88rem;
             color: var(--pos-text);
             background: #F8FAFD;
-            transition: border-color .2s, box-shadow .2s;
             outline: none;
+            transition: border-color .2s, box-shadow .2s;
         }
 
         .pos-search-wrap input:focus {
@@ -93,13 +90,13 @@
             background: #fff;
         }
 
-        /* Product Grid */
+        /* Product Grid — FIX: grid dengan min-height agar card tidak collapse */
         .pos-product-grid {
             flex: 1;
             overflow-y: auto;
             padding: 16px;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
             gap: 14px;
             align-content: start;
         }
@@ -108,16 +105,12 @@
             width: 5px;
         }
 
-        .pos-product-grid::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
         .pos-product-grid::-webkit-scrollbar-thumb {
             background: #CBD5E0;
             border-radius: 10px;
         }
 
-        /* Product Card */
+        /* Product Card — FIX: pakai flex column dengan height eksplisit */
         .product-card {
             background: var(--pos-card);
             border: 1.5px solid var(--pos-border);
@@ -127,6 +120,10 @@
             overflow: hidden;
             position: relative;
             user-select: none;
+            /* FIX: pastikan card punya tinggi minimum agar body tidak collapse */
+            display: flex;
+            flex-direction: column;
+            min-height: 210px;
         }
 
         .product-card:hover {
@@ -139,16 +136,20 @@
             transform: scale(.97);
         }
 
+        /* FIX: gambar diberi flex-shrink:0 agar tidak mendorong body keluar */
         .product-card .pc-img-wrap {
+            flex-shrink: 0;
             background: #F0F4F8;
             overflow: hidden;
-            aspect-ratio: 1;
+            /* Tinggi gambar fixed supaya tidak terlalu dominan */
+            height: 120px;
         }
 
         .product-card .pc-img-wrap img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
             transition: transform .3s ease;
         }
 
@@ -156,32 +157,43 @@
             transform: scale(1.07);
         }
 
+        /* FIX: pc-body flex-grow agar selalu tampil */
         .product-card .pc-body {
-            padding: 10px 10px 8px;
+            flex: 1;
+            padding: 10px 10px 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            /* Pastikan tidak bisa di-collapse */
+            min-height: 72px;
         }
 
         .product-card .pc-name {
             font-size: .8rem;
             font-weight: 700;
             color: var(--pos-text);
-            white-space: nowrap;
+            /* Batas 2 baris, overflow ellipsis */
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
             overflow: hidden;
-            text-overflow: ellipsis;
             margin-bottom: 4px;
+            line-height: 1.3;
         }
 
         .product-card .pc-price {
-            font-size: .82rem;
+            font-size: .83rem;
             font-weight: 800;
             color: var(--pos-primary);
+            margin-bottom: 3px;
         }
 
         .product-card .pc-stock {
-            font-size: .72rem;
+            font-size: .7rem;
             color: var(--pos-muted);
-            margin-top: 4px;
         }
 
+        /* Tombol + hover */
         .product-card .pc-add-btn {
             position: absolute;
             top: 8px;
@@ -194,11 +206,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: .72rem;
+            font-size: .7rem;
             opacity: 0;
             transform: scale(.8);
             transition: all .2s;
             box-shadow: 0 2px 8px rgba(21, 101, 192, .3);
+            z-index: 1;
         }
 
         .product-card:hover .pc-add-btn {
@@ -206,9 +219,9 @@
             transform: scale(1);
         }
 
-        /* Out of stock overlay */
+        /* Out of stock */
         .product-card.out-of-stock {
-            opacity: .55;
+            opacity: .5;
             cursor: not-allowed;
             pointer-events: none;
         }
@@ -220,25 +233,29 @@
             left: 8px;
             background: var(--pos-danger);
             color: #fff;
-            font-size: .65rem;
+            font-size: .63rem;
             font-weight: 700;
             padding: 2px 7px;
             border-radius: 20px;
+            z-index: 2;
         }
 
         /* Empty search state */
         .pos-empty {
             grid-column: 1/-1;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             padding: 40px 20px;
             color: var(--pos-muted);
+            gap: 8px;
+            font-size: .85rem;
         }
 
         .pos-empty i {
             font-size: 2.5rem;
-            display: block;
-            margin-bottom: 10px;
-            opacity: .4;
+            opacity: .3;
         }
 
         /* ── RIGHT PANEL: CART ──────────────────────────────────────── */
@@ -253,7 +270,6 @@
             overflow: hidden;
         }
 
-        /* Cart Header */
         .cart-header {
             background: linear-gradient(135deg, var(--pos-primary) 0%, var(--pos-primary-lt) 100%);
             padding: 16px 20px;
@@ -271,15 +287,14 @@
         }
 
         .cart-header .cart-badge {
+            margin-left: auto;
             background: rgba(255, 255, 255, .22);
             border-radius: 20px;
             padding: 2px 10px;
             font-size: .75rem;
             font-weight: 700;
-            backdrop-filter: blur(4px);
         }
 
-        /* Cart Items */
         .cart-items {
             flex: 1;
             overflow-y: auto;
@@ -308,7 +323,7 @@
 
         .cart-empty i {
             font-size: 2rem;
-            opacity: .35;
+            opacity: .3;
         }
 
         .cart-item {
@@ -339,7 +354,7 @@
         }
 
         .cart-item-name {
-            font-size: .8rem;
+            font-size: .79rem;
             font-weight: 700;
             color: var(--pos-text);
             white-space: nowrap;
@@ -348,14 +363,14 @@
         }
 
         .cart-item-price {
-            font-size: .75rem;
+            font-size: .73rem;
             color: var(--pos-muted);
         }
 
         .qty-ctrl {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             flex-shrink: 0;
         }
 
@@ -366,14 +381,13 @@
             border: 1.5px solid var(--pos-border);
             background: #F0F4F8;
             color: var(--pos-text);
-            font-size: .78rem;
+            font-size: .72rem;
             font-weight: 700;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all .15s;
-            line-height: 1;
             padding: 0;
         }
 
@@ -389,18 +403,17 @@
         }
 
         .qty-num {
-            font-size: .85rem;
+            font-size: .84rem;
             font-weight: 800;
-            color: var(--pos-text);
             min-width: 22px;
             text-align: center;
         }
 
         .cart-item-subtotal {
-            font-size: .8rem;
+            font-size: .79rem;
             font-weight: 800;
             color: var(--pos-primary);
-            min-width: 70px;
+            min-width: 68px;
             text-align: right;
             flex-shrink: 0;
         }
@@ -435,13 +448,13 @@
             color: var(--pos-primary);
         }
 
-        /* Payment Method */
+        /* Payment tabs */
         .pay-method-row {
             margin-bottom: 10px;
         }
 
         .pay-method-row label {
-            font-size: .78rem;
+            font-size: .75rem;
             font-weight: 700;
             color: var(--pos-muted);
             text-transform: uppercase;
@@ -486,18 +499,17 @@
             box-shadow: 0 2px 8px rgba(21, 101, 192, .25);
         }
 
-        /* Hidden real select */
         #payment_method {
             display: none;
         }
 
-        /* Cash Input */
+        /* Cash input */
         .cash-input-section {
             margin-bottom: 10px;
         }
 
         .cash-input-section label {
-            font-size: .78rem;
+            font-size: .75rem;
             font-weight: 700;
             color: var(--pos-muted);
             text-transform: uppercase;
@@ -512,8 +524,8 @@
             border: 1.5px solid var(--pos-border);
             border-radius: var(--pos-radius-sm);
             overflow: hidden;
-            transition: border-color .2s;
             background: #fff;
+            transition: border-color .2s;
         }
 
         .cash-input-wrap:focus-within {
@@ -530,6 +542,7 @@
             display: flex;
             align-items: center;
             border-right: 1px solid var(--pos-border);
+            flex-shrink: 0;
         }
 
         #paid_amount_format {
@@ -542,6 +555,7 @@
             color: var(--pos-text);
             height: 42px;
             background: transparent;
+            min-width: 0;
         }
 
         .change-row {
@@ -553,7 +567,7 @@
         }
 
         .change-row .change-label {
-            font-size: .78rem;
+            font-size: .77rem;
             color: var(--pos-muted);
         }
 
@@ -622,7 +636,7 @@
             transform: none;
         }
 
-        /* ── BADGE ANIMATION saat produk ditambah ───────────────────── */
+        /* Badge pop animation */
         @keyframes pop {
 
             0%,
@@ -649,11 +663,9 @@
 
             .pos-right {
                 width: 100%;
-                max-height: 600px;
             }
 
             .pos-product-grid {
-                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
                 max-height: 55vh;
             }
         }
@@ -669,14 +681,6 @@
                 padding: 0 4px 8px;
                 gap: 12px;
             }
-
-            .cart-footer {
-                padding: 12px;
-            }
-
-            .pay-method-tabs {
-                grid-template-columns: 1fr 1fr;
-            }
         }
     </style>
 @endpush
@@ -689,7 +693,7 @@
             <div class="pos-left-header">
                 <h5><i class="fas fa-store mr-2 text-primary"></i>Pilih Produk</h5>
                 <div class="pos-search-wrap">
-                    <i class="fas fa-search search-icon"></i>
+                    <i class="fas fa-search si"></i>
                     <input type="text" id="product-search" placeholder="Cari nama produk...">
                 </div>
             </div>
@@ -700,24 +704,27 @@
                         data-name="{{ strtolower($product->name) }}" data-category="{{ $product->category_id }}"
                         onclick="addToCart({{ json_encode($product) }})">
 
+                        {{-- Gambar --}}
                         <div class="pc-img-wrap">
                             <img src="{{ asset('storage/uploads/products/' . ($product->image ?? 'default-product.jpg')) }}"
                                 alt="{{ $product->name }}" loading="lazy"
                                 onerror="this.src='{{ asset('storage/uploads/products/default-product.jpg') }}'">
                         </div>
 
+                        {{-- Body — nama, harga, stok selalu tampil --}}
                         <div class="pc-body">
-                            <div class="pc-name" title="{{ $product->name }}">{{ $product->name }}</div>
-                            <div class="pc-price">Rp{{ number_format($product->price, 0, ',', '.') }}</div>
+                            <div>
+                                <div class="pc-name">{{ $product->name }}</div>
+                                <div class="pc-price">Rp{{ number_format($product->price, 0, ',', '.') }}</div>
+                            </div>
                             <div class="pc-stock">
-                                <i class="fas fa-box-open mr-1" style="font-size:.65rem;"></i>
+                                <i class="fas fa-box-open mr-1" style="font-size:.62rem;"></i>
                                 Stok: {{ $product->stock }}
                             </div>
                         </div>
 
-                        <div class="pc-add-btn">
-                            <i class="fas fa-plus"></i>
-                        </div>
+                        {{-- Tombol + hover --}}
+                        <div class="pc-add-btn"><i class="fas fa-plus"></i></div>
                     </div>
                 @empty
                     <div class="pos-empty">
@@ -726,7 +733,7 @@
                     </div>
                 @endforelse
 
-                {{-- Empty search state (hidden by default) --}}
+                {{-- Empty search state --}}
                 <div class="pos-empty" id="search-empty" style="display:none;">
                     <i class="fas fa-search"></i>
                     Produk tidak ditemukan
@@ -737,35 +744,29 @@
         {{-- ── RIGHT: CART ──────────────────────────────────────────── --}}
         <div class="pos-right">
 
-            {{-- Cart Header --}}
             <div class="cart-header">
                 <p class="cart-title">
                     <i class="fas fa-shopping-cart"></i>
                     Keranjang
-                    <span class="cart-badge ml-auto" id="cart-count">0 Item</span>
+                    <span class="cart-badge" id="cart-count">0 Item</span>
                 </p>
             </div>
 
-            {{-- Cart Items --}}
             <div class="cart-items" id="cart-items-wrap">
                 <div class="cart-empty" id="cart-empty-state">
                     <i class="fas fa-shopping-cart"></i>
                     <span>Keranjang masih kosong</span>
-                    <small style="font-size:.75rem; opacity:.7;">Klik produk untuk menambahkan</small>
+                    <small style="font-size:.73rem; opacity:.7;">Klik produk untuk menambahkan</small>
                 </div>
                 <div id="cart-table-body"></div>
             </div>
 
-            {{-- Cart Footer --}}
             <div class="cart-footer">
-
-                {{-- Total --}}
                 <div class="cart-total-row">
                     <span class="label"><i class="fas fa-receipt mr-1"></i>Total</span>
                     <span class="value" id="total-display">Rp0</span>
                 </div>
 
-                {{-- Metode Bayar --}}
                 <div class="pay-method-row">
                     <label>Metode Pembayaran</label>
                     <div class="pay-method-tabs">
@@ -782,7 +783,6 @@
                     </select>
                 </div>
 
-                {{-- Cash Input (hidden jika transfer) --}}
                 <div class="cash-input-section" id="cash-input-group">
                     <label>Uang Diterima</label>
                     <div class="cash-input-wrap">
@@ -796,16 +796,12 @@
                     </div>
                 </div>
 
-                {{-- Action Buttons --}}
                 <button class="btn-clear-cart" onclick="clearCart()">
                     <i class="fas fa-trash-alt"></i> Kosongkan Keranjang
                 </button>
-
                 <button class="btn-checkout" id="btn-submit" onclick="submitTransaction()">
-                    <i class="fas fa-check-circle"></i>
-                    PROSES TRANSAKSI
+                    <i class="fas fa-check-circle"></i> PROSES TRANSAKSI
                 </button>
-
             </div>
         </div>
     </div>
@@ -816,21 +812,19 @@
         window.posConfig = {
             storeUrl: "{{ route('dashboard.orders.store') }}",
             csrfToken: "{{ csrf_token() }}",
-            assetUrl: "{{ asset('storage/uploads/products/') }}"
+            assetUrl: "{{ asset('storage/uploads/products') }}"
         };
 
-        // ── Payment method tab switcher ──────────────────────────────
         function selectPayMethod(val) {
             document.getElementById('payment_method').value = val;
-            document.querySelectorAll('.pay-tab').forEach(t => {
-                t.classList.toggle('active', t.dataset.value === val);
-            });
+            document.querySelectorAll('.pay-tab').forEach(t =>
+                t.classList.toggle('active', t.dataset.value === val)
+            );
             const cashGroup = document.getElementById('cash-input-group');
+            cashGroup.style.display = val === 'transfer' ? 'none' : 'block';
             if (val === 'transfer') {
-                cashGroup.style.display = 'none';
                 document.getElementById('paid_amount').value = 0;
-            } else {
-                cashGroup.style.display = 'block';
+                document.getElementById('paid_amount_format').value = '';
             }
             calculateChange();
         }

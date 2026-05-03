@@ -1,9 +1,8 @@
 /**
  * pos-logic.js — Anda Petshop POS
- * Compatible dengan pos.blade.php versi baru
  */
 
-let cart = [];
+let cart        = [];
 let totalAmount = 0;
 
 // ── SEARCH ──────────────────────────────────────────────────────
@@ -32,7 +31,7 @@ function addToCart(product) {
         } else {
             Swal.fire({
                 icon: 'warning',
-                title: 'Stok Habis',
+                title: 'Stok Terbatas',
                 text: `Stok ${product.name} hanya ${product.stock} unit.`,
                 confirmButtonColor: '#1565C0',
                 timer: 2000,
@@ -54,7 +53,7 @@ function addToCart(product) {
     // Animasi badge
     const badge = document.getElementById('cart-count');
     badge.classList.remove('pop');
-    void badge.offsetWidth; // reflow
+    void badge.offsetWidth;
     badge.classList.add('pop');
 
     renderCart();
@@ -131,6 +130,7 @@ function renderCart() {
         totalAmount    += subtotal;
         totalItems     += item.qty;
 
+        // Bangun URL gambar dengan fallback
         const imgUrl = item.image
             ? `${window.posConfig.assetUrl}/${item.image}`
             : `${window.posConfig.assetUrl}/default-product.jpg`;
@@ -139,19 +139,19 @@ function renderCart() {
         <div class="cart-item">
             <img class="cart-item-img"
                  src="${imgUrl}"
-                 alt="${item.name}"
+                 alt="${escHtml(item.name)}"
                  onerror="this.src='${window.posConfig.assetUrl}/default-product.jpg'">
             <div class="cart-item-info">
-                <div class="cart-item-name" title="${item.name}">${item.name}</div>
+                <div class="cart-item-name" title="${escHtml(item.name)}">${escHtml(item.name)}</div>
                 <div class="cart-item-price">Rp${formatRupiah(item.price)}</div>
             </div>
             <div class="qty-ctrl">
                 <button class="qty-btn minus" onclick="updateQty(${index}, -1)">
-                    <i class="fas fa-minus" style="font-size:.6rem;"></i>
+                    <i class="fas fa-minus" style="font-size:.58rem;"></i>
                 </button>
                 <span class="qty-num">${item.qty}</span>
-                <button class="qty-btn plus" onclick="updateQty(${index}, 1)">
-                    <i class="fas fa-plus" style="font-size:.6rem;"></i>
+                <button class="qty-btn plus"  onclick="updateQty(${index}, 1)">
+                    <i class="fas fa-plus"  style="font-size:.58rem;"></i>
                 </button>
             </div>
             <div class="cart-item-subtotal">Rp${formatRupiah(subtotal)}</div>
@@ -163,12 +163,22 @@ function renderCart() {
     calculateChange();
 }
 
-// ── FORMAT & KEMBALIAN ───────────────────────────────────────────
+// ── FORMAT RUPIAH ────────────────────────────────────────────────
 function formatRupiah(angka) {
     if (!angka && angka !== 0) return '0';
     return new Intl.NumberFormat('id-ID').format(Math.floor(angka));
 }
 
+// ── ESCAPE HTML (keamanan: cegah XSS dari nama produk) ───────────
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+// ── HITUNG KEMBALIAN ─────────────────────────────────────────────
 const inputFormat = document.getElementById('paid_amount_format');
 const inputReal   = document.getElementById('paid_amount');
 
@@ -191,15 +201,10 @@ function calculateChange() {
         'Rp' + (change > 0 ? formatRupiah(change) : '0');
 }
 
-// ── SUBMIT TRANSAKSI ─────────────────────────────────────────────
+// ── SUBMIT ───────────────────────────────────────────────────────
 async function submitTransaction() {
     if (cart.length === 0) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Keranjang Kosong',
-            text: 'Tambahkan produk terlebih dahulu.',
-            confirmButtonColor: '#1565C0',
-        });
+        Swal.fire({ icon:'warning', title:'Keranjang Kosong', text:'Tambahkan produk terlebih dahulu.', confirmButtonColor:'#1565C0' });
         return;
     }
 
@@ -229,7 +234,7 @@ async function submitTransaction() {
 
     try {
         const response = await fetch(window.posConfig.storeUrl, {
-            method: 'POST',
+            method:  'POST',
             headers: {
                 'Content-Type':  'application/json',
                 'Accept':        'application/json',
@@ -246,23 +251,13 @@ async function submitTransaction() {
                 '?status=success&invoice=' +
                 result.invoice_number;
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Transaksi Gagal',
-                text: result.message,
-                confirmButtonColor: '#1565C0',
-            });
+            Swal.fire({ icon:'error', title:'Transaksi Gagal', text:result.message, confirmButtonColor:'#1565C0' });
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>PROSES TRANSAKSI';
         }
     } catch (err) {
         console.error(err);
-        Swal.fire({
-            icon: 'error',
-            title: 'Koneksi Error',
-            text: 'Terjadi kesalahan koneksi ke server.',
-            confirmButtonColor: '#1565C0',
-        });
+        Swal.fire({ icon:'error', title:'Koneksi Error', text:'Terjadi kesalahan koneksi ke server.', confirmButtonColor:'#1565C0' });
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>PROSES TRANSAKSI';
     }

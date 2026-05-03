@@ -6,11 +6,10 @@
     <style>
         :root {
             --ord-primary: #1565C0;
-            --ord-accent: #42A5F5;
-            --ord-bg: #F0F4F8;
             --ord-radius: 12px;
         }
 
+        /* ── HEADER ─────────────────────────────────────────────────── */
         .ord-header-card {
             background: linear-gradient(135deg, #0D47A1 0%, #1565C0 60%, #1976D2 100%);
             border-radius: var(--ord-radius);
@@ -37,30 +36,92 @@
             margin: 2px 0 0;
         }
 
-        .btn-new-trx {
-            background: rgba(255, 255, 255, .15);
-            border: 1.5px solid rgba(255, 255, 255, .35);
-            color: #fff;
+        .ord-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Tombol header */
+        .btn-hdr {
             font-size: .82rem;
             font-weight: 700;
-            padding: 9px 20px;
+            padding: 9px 18px;
             border-radius: 8px;
-            backdrop-filter: blur(4px);
             transition: all .2s;
             display: inline-flex;
             align-items: center;
             gap: 6px;
             text-decoration: none;
+            position: relative;
+            white-space: nowrap;
+            border: 1.5px solid rgba(255, 255, 255, .3);
+            color: #fff;
+            backdrop-filter: blur(4px);
         }
 
-        .btn-new-trx:hover {
-            background: rgba(255, 255, 255, .28);
-            color: #fff;
+        .btn-hdr:hover {
             text-decoration: none;
+            color: #fff;
             transform: translateY(-1px);
         }
 
-        /* Table Card */
+        /* Biru (Transaksi Baru) */
+        .btn-hdr-blue {
+            background: rgba(255, 255, 255, .15);
+        }
+
+        .btn-hdr-blue:hover {
+            background: rgba(255, 255, 255, .28);
+        }
+
+        /* Kuning (Konfirmasi) */
+        .btn-hdr-yellow {
+            background: linear-gradient(135deg, #F57F17, #F9A825);
+            border-color: rgba(255, 255, 255, .25);
+            box-shadow: 0 3px 12px rgba(245, 127, 23, .35);
+        }
+
+        .btn-hdr-yellow:hover {
+            background: linear-gradient(135deg, #E65100, #F57F17);
+            box-shadow: 0 5px 16px rgba(245, 127, 23, .45);
+        }
+
+        /* Badge notif pending */
+        .pending-badge {
+            position: absolute;
+            top: -9px;
+            right: -9px;
+            background: #E53935;
+            color: #fff;
+            font-size: .62rem;
+            font-weight: 800;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 5px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(229, 57, 53, .4);
+            animation: badge-pop 2s ease infinite;
+        }
+
+        @keyframes badge-pop {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.18);
+            }
+        }
+
+        /* ── TABLE CARD ─────────────────────────────────────────────── */
         .ord-table-card {
             background: #fff;
             border-radius: var(--ord-radius);
@@ -72,7 +133,6 @@
             padding: 20px;
         }
 
-        /* DataTable overrides */
         #orders-table thead th {
             background: #F0F4F8 !important;
             color: #546E7A;
@@ -117,7 +177,6 @@
             border-radius: 20px;
             font-size: .72rem;
             font-weight: 700;
-            letter-spacing: .4px;
         }
 
         .badge-status.completed {
@@ -155,7 +214,8 @@
             color: #1565C0;
         }
 
-        .btn-struk {
+        /* Tombol struk di tabel */
+        .btn-struk-row {
             background: linear-gradient(135deg, #1565C0, #1976D2);
             color: #fff;
             border: none;
@@ -164,16 +224,18 @@
             font-size: .78rem;
             font-weight: 700;
             cursor: pointer;
-            transition: all .2s;
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            transition: all .2s;
             box-shadow: 0 2px 8px rgba(21, 101, 192, .2);
+            white-space: nowrap;
         }
 
-        .btn-struk:hover {
+        .btn-struk-row:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(21, 101, 192, .3);
+            color: #fff;
         }
     </style>
 @endpush
@@ -181,15 +243,28 @@
 @section('content')
     <div class="container-fluid">
 
-        {{-- Header Banner --}}
+        {{-- Header --}}
         <div class="ord-header-card">
             <div>
                 <h4><i class="fas fa-clock-rotate-left mr-2"></i>Riwayat Transaksi</h4>
                 <p>Semua transaksi penjualan Anda Petshop</p>
             </div>
-            <a href="{{ route('dashboard.orders.pos') }}" class="btn-new-trx">
-                <i class="fas fa-plus-circle"></i> Transaksi Baru
-            </a>
+            <div class="ord-header-actions">
+
+                {{-- Tombol Konfirmasi (kuning) + badge pending --}}
+                @php $pendingCount = \App\Models\Order::where('status','pending')->count(); @endphp
+                <a href="{{ route('dashboard.orders.confirmation') }}" class="btn-hdr btn-hdr-yellow">
+                    <i class="fas fa-hourglass-half"></i> Konfirmasi
+                    @if ($pendingCount > 0)
+                        <span class="pending-badge">{{ $pendingCount }}</span>
+                    @endif
+                </a>
+
+                {{-- Tombol Transaksi Baru (biru) --}}
+                <a href="{{ route('dashboard.orders.pos') }}" class="btn-hdr btn-hdr-blue">
+                    <i class="fas fa-plus-circle"></i> Transaksi Baru
+                </a>
+            </div>
         </div>
 
         {{-- Table --}}
@@ -206,7 +281,7 @@
                                 <th>Metode</th>
                                 <th>Total</th>
                                 <th>Status</th>
-                                <th width="90px" class="text-center">Aksi</th>
+                                <th width="100px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -286,8 +361,9 @@
                 dom: '<"row align-items-center mb-3"<"col-sm-6"l><"col-sm-6 text-right"f>>rt<"row align-items-center mt-3"<"col-sm-6"i><"col-sm-6"p>>',
             });
 
-            // Struk
-            $(document).on('click', '.btn-struk', function() {
+            // ── FIX: controller merender class "btn-detail", bukan "btn-struk"
+            // Cukup tambahkan listener untuk btn-detail yang redirect ke receipt
+            $(document).on('click', '.btn-detail', function() {
                 const id = $(this).data('id');
                 const url = "{{ route('dashboard.orders.receipt', ':id') }}".replace(':id', id);
                 window.location.href = url;
