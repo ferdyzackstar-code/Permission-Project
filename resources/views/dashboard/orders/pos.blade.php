@@ -4,7 +4,6 @@
 
 @push('styles')
     <style>
-        /* ── ROOT ───────────────────────────────────────────────────── */
         :root {
             --pos-primary: #1565C0;
             --pos-primary-lt: #1976D2;
@@ -24,7 +23,18 @@
             background: var(--pos-bg);
         }
 
-        /* ── LAYOUT ─────────────────────────────────────────────────── */
+        body.swal2-shown,
+        body.swal2-height-auto {
+            padding-right: 0 !important;
+            overflow: hidden !important;
+            height: auto !important;
+        }
+
+        .pos-wrapper {
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
         .pos-wrapper {
             display: flex;
             gap: 20px;
@@ -32,7 +42,6 @@
             padding: 0 8px 8px;
         }
 
-        /* ── LEFT PANEL ─────────────────────────────────────────────── */
         .pos-left {
             flex: 1;
             display: flex;
@@ -57,7 +66,6 @@
             margin: 0 0 12px;
         }
 
-        /* Search */
         .pos-search-wrap {
             position: relative;
         }
@@ -90,7 +98,6 @@
             background: #fff;
         }
 
-        /* Product Grid — FIX: grid dengan min-height agar card tidak collapse */
         .pos-product-grid {
             flex: 1;
             overflow-y: auto;
@@ -110,7 +117,6 @@
             border-radius: 10px;
         }
 
-        /* Product Card — FIX: pakai flex column dengan height eksplisit */
         .product-card {
             background: var(--pos-card);
             border: 1.5px solid var(--pos-border);
@@ -120,10 +126,9 @@
             overflow: hidden;
             position: relative;
             user-select: none;
-            /* FIX: pastikan card punya tinggi minimum agar body tidak collapse */
             display: flex;
             flex-direction: column;
-            min-height: 210px;
+            min-height: 220px;
         }
 
         .product-card:hover {
@@ -136,12 +141,10 @@
             transform: scale(.97);
         }
 
-        /* FIX: gambar diberi flex-shrink:0 agar tidak mendorong body keluar */
         .product-card .pc-img-wrap {
             flex-shrink: 0;
             background: #F0F4F8;
             overflow: hidden;
-            /* Tinggi gambar fixed supaya tidak terlalu dominan */
             height: 120px;
         }
 
@@ -157,14 +160,12 @@
             transform: scale(1.07);
         }
 
-        /* FIX: pc-body flex-grow agar selalu tampil */
         .product-card .pc-body {
             flex: 1;
             padding: 10px 10px 10px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            /* Pastikan tidak bisa di-collapse */
             min-height: 72px;
         }
 
@@ -172,7 +173,6 @@
             font-size: .8rem;
             font-weight: 700;
             color: var(--pos-text);
-            /* Batas 2 baris, overflow ellipsis */
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -193,7 +193,6 @@
             color: var(--pos-muted);
         }
 
-        /* Tombol + hover */
         .product-card .pc-add-btn {
             position: absolute;
             top: 8px;
@@ -219,7 +218,6 @@
             transform: scale(1);
         }
 
-        /* Out of stock */
         .product-card.out-of-stock {
             opacity: .5;
             cursor: not-allowed;
@@ -240,7 +238,6 @@
             z-index: 2;
         }
 
-        /* Empty search state */
         .pos-empty {
             grid-column: 1/-1;
             display: flex;
@@ -258,7 +255,6 @@
             opacity: .3;
         }
 
-        /* ── RIGHT PANEL: CART ──────────────────────────────────────── */
         .pos-right {
             width: 340px;
             flex-shrink: 0;
@@ -418,7 +414,6 @@
             flex-shrink: 0;
         }
 
-        /* Cart Footer */
         .cart-footer {
             padding: 14px 16px;
             border-top: 1.5px solid var(--pos-border);
@@ -448,7 +443,6 @@
             color: var(--pos-primary);
         }
 
-        /* Payment tabs */
         .pay-method-row {
             margin-bottom: 10px;
         }
@@ -503,7 +497,6 @@
             display: none;
         }
 
-        /* Cash input */
         .cash-input-section {
             margin-bottom: 10px;
         }
@@ -577,7 +570,6 @@
             color: var(--pos-success);
         }
 
-        /* Buttons */
         .btn-clear-cart {
             width: 100%;
             padding: 8px;
@@ -636,7 +628,6 @@
             transform: none;
         }
 
-        /* Badge pop animation */
         @keyframes pop {
 
             0%,
@@ -653,7 +644,6 @@
             animation: pop .25s ease;
         }
 
-        /* ── RESPONSIVE ─────────────────────────────────────────────── */
         @media (max-width: 991px) {
             .pos-wrapper {
                 flex-direction: column;

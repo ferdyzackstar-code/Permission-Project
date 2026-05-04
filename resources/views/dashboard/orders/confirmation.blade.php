@@ -258,7 +258,6 @@
                         data: 'total_amount',
                         name: 'total_amount'
                     },
-                    // Kolom status dihapus — semua sudah pasti pending
                     {
                         data: 'action',
                         name: 'action',

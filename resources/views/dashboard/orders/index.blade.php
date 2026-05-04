@@ -217,7 +217,6 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
-            // Route receipt dengan placeholder untuk diisi JS
             const receiptBaseUrl = "{{ route('dashboard.orders.receipt', ':id') }}";
 
             $('#orders-table').DataTable({
@@ -254,7 +253,6 @@
                     {
                         data: 'created_at',
                         name: 'created_at',
-                        orderable: true
                     },
                     {
                         data: 'payment_method',
@@ -280,14 +278,9 @@
                     targets: [0, 4, 6, 7],
                     className: 'text-center align-middle'
                 }, ],
-                // Kolom index 3 = created_at, sort DESC (terbaru ke terlama)
-                order: [
-                    [3, 'desc']
-                ],
                 dom: '<"row align-items-center mb-3"<"col-sm-6"l><"col-sm-6 text-right"f>>rt<"row align-items-center mt-3"<"col-sm-6"i><"col-sm-6"p>>',
             });
 
-            // Tombol struk — class btn-detail dari controller, redirect dengan from=index
             $(document).on('click', '.btn-detail', function() {
                 const id = $(this).data('id');
                 const url = receiptBaseUrl.replace(':id', id) + '?from=index';

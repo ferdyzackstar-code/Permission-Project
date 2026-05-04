@@ -507,17 +507,16 @@
             const status = params.get('status');
             const invoice = params.get('invoice');
 
-            // Notif sukses cash
             if (status === 'success' && invoice && invoice !== 'null') {
                 Swal.fire({
                     icon: 'success',
                     title: 'Transaksi Berhasil!',
                     html: `No Invoice: <b>${invoice}</b>`,
-                    timer: 3000,
+                    timer: 1000,
                     showConfirmButton: false,
                     timerProgressBar: true,
                 });
-                // Bersihkan URL supaya tidak muncul lagi saat refresh
+
                 window.history.replaceState({}, document.title, window.location.pathname +
                     '?from={{ request('from', 'index') }}');
             }

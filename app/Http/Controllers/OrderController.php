@@ -65,7 +65,6 @@ class OrderController extends Controller
                     throw new Exception('Produk tidak ditemukan.');
                 }
 
-                // Double check stok hanya untuk CASH — karena langsung dipotong
                 if ($isCash && $product->stock < $item['qty']) {
                     throw new Exception("Stok produk {$product->name} tidak mencukupi.");
                 }
@@ -73,14 +72,11 @@ class OrderController extends Controller
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item['id'],
-                    'qty' => $item['qty'],
+                    'qty' => $item['qty'],  
                     'price' => $item['price'],
                     'subtotal' => $item['qty'] * $item['price'],
                 ]);
 
-                // ── LOGIKA STOK ──────────────────────────────────
-                // CASH     → stok langsung dipotong (transaksi selesai)
-                // TRANSFER → stok TIDAK dipotong, tunggu admin approve
                 if ($isCash) {
                     $product->decrement('stock', $item['qty']);
                 }
@@ -123,9 +119,7 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            // PENTING: pakai query builder (tanpa ->get()) supaya DataTables
-            // bisa handle sorting server-side dengan benar
-            $orders = Order::with(['user', 'payment'])->latest(); // default sort: created_at DESC
+            $orders = Order::with(['user', 'payment'])->latest()->get(); 
 
             return datatables()
                 ->of($orders)
@@ -143,7 +137,7 @@ class OrderController extends Controller
                 ->editColumn('status', function ($row) {
                     return match ($row->status) {
                         'completed' => '<span class="badge bg-success text-white">Completed</span>',
-                        'pending' => '<span class="badge bg-warning text-dark">Pending</span>',
+                        'pending' => '<span class="badge bg-warning text-white">Pending</span>',
                         'cancelled' => '<span class="badge bg-danger text-white">Cancelled</span>',
                         default => '-',
                     };
@@ -170,7 +164,7 @@ class OrderController extends Controller
         return view('dashboard.orders.receipt', compact('order'));
     }
 
-    // ── CONFIRMATION (DataTables — hanya pending) ─────────────────
+    // ── CONFIRMATION  ─────────────────
     public function confirmation(Request $request)
     {
         if ($request->ajax()) {
@@ -212,7 +206,6 @@ class OrderController extends Controller
     }
 
     // ── APPROVE ───────────────────────────────────────────────────
-    // Saat approve: update status + POTONG STOK (karena transfer belum potong saat store)
     public function approve(Order $order)
     {
         DB::beginTransaction();

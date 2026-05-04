@@ -115,7 +115,7 @@ class ProductController extends Controller
                             '<button type="button"
                                     class="tbl-btn tbl-btn-view"
                                     data-toggle="modal"
-                                    data-target="#modalShowProduct' .
+                                    data-target="#showView' .
                             $product->id .
                             '"
                                     title="Lihat Detail">
@@ -125,11 +125,11 @@ class ProductController extends Controller
 
                     // Edit
                     if (auth()->user()->can('product.edit')) {
-                        $btn .=
+                        $btn .= 
                             '<button type="button"
                                     class="tbl-btn tbl-btn-edit"
                                     data-toggle="modal"
-                                    data-target="#modalEditProduct' .
+                                    data-target="#productForm' .
                             $product->id .
                             '"
                                     title="Edit Produk">
