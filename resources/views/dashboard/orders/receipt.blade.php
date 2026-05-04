@@ -1,6 +1,6 @@
 @extends('dashboard.layouts.admin')
 
-@section('title', 'Struk Transaksi — {{ $order->invoice_number }}')
+@section('title', 'Struk — ' . $order->invoice_number)
 
 @push('styles')
     <style>
@@ -15,7 +15,6 @@
             padding-bottom: 40px;
         }
 
-        /* Back button bar */
         .receipt-topbar {
             display: flex;
             align-items: center;
@@ -34,11 +33,14 @@
             font-weight: 600;
             text-decoration: none;
             transition: color .2s;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
         }
 
         .btn-back:hover {
             color: var(--rec-primary);
-            text-decoration: none;
         }
 
         .btn-print {
@@ -59,10 +61,8 @@
 
         .btn-print:hover {
             transform: translateY(-1px);
-            box-shadow: 0 5px 16px rgba(21, 101, 192, .35);
         }
 
-        /* Receipt Card */
         .receipt-card {
             background: #fff;
             border-radius: var(--rec-radius);
@@ -70,7 +70,6 @@
             overflow: hidden;
         }
 
-        /* Receipt top stripe */
         .receipt-stripe {
             height: 6px;
             background: linear-gradient(90deg, #0D47A1, #42A5F5, #0D47A1);
@@ -92,13 +91,12 @@
             padding: 28px 32px;
         }
 
-        /* Store identity */
         .receipt-store {
             text-align: center;
             margin-bottom: 20px;
         }
 
-        .receipt-store .store-logo {
+        .store-logo {
             width: 52px;
             height: 52px;
             border-radius: 12px;
@@ -107,7 +105,7 @@
             border: 2px solid #E3F2FD;
         }
 
-        .receipt-store .store-logo-fallback {
+        .store-logo-fallback {
             width: 52px;
             height: 52px;
             border-radius: 12px;
@@ -141,11 +139,6 @@
             margin: 16px 0;
         }
 
-        /* Info rows */
-        .receipt-info {
-            margin-bottom: 4px;
-        }
-
         .receipt-info-row {
             display: flex;
             justify-content: space-between;
@@ -164,7 +157,6 @@
             text-align: right;
         }
 
-        /* Items table */
         .receipt-items {
             width: 100%;
             border-collapse: collapse;
@@ -214,7 +206,6 @@
             text-align: right;
         }
 
-        /* Summary */
         .receipt-summary {
             background: #F8FAFD;
             border-radius: 10px;
@@ -247,7 +238,6 @@
             color: #1A2332;
         }
 
-        /* Status badge */
         .receipt-status {
             text-align: center;
             margin-top: 20px;
@@ -278,7 +268,6 @@
             color: #C62828;
         }
 
-        /* Thank you */
         .receipt-footer {
             text-align: center;
             margin-top: 22px;
@@ -298,7 +287,21 @@
             margin-top: 6px;
         }
 
-        /* Print */
+        /* Alert pending */
+        .pending-notice {
+            background: #FFF8E1;
+            border: 1.5px solid #FFE082;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: .8rem;
+            color: #F57F17;
+            font-weight: 600;
+        }
+
         @media print {
 
             body,
@@ -334,10 +337,25 @@
     <div class="container-fluid">
         <div class="receipt-wrapper">
 
+            {{-- ── Tentukan URL "back" berdasarkan ?from= parameter ──────── --}}
+            @php
+                $from = request('from', 'index'); // default ke riwayat transaksi
+                $backUrl = match ($from) {
+                    'pos' => route('dashboard.orders.pos'),
+                    'confirmation' => route('dashboard.orders.confirmation'),
+                    default => route('dashboard.orders.index'),
+                };
+                $backLabel = match ($from) {
+                    'pos' => 'Kembali ke Kasir',
+                    'confirmation' => 'Kembali ke Konfirmasi',
+                    default => 'Kembali ke Riwayat',
+                };
+            @endphp
+
             {{-- Top Bar --}}
             <div class="receipt-topbar d-print-none">
-                <a href="{{ route('dashboard.orders.index') }}" class="btn-back">
-                    <i class="fas fa-arrow-left"></i> Kembali ke Riwayat
+                <a href="{{ $backUrl }}" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> {{ $backLabel }}
                 </a>
                 <button class="btn-print" onclick="window.print()">
                     <i class="fas fa-print"></i> Cetak Struk
@@ -355,7 +373,7 @@
                         $logoPath = 'storage/' . $logo;
                         $hasLogo = $logo && file_exists(public_path($logoPath));
                         $storeName = \App\Models\SettingApp::get('app_name', 'Anda Petshop');
-                        $storeAddress = \App\Models\SettingApp::get('store_address', '');
+                        $storeAddr = \App\Models\SettingApp::get('store_address', '');
                         $storePhone = \App\Models\SettingApp::get('store_phone', '');
                     @endphp
 
@@ -366,8 +384,8 @@
                             <div class="store-logo-fallback"><i class="fas fa-paw"></i></div>
                         @endif
                         <h5>{{ $storeName }}</h5>
-                        @if ($storeAddress)
-                            <p>{{ $storeAddress }}</p>
+                        @if ($storeAddr)
+                            <p>{{ $storeAddr }}</p>
                         @endif
                         @if ($storePhone)
                             <p><i class="fas fa-phone mr-1"></i>{{ $storePhone }}</p>
@@ -377,25 +395,23 @@
                     <hr class="receipt-divider">
 
                     {{-- Order Info --}}
-                    <div class="receipt-info">
-                        <div class="receipt-info-row">
-                            <span class="label">No. Invoice</span>
-                            <span class="value" style="font-family:monospace; font-size:.82rem;">
-                                {{ $order->invoice_number }}
-                            </span>
-                        </div>
-                        <div class="receipt-info-row">
-                            <span class="label">Tanggal</span>
-                            <span class="value">{{ $order->created_at->format('d/m/Y H:i:s') }}</span>
-                        </div>
-                        <div class="receipt-info-row">
-                            <span class="label">Kasir</span>
-                            <span class="value">{{ $order->user->name }}</span>
-                        </div>
-                        <div class="receipt-info-row">
-                            <span class="label">Metode Bayar</span>
-                            <span class="value">{{ ucfirst($order->payment->payment_method ?? '-') }}</span>
-                        </div>
+                    <div class="receipt-info-row">
+                        <span class="label">No. Invoice</span>
+                        <span class="value" style="font-family:monospace; font-size:.82rem;">
+                            {{ $order->invoice_number }}
+                        </span>
+                    </div>
+                    <div class="receipt-info-row">
+                        <span class="label">Tanggal</span>
+                        <span class="value">{{ $order->created_at->format('d/m/Y H:i:s') }}</span>
+                    </div>
+                    <div class="receipt-info-row">
+                        <span class="label">Kasir</span>
+                        <span class="value">{{ $order->user->name }}</span>
+                    </div>
+                    <div class="receipt-info-row">
+                        <span class="label">Metode Bayar</span>
+                        <span class="value">{{ ucfirst($order->payment->payment_method ?? '-') }}</span>
                     </div>
 
                     <hr class="receipt-divider">
@@ -413,7 +429,7 @@
                             @foreach ($order->items as $item)
                                 <tr>
                                     <td>
-                                        <div class="item-name">{{ $item->product->name }}</div>
+                                        <div class="item-name">{{ $item->product->name ?? 'Produk dihapus' }}</div>
                                         <div class="item-price">Rp{{ number_format($item->price, 0, ',', '.') }}</div>
                                     </td>
                                     <td class="item-qty">{{ $item->qty }}</td>
@@ -431,16 +447,18 @@
                             <span class="sum-label">Subtotal</span>
                             <span class="sum-value">Rp{{ number_format($order->total_amount, 0, ',', '.') }}</span>
                         </div>
-                        <div class="sum-row">
-                            <span class="sum-label">Dibayar ({{ ucfirst($order->payment->payment_method ?? '-') }})</span>
-                            <span
-                                class="sum-value">Rp{{ number_format($order->payment->paid_amount ?? 0, 0, ',', '.') }}</span>
-                        </div>
-                        <div class="sum-row">
-                            <span class="sum-label">Kembalian</span>
-                            <span
-                                class="sum-value">Rp{{ number_format($order->payment->change_amount ?? 0, 0, ',', '.') }}</span>
-                        </div>
+                        @if ($order->payment)
+                            <div class="sum-row">
+                                <span class="sum-label">Dibayar ({{ ucfirst($order->payment->payment_method) }})</span>
+                                <span
+                                    class="sum-value">Rp{{ number_format($order->payment->paid_amount ?? 0, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="sum-row">
+                                <span class="sum-label">Kembalian</span>
+                                <span
+                                    class="sum-value">Rp{{ number_format($order->payment->change_amount ?? 0, 0, ',', '.') }}</span>
+                            </div>
+                        @endif
                         <div class="sum-row total">
                             <span>Total</span>
                             <span>Rp{{ number_format($order->total_amount, 0, ',', '.') }}</span>
@@ -453,12 +471,20 @@
                             @if ($order->status === 'completed')
                                 <i class="fas fa-check-circle"></i> Lunas
                             @elseif($order->status === 'pending')
-                                <i class="fas fa-hourglass-half"></i> Menunggu Konfirmasi
+                                <i class="fas fa-hourglass-half"></i> Menunggu Konfirmasi Admin
                             @else
                                 <i class="fas fa-times-circle"></i> Dibatalkan
                             @endif
                         </span>
                     </div>
+
+                    {{-- Notif tambahan jika pending --}}
+                    @if ($order->status === 'pending')
+                        <div class="pending-notice d-print-none">
+                            <i class="fas fa-exclamation-circle" style="font-size:1.1rem; flex-shrink:0;"></i>
+                            <span>Stok belum dipotong. Menunggu konfirmasi admin sebelum transaksi diproses.</span>
+                        </div>
+                    @endif
 
                     {{-- Footer --}}
                     <div class="receipt-footer">
@@ -481,6 +507,7 @@
             const status = params.get('status');
             const invoice = params.get('invoice');
 
+            // Notif sukses cash
             if (status === 'success' && invoice && invoice !== 'null') {
                 Swal.fire({
                     icon: 'success',
@@ -490,7 +517,9 @@
                     showConfirmButton: false,
                     timerProgressBar: true,
                 });
-                window.history.replaceState({}, document.title, window.location.pathname);
+                // Bersihkan URL supaya tidak muncul lagi saat refresh
+                window.history.replaceState({}, document.title, window.location.pathname +
+                    '?from={{ request('from', 'index') }}');
             }
         });
     </script>

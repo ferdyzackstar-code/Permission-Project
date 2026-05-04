@@ -14,7 +14,7 @@ use Exception;
 
 class OrderController extends Controller
 {
-    function __construct()
+    public function __construct()
     {
         $this->middleware('permission:order.history')->only(['index']);
         $this->middleware('permission:order.pos')->only(['pos', 'store']);
@@ -22,27 +22,20 @@ class OrderController extends Controller
         $this->middleware('permission:order.receipt')->only(['receipt']);
     }
 
+    // ── POS ───────────────────────────────────────────────────────
     public function pos()
     {
         $categories = Category::where('status', 'active')->whereNull('parent_id')->get();
-        $products = Product::where('stock', '>', 0)
-            ->where('status', 'active')
-            ->whereHas('category', function ($query) {
-                $query->where('status', 'active');
-            })
-            ->with('category')
-            ->get();
+        $products = Product::where('stock', '>', 0)->where('status', 'active')->whereHas('category', fn($q) => $q->where('status', 'active'))->with('category')->get();
 
         return view('dashboard.orders.pos', compact('products', 'categories'));
     }
 
-    // Proses Simpan Transaksi (Checkout)
+    // ── STORE (Checkout) ──────────────────────────────────────────
     public function store(Request $request)
     {
-        // Pastikan paid_amount dibersihkan dari titik jika masih ada   
         $paidAmount = (int) str_replace('.', '', $request->paid_amount);
-
-        $request->merge(['paid_amount' => $paidAmount]); // Paksa jadi angka murni
+        $request->merge(['paid_amount' => $paidAmount]);
 
         $request->validate([
             'cart' => 'required|array',
@@ -52,9 +45,11 @@ class OrderController extends Controller
 
         DB::beginTransaction();
         try {
-            $orderStatus = $request->payment_method === 'cash' ? 'completed' : 'pending';
-            $paymentStatus = $request->payment_method === 'cash' ? 'paid' : 'pending';
-            // 1. Simpan ke Tabel Orders
+            $isCash = $request->payment_method === 'cash';
+            $orderStatus = $isCash ? 'completed' : 'pending';
+            $paymentStatus = $isCash ? 'paid' : 'pending';
+
+            // 1. Buat Order
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'invoice_number' => Order::generateInvoiceNumber(),
@@ -62,12 +57,16 @@ class OrderController extends Controller
                 'status' => $orderStatus,
             ]);
 
-            // 2. Loop Cart untuk Simpan ke OrderItems & Update Stok
+            // 2. Loop Cart → simpan order items
             foreach ($request->cart as $item) {
-                $product = Product::find($item['id']);
+                $product = Product::lockForUpdate()->find($item['id']);
 
-                // Cek apakah stok mencukupi lagi (Double Check)
-                if ($product->stock < $item['qty']) {
+                if (!$product) {
+                    throw new Exception('Produk tidak ditemukan.');
+                }
+
+                // Double check stok hanya untuk CASH — karena langsung dipotong
+                if ($isCash && $product->stock < $item['qty']) {
                     throw new Exception("Stok produk {$product->name} tidak mencukupi.");
                 }
 
@@ -79,19 +78,23 @@ class OrderController extends Controller
                     'subtotal' => $item['qty'] * $item['price'],
                 ]);
 
-                // Potong Stok Produk
-                $product->decrement('stock', $item['qty']);
+                // ── LOGIKA STOK ──────────────────────────────────
+                // CASH     → stok langsung dipotong (transaksi selesai)
+                // TRANSFER → stok TIDAK dipotong, tunggu admin approve
+                if ($isCash) {
+                    $product->decrement('stock', $item['qty']);
+                }
             }
 
-            // 3. Simpan ke Tabel Payments
+            // 3. Simpan Payment
             Payment::create([
                 'order_id' => $order->id,
                 'payment_method' => $request->payment_method,
-                'paid_amount' => $request->payment_method === 'cash' ? $request->paid_amount : $request->total_amount,
-                'change_amount' => $request->payment_method === 'cash' ? $request->paid_amount - $request->total_amount : 0,
+                'paid_amount' => $isCash ? $request->paid_amount : $request->total_amount,
+                'change_amount' => $isCash ? $request->paid_amount - $request->total_amount : 0,
                 'payment_status' => $paymentStatus,
-                'approved_at' => $request->payment_method === 'cash' ? now() : null,
-                'approved_by' => Auth::id(),
+                'approved_at' => $isCash ? now() : null,
+                'approved_by' => $isCash ? Auth::id() : null,
             ]);
 
             DB::commit();
@@ -102,9 +105,10 @@ class OrderController extends Controller
                 'order_id' => $order->id,
                 'invoice_number' => $order->invoice_number,
                 'receipt_url' => route('dashboard.orders.receipt', $order->id),
+                'is_transfer' => !$isCash,
             ]);
         } catch (Exception $e) {
-            DB::rollback();
+            DB::rollBack();
             return response()->json(
                 [
                     'success' => false,
@@ -115,153 +119,188 @@ class OrderController extends Controller
         }
     }
 
-    // List Riwayat Transaksi (Untuk DataTables)
+    // ── INDEX (Riwayat Transaksi — DataTables) ────────────────────
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $orders = Order::with(['user', 'payment'])
-                ->latest()
-                ->get();
+            // PENTING: pakai query builder (tanpa ->get()) supaya DataTables
+            // bisa handle sorting server-side dengan benar
+            $orders = Order::with(['user', 'payment'])->latest(); // default sort: created_at DESC
+
             return datatables()
                 ->of($orders)
                 ->addIndexColumn()
-                ->editColumn('total_amount', function ($row) {
-                    return 'Rp ' . number_format($row->total_amount, 0, ',', '.');
-                })
+                ->editColumn('created_at', fn($row) => $row->created_at->format('d/m/Y H:i'))
+                ->editColumn('total_amount', fn($row) => 'Rp ' . number_format($row->total_amount, 0, ',', '.'))
                 ->addColumn('payment_method', function ($row) {
-                    $method = $row->payment ? $row->payment->payment_method : '';
-
-                    if ($method == 'cash') {
-                        return '<span class="badge bg-success text-white"><i class="fa-solid fa-money-bill-wave me-1"></i> Cash</span>';
-                    } elseif ($method == 'transfer') {
-                        return '<span class="badge bg-info text-white"><i class="fa-solid fa-wallet me-1"></i> Transfer</span>';
-                    } else {
-                        return '-';
-                    }
-                })
-                ->editColumn('created_at', function ($row) {
-                    return $row->created_at->format('d/m/Y H:i');
+                    $method = $row->payment->payment_method ?? '';
+                    return match ($method) {
+                        'cash' => '<span class="badge bg-success text-white"><i class="fas fa-money-bill-wave me-1"></i> Cash</span>',
+                        'transfer' => '<span class="badge bg-info text-white"><i class="fas fa-university me-1"></i> Transfer</span>',
+                        default => '-',
+                    };
                 })
                 ->editColumn('status', function ($row) {
-                    if ($row->status == 'completed') {
-                        return '<span class="badge bg-primary text-white">Completed</span>';
-                    } elseif ($row->status == 'pending') {
-                        return '<span class="badge bg-warning text-white">Pending</span>';
-                    } else {
-                        return '<span class="badge bg-danger text-white">Cancelled</span>';
-                    }
+                    return match ($row->status) {
+                        'completed' => '<span class="badge bg-success text-white">Completed</span>',
+                        'pending' => '<span class="badge bg-warning text-dark">Pending</span>',
+                        'cancelled' => '<span class="badge bg-danger text-white">Cancelled</span>',
+                        default => '-',
+                    };
                 })
-                ->addColumn('action', function ($row) {
-                    $btn = '<button class="btn btn-sm btn-info text-white btn-detail mx-2" data-id="' . $row->id . '"><i class="fa fa-print me-1"></i> Struk</button>';
-
-                    return $btn;
-                })
-                ->rawColumns(['status', 'action', 'payment_method'])
+                ->addColumn(
+                    'action',
+                    fn($row) => '<button class="btn btn-sm btn-primary btn-detail" data-id="' .
+                        $row->id .
+                        '">
+                        <i class="fas fa-print me-1"></i> Struk
+                    </button>',
+                )
+                ->rawColumns(['payment_method', 'status', 'action'])
                 ->make(true);
         }
+
         return view('dashboard.orders.index');
     }
 
-    // Detail Order & Struk
+    // ── RECEIPT (Struk) ───────────────────────────────────────────
     public function receipt($id)
     {
         $order = Order::with(['items.product', 'payment', 'user'])->findOrFail($id);
         return view('dashboard.orders.receipt', compact('order'));
     }
 
-    public function confirmPayment(Request $request, Order $order)
+    // ── CONFIRMATION (DataTables — hanya pending) ─────────────────
+    public function confirmation(Request $request)
+    {
+        if ($request->ajax()) {
+            $orders = Order::with('user')->where('status', 'pending')->orderBy('created_at', 'desc')->get();
+
+            return datatables()
+                ->of($orders)
+                ->addIndexColumn()
+                ->editColumn('total_amount', fn($row) => 'Rp ' . number_format($row->total_amount, 0, ',', '.'))
+                ->addColumn('action', function ($row) {
+                    $approveUrl = route('dashboard.orders.approve', $row->id);
+                    $cancelUrl = route('dashboard.orders.cancel', $row->id);
+                    $receiptUrl = route('dashboard.orders.receipt', $row->id);
+
+                    return '
+                        <div class="action-group">
+                            <button class="btn-approve-conf btn-approve" data-id="' .
+                        $row->id .
+                        '">
+                                <i class="fas fa-check-circle"></i> Approve
+                            </button>
+                            <button class="btn-cancel-conf btn-cancel" data-id="' .
+                        $row->id .
+                        '">
+                                <i class="fas fa-times-circle"></i> Batalkan
+                            </button>
+                            <a href="' .
+                        $receiptUrl .
+                        '?from=confirmation" class="btn-struk-conf">
+                                <i class="fas fa-print"></i> Struk
+                            </a>
+                        </div>';
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+
+        return view('dashboard.orders.confirmation');
+    }
+
+    // ── APPROVE ───────────────────────────────────────────────────
+    // Saat approve: update status + POTONG STOK (karena transfer belum potong saat store)
+    public function approve(Order $order)
     {
         DB::beginTransaction();
         try {
-            // Update status order
+            if ($order->status !== 'pending') {
+                return response()->json(
+                    [
+                        'success' => false,
+                        'message' => 'Order bukan dalam status pending.',
+                    ],
+                    422,
+                );
+            }
+
+            // 1. Update status order & payment
             $order->update(['status' => 'completed']);
 
-            // Update status payment
-            $order->payment()->update([
-                'payment_status' => 'paid',
-                'approved_by' => Auth::id(),
-                'approved_at' => now(),
-            ]);
+            if ($order->payment) {
+                $order->payment->update([
+                    'payment_status' => 'paid',
+                    'approved_by' => Auth::id(),
+                    'approved_at' => now(),
+                ]);
+            }
+
+            // 2. POTONG STOK — karena saat transfer stok belum dipotong
+            $order->load('items.product');
+            foreach ($order->items as $item) {
+                if ($item->product) {
+                    // Cek stok sebelum potong
+                    if ($item->product->stock < $item->qty) {
+                        throw new Exception("Stok {$item->product->name} tidak mencukupi saat approve.");
+                    }
+                    $item->product->decrement('stock', $item->qty);
+                }
+            }
 
             DB::commit();
-            return response()->json([
-                'success' => true,
-                'message' => 'Pembayaran Transfer berhasil disetujui!',
-            ]);
-        } catch (\Exception $e) {
-            DB::rollback();
+            return response()->json(['success' => true, 'message' => 'Transaksi disetujui & stok dipotong.']);
+        } catch (Exception $e) {
+            DB::rollBack();
             return response()->json(
                 [
                     'success' => false,
-                    'message' => 'Gagal menyetujui pembayaran: ' . $e->getMessage(),
+                    'message' => 'Gagal approve: ' . $e->getMessage(),
                 ],
                 500,
             );
         }
     }
 
-    public function confirmation(Request $request)
-    {
-        if ($request->ajax()) {
-            $orders = Order::with('user')->where('status', 'pending')->latest()->get();
-            return datatables()
-                ->of($orders)
-                ->addIndexColumn()
-                ->editColumn('total_amount', fn($row) => 'Rp ' . number_format($row->total_amount, 0, ',', '.'))
-                ->addColumn('action', function ($row) {
-                    // Tambahkan tombol Batalkan di sini    
-                    return '
-                        <button class="btn btn-sm btn-success btn-approve mx-1" data-id="' .
-                        $row->id .
-                        '">
-                            <i class="far fa-check-circle"></i> Approve
-                        </button>
-                        <button class="btn btn-sm btn-danger btn-cancel mr-1" data-id="' .
-                        $row->id .
-                        '">
-                            <i class="far fa-times-circle"></i> Batalkan
-                        </button>
-                        <a href="' .
-                        route('dashboard.orders.receipt', $row->id) .
-                        '" class="btn btn-sm btn-info text-white">
-            <i class="fa fa-print me-1"></i> Struk
-        </a>';
-                })
-                ->make(true);
-        }
-        return view('dashboard.orders.confirmation');
-    }
-
-    // FUNGSI BARU UNTUK MEMBATALKAN DAN MENGEMBALIKAN STOK
+    // ── CANCEL ────────────────────────────────────────────────────
+    // Cancel: status → cancelled, payment → failed
+    // STOK TIDAK dikembalikan karena transfer pending belum pernah dipotong
     public function cancel($id)
     {
-        // Gunakan $id
         DB::beginTransaction();
         try {
-            // Cari order berdasarkan ID
-            $order = Order::with('items.product')->findOrFail($id);
+            $order = Order::with(['items.product', 'payment'])->findOrFail($id);
 
-            // 1. Ubah status jadi cancelled
+            if ($order->status !== 'pending') {
+                return response()->json(
+                    [
+                        'success' => false,
+                        'message' => 'Hanya order berstatus pending yang bisa dibatalkan.',
+                    ],
+                    422,
+                );
+            }
+
+            // Update status
             $order->update(['status' => 'cancelled']);
 
             if ($order->payment) {
                 $order->payment->update(['payment_status' => 'failed']);
             }
 
-            // 2. Kembalikan stok produk
-            foreach ($order->items as $item) {
-                if ($item->product) {
-                    $item->product->increment('stock', $item->qty);
-                }
-            }
+            // ── TIDAK kembalikan stok ────────────────────────────
+            // Transfer pending = stok belum pernah dipotong saat store()
+            // Mengembalikan stok di sini akan menyebabkan stok bertambah salah
 
             DB::commit();
             return response()->json([
                 'success' => true,
-                'message' => 'Transaksi dibatalkan & stok dikembalikan!',
+                'message' => 'Transaksi dibatalkan.',
             ]);
-        } catch (\Exception $e) {
-            DB::rollback();
+        } catch (Exception $e) {
+            DB::rollBack();
             return response()->json(
                 [
                     'success' => false,
@@ -272,12 +311,9 @@ class OrderController extends Controller
         }
     }
 
-    public function approve(Order $order)
+    // ── CONFIRM PAYMENT (legacy — dipertahankan) ──────────────────
+    public function confirmPayment(Request $request, Order $order)
     {
-        $order->update(['status' => 'completed']);
-        if ($order->payment) {
-            $order->payment->update(['payment_status' => 'paid']);
-        }
-        return response()->json(['success' => true]);
+        return $this->approve($order);
     }
 }

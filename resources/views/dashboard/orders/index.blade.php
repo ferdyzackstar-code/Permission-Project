@@ -9,7 +9,6 @@
             --ord-radius: 12px;
         }
 
-        /* ── HEADER ─────────────────────────────────────────────────── */
         .ord-header-card {
             background: linear-gradient(135deg, #0D47A1 0%, #1565C0 60%, #1976D2 100%);
             border-radius: var(--ord-radius);
@@ -43,7 +42,6 @@
             flex-wrap: wrap;
         }
 
-        /* Tombol header */
         .btn-hdr {
             font-size: .82rem;
             font-weight: 700;
@@ -67,7 +65,6 @@
             transform: translateY(-1px);
         }
 
-        /* Biru (Transaksi Baru) */
         .btn-hdr-blue {
             background: rgba(255, 255, 255, .15);
         }
@@ -76,7 +73,6 @@
             background: rgba(255, 255, 255, .28);
         }
 
-        /* Kuning (Konfirmasi) */
         .btn-hdr-yellow {
             background: linear-gradient(135deg, #F57F17, #F9A825);
             border-color: rgba(255, 255, 255, .25);
@@ -88,7 +84,6 @@
             box-shadow: 0 5px 16px rgba(245, 127, 23, .45);
         }
 
-        /* Badge notif pending */
         .pending-badge {
             position: absolute;
             top: -9px;
@@ -121,7 +116,6 @@
             }
         }
 
-        /* ── TABLE CARD ─────────────────────────────────────────────── */
         .ord-table-card {
             background: #fff;
             border-radius: var(--ord-radius);
@@ -170,88 +164,18 @@
             border-radius: 5px;
             font-weight: 700;
         }
-
-        .badge-status {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: .72rem;
-            font-weight: 700;
-        }
-
-        .badge-status.completed {
-            background: #E8F5E9;
-            color: #2E7D32;
-        }
-
-        .badge-status.pending {
-            background: #FFF8E1;
-            color: #F57F17;
-        }
-
-        .badge-status.cancelled {
-            background: #FFEBEE;
-            color: #C62828;
-        }
-
-        .badge-method {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: .72rem;
-            font-weight: 700;
-        }
-
-        .badge-method.cash {
-            background: #E8F5E9;
-            color: #2E7D32;
-        }
-
-        .badge-method.transfer {
-            background: #E3F2FD;
-            color: #1565C0;
-        }
-
-        /* Tombol struk di tabel */
-        .btn-struk-row {
-            background: linear-gradient(135deg, #1565C0, #1976D2);
-            color: #fff;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 7px;
-            font-size: .78rem;
-            font-weight: 700;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all .2s;
-            box-shadow: 0 2px 8px rgba(21, 101, 192, .2);
-            white-space: nowrap;
-        }
-
-        .btn-struk-row:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(21, 101, 192, .3);
-            color: #fff;
-        }
     </style>
 @endpush
 
 @section('content')
     <div class="container-fluid">
 
-        {{-- Header --}}
         <div class="ord-header-card">
             <div>
                 <h4><i class="fas fa-clock-rotate-left mr-2"></i>Riwayat Transaksi</h4>
                 <p>Semua transaksi penjualan Anda Petshop</p>
             </div>
             <div class="ord-header-actions">
-
-                {{-- Tombol Konfirmasi (kuning) + badge pending --}}
                 @php $pendingCount = \App\Models\Order::where('status','pending')->count(); @endphp
                 <a href="{{ route('dashboard.orders.confirmation') }}" class="btn-hdr btn-hdr-yellow">
                     <i class="fas fa-hourglass-half"></i> Konfirmasi
@@ -259,15 +183,12 @@
                         <span class="pending-badge">{{ $pendingCount }}</span>
                     @endif
                 </a>
-
-                {{-- Tombol Transaksi Baru (biru) --}}
                 <a href="{{ route('dashboard.orders.pos') }}" class="btn-hdr btn-hdr-blue">
                     <i class="fas fa-plus-circle"></i> Transaksi Baru
                 </a>
             </div>
         </div>
 
-        {{-- Table --}}
         <div class="ord-table-card">
             <div class="card-body">
                 <div class="table-responsive">
@@ -296,6 +217,9 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+            // Route receipt dengan placeholder untuk diisi JS
+            const receiptBaseUrl = "{{ route('dashboard.orders.receipt', ':id') }}";
+
             $('#orders-table').DataTable({
                 autoWidth: false,
                 processing: true,
@@ -329,7 +253,8 @@
                     },
                     {
                         data: 'created_at',
-                        name: 'created_at'
+                        name: 'created_at',
+                        orderable: true
                     },
                     {
                         data: 'payment_method',
@@ -355,17 +280,17 @@
                     targets: [0, 4, 6, 7],
                     className: 'text-center align-middle'
                 }, ],
+                // Kolom index 3 = created_at, sort DESC (terbaru ke terlama)
                 order: [
                     [3, 'desc']
                 ],
                 dom: '<"row align-items-center mb-3"<"col-sm-6"l><"col-sm-6 text-right"f>>rt<"row align-items-center mt-3"<"col-sm-6"i><"col-sm-6"p>>',
             });
 
-            // ── FIX: controller merender class "btn-detail", bukan "btn-struk"
-            // Cukup tambahkan listener untuk btn-detail yang redirect ke receipt
+            // Tombol struk — class btn-detail dari controller, redirect dengan from=index
             $(document).on('click', '.btn-detail', function() {
                 const id = $(this).data('id');
-                const url = "{{ route('dashboard.orders.receipt', ':id') }}".replace(':id', id);
+                const url = receiptBaseUrl.replace(':id', id) + '?from=index';
                 window.location.href = url;
             });
         });

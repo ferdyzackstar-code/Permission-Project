@@ -50,7 +50,6 @@ function addToCart(product) {
         });
     }
 
-    // Animasi badge
     const badge = document.getElementById('cart-count');
     badge.classList.remove('pop');
     void badge.offsetWidth;
@@ -130,7 +129,6 @@ function renderCart() {
         totalAmount    += subtotal;
         totalItems     += item.qty;
 
-        // Bangun URL gambar dengan fallback
         const imgUrl = item.image
             ? `${window.posConfig.assetUrl}/${item.image}`
             : `${window.posConfig.assetUrl}/default-product.jpg`;
@@ -150,8 +148,8 @@ function renderCart() {
                     <i class="fas fa-minus" style="font-size:.58rem;"></i>
                 </button>
                 <span class="qty-num">${item.qty}</span>
-                <button class="qty-btn plus"  onclick="updateQty(${index}, 1)">
-                    <i class="fas fa-plus"  style="font-size:.58rem;"></i>
+                <button class="qty-btn plus" onclick="updateQty(${index}, 1)">
+                    <i class="fas fa-plus" style="font-size:.58rem;"></i>
                 </button>
             </div>
             <div class="cart-item-subtotal">Rp${formatRupiah(subtotal)}</div>
@@ -169,7 +167,7 @@ function formatRupiah(angka) {
     return new Intl.NumberFormat('id-ID').format(Math.floor(angka));
 }
 
-// ── ESCAPE HTML (keamanan: cegah XSS dari nama produk) ───────────
+// ── ESCAPE HTML ──────────────────────────────────────────────────
 function escHtml(str) {
     return String(str)
         .replace(/&/g, '&amp;')
@@ -178,7 +176,7 @@ function escHtml(str) {
         .replace(/"/g, '&quot;');
 }
 
-// ── HITUNG KEMBALIAN ─────────────────────────────────────────────
+// ── KEMBALIAN ────────────────────────────────────────────────────
 const inputFormat = document.getElementById('paid_amount_format');
 const inputReal   = document.getElementById('paid_amount');
 
@@ -204,7 +202,12 @@ function calculateChange() {
 // ── SUBMIT ───────────────────────────────────────────────────────
 async function submitTransaction() {
     if (cart.length === 0) {
-        Swal.fire({ icon:'warning', title:'Keranjang Kosong', text:'Tambahkan produk terlebih dahulu.', confirmButtonColor:'#1565C0' });
+        Swal.fire({
+            icon: 'warning',
+            title: 'Keranjang Kosong',
+            text: 'Tambahkan produk terlebih dahulu.',
+            confirmButtonColor: '#1565C0',
+        });
         return;
     }
 
@@ -246,18 +249,49 @@ async function submitTransaction() {
         const result = await response.json();
 
         if (result.success) {
-            window.location.href =
-                result.receipt_url +
-                '?status=success&invoice=' +
-                result.invoice_number;
+
+            if (result.is_transfer) {
+                // ── TRANSFER: tampilkan notif pending, lalu ke receipt
+                await Swal.fire({
+                    icon:  'info',
+                    title: 'Transaksi Tersimpan!',
+                    html:  `No Invoice: <b>${result.invoice_number}</b><br>
+                            <span class="text-warning">
+                                <i class="fas fa-hourglass-half mr-1"></i>
+                                Menunggu konfirmasi admin
+                            </span>`,
+                    confirmButtonColor: '#1565C0',
+                    confirmButtonText:  'Lihat Struk',
+                });
+                // Redirect ke receipt dengan from=pos agar tombol back kembali ke POS
+                window.location.href =
+                    result.receipt_url + '?from=pos&invoice=' + result.invoice_number;
+            } else {
+                // ── CASH: langsung ke receipt dengan notif sukses
+                window.location.href =
+                    result.receipt_url +
+                    '?status=success&invoice=' + result.invoice_number + '&from=pos';
+            }
+
         } else {
-            Swal.fire({ icon:'error', title:'Transaksi Gagal', text:result.message, confirmButtonColor:'#1565C0' });
+            Swal.fire({
+                icon: 'error',
+                title: 'Transaksi Gagal',
+                text: result.message,
+                confirmButtonColor: '#1565C0',
+            });
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>PROSES TRANSAKSI';
         }
+
     } catch (err) {
         console.error(err);
-        Swal.fire({ icon:'error', title:'Koneksi Error', text:'Terjadi kesalahan koneksi ke server.', confirmButtonColor:'#1565C0' });
+        Swal.fire({
+            icon: 'error',
+            title: 'Koneksi Error',
+            text: 'Terjadi kesalahan koneksi ke server.',
+            confirmButtonColor: '#1565C0',
+        });
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>PROSES TRANSAKSI';
     }
