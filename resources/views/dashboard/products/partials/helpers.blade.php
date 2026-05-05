@@ -1,28 +1,11 @@
-{{-- ╔══════════════════════════════════════════════════════╗
-     ║  PARTIAL — _product-helpers.blade.php               ║
-     ║  @include('dashboard.products.partials._helpers')   ║
-     ╚══════════════════════════════════════════════════════╝
-     Letakkan @include ini sekali di dalam @push('scripts')
-     pada index.blade.php — SETELAH DataTables sudah diload.
---}}
-
 <script>
-    /* ══════════════════════════════════════════════════════
-   1. IMAGE PREVIEW (advanced — update src langsung)
-══════════════════════════════════════════════════════ */
-    /**
-     * @param {string}      inputId       – ID <input type="file">
-     * @param {string}      previewId     – ID <img> preview
-     * @param {string|null} wrapId        – ID wrapper (toggle d-none) — null = skip
-     * @param {string|null} zoneId        – ID drop-zone (visual feedback) — null = skip
-     */
+
     function previewImageAdvanced(inputId, previewId, wrapId, zoneId) {
         var input = document.getElementById(inputId);
         if (!input || !input.files || !input.files[0]) return;
 
         var file = input.files[0];
 
-        // Basic client-side validation
         var maxMB = 2;
         if (file.size > maxMB * 1024 * 1024) {
             Swal.fire({

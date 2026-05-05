@@ -6,18 +6,19 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
 
     <style>
-        /* ══════════════════════════════════════════════
-               FIX LAYOUT SHIFT — strip semua padding-right
-               yang ditambah Bootstrap & SweetAlert ke <body>
-            ══════════════════════════════════════════════ */
+        /* ══════════════════════════════════════════
+               FIX LAYOUT SHIFT
+               html { overflow-y: scroll } → scrollbar
+               selalu ada → lebar konten tidak berubah
+               saat modal/swal muncul
+            ══════════════════════════════════════════ */
         html {
             overflow-y: scroll;
         }
 
-        /* scrollbar selalu ada → tidak ada shift */
         body.modal-open {
-            padding-right: 0 !important;
             overflow: hidden !important;
+            padding-right: 0 !important;
         }
 
         body.swal2-shown {
@@ -28,13 +29,9 @@
             overflow-y: auto !important;
         }
 
-        .modal-backdrop {
-            padding-right: 0 !important;
-        }
-
-        /* ══════════════════════════════════════════════
-               ROOT TOKENS
-            ══════════════════════════════════════════════ */
+        /* ══════════════════════════════════════════
+               TOKENS
+            ══════════════════════════════════════════ */
         :root {
             --bp: #4e73df;
             --bs: #224abe;
@@ -48,9 +45,9 @@
             --tr: .2s ease;
         }
 
-        /* ══════════════════════════════════════════════
+        /* ══════════════════════════════════════════
                PAGE HEADER
-            ══════════════════════════════════════════════ */
+            ══════════════════════════════════════════ */
         .page-header-wrap {
             background: linear-gradient(135deg, #4e73df, #224abe);
             border-radius: var(--rad);
@@ -126,9 +123,9 @@
             text-align: center;
         }
 
-        /* ══════════════════════════════════════════════
+        /* ══════════════════════════════════════════
                BUTTONS
-            ══════════════════════════════════════════════ */
+            ══════════════════════════════════════════ */
         .btn-pill {
             display: inline-flex;
             align-items: center;
@@ -159,9 +156,10 @@
             color: #fff !important;
         }
 
-        .btn-primary-pill:disabled {
-            opacity: .55;
-            transform: none;
+        .btn-primary-pill:disabled,
+        .btn-primary-pill[disabled] {
+            opacity: .5;
+            transform: none !important;
             cursor: not-allowed;
             box-shadow: none;
         }
@@ -202,18 +200,6 @@
             transform: translateY(-2px);
         }
 
-        .btn-danger-pill {
-            background: #fff;
-            color: var(--bd) !important;
-            border: 1.5px solid var(--bd) !important;
-        }
-
-        .btn-danger-pill:hover {
-            background: var(--bd);
-            color: #fff !important;
-            transform: translateY(-2px);
-        }
-
         .btn-cancel-pill {
             background: #fff;
             color: var(--dark) !important;
@@ -224,9 +210,9 @@
             background: #f0f0f5;
         }
 
-        /* ══════════════════════════════════════════════
+        /* ══════════════════════════════════════════
                TOOLBAR
-            ══════════════════════════════════════════════ */
+            ══════════════════════════════════════════ */
         .action-toolbar {
             background: #fff;
             border-radius: var(--rad);
@@ -248,16 +234,15 @@
             margin-right: auto;
         }
 
-        /* ══════════════════════════════════════════════
-               INLINE PANEL (replaces semua modal)
-            ══════════════════════════════════════════════ */
+        /* ══════════════════════════════════════════
+               INLINE PANEL
+            ══════════════════════════════════════════ */
         .product-panel {
             border: none;
             border-radius: var(--rad);
             box-shadow: var(--shad);
             overflow: hidden;
             margin-bottom: 1.25rem;
-            transition: all .3s ease;
         }
 
         .panel-header {
@@ -265,7 +250,6 @@
             display: flex;
             align-items: center;
             gap: .75rem;
-            border-bottom: 2px solid rgba(255, 255, 255, .15);
         }
 
         .panel-header-create {
@@ -280,7 +264,7 @@
             background: linear-gradient(135deg, #36b9cc, #258391);
         }
 
-        .panel-header-icon {
+        .panel-hdr-icon {
             width: 38px;
             height: 38px;
             border-radius: .5rem;
@@ -288,31 +272,32 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
 
-        .panel-header-icon i {
+        .panel-hdr-icon i {
             color: #fff;
             font-size: .9rem;
         }
 
-        .panel-header-title {
+        .panel-hdr-title {
             font-size: 1rem;
             font-weight: 700;
             color: #fff;
         }
 
-        .panel-header-sub {
+        .panel-hdr-sub {
             font-size: .73rem;
             color: rgba(255, 255, 255, .75);
             margin: .1rem 0 0;
         }
 
-        .panel-body {
+        .panel-body-wrap {
             background: #fff;
             padding: 1.5rem;
         }
 
-        /* Form section labels */
+        /* Section labels */
         .fs-label {
             font-size: .68rem;
             font-weight: 800;
@@ -331,11 +316,11 @@
             color: #4e73df;
         }
 
-        .fs-label.edit-accent i {
+        .fs-label.edit-clr i {
             color: #d4a017;
         }
 
-        .fs-label.show-accent i {
+        .fs-label.show-clr i {
             color: #36b9cc;
         }
 
@@ -387,18 +372,35 @@
             cursor: not-allowed;
         }
 
+        /* FIX #3 — Input group prefix sejajar dengan input */
+        .fc-input-group {
+            display: flex;
+            align-items: stretch;
+        }
+
         .fc-prefix {
             background: #eaecf4;
             border: 1.5px solid #d1d3e2;
             border-right: none;
             border-radius: .5rem 0 0 .5rem;
-            padding: .5rem .85rem;
+            padding: 0 .85rem;
+            /* padding vertikal 0 agar flex stretch */
             font-size: .8rem;
             color: #858796;
             font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            white-space: nowrap;
         }
 
-        /* Upload zone */
+        .fc-input-group .fc-input {
+            border-radius: 0 .5rem .5rem 0;
+            flex: 1;
+        }
+
+        /* Image upload */
         .img-upload-zone {
             border: 2px dashed #d1d3e2;
             border-radius: .65rem;
@@ -414,7 +416,7 @@
             background: #f0f4ff;
         }
 
-        .img-upload-zone .upload-icon {
+        .upload-icon {
             font-size: 1.4rem;
             color: #b7bac7;
             transition: color .2s;
@@ -456,7 +458,7 @@
             justify-content: center;
         }
 
-        /* Show detail rows */
+        /* Show view detail rows */
         .detail-row {
             display: flex;
             align-items: center;
@@ -520,9 +522,9 @@
             border: 1px solid rgba(54, 185, 204, .2);
         }
 
-        /* ══════════════════════════════════════════════
+        /* ══════════════════════════════════════════
                TABLE CARD
-            ══════════════════════════════════════════════ */
+            ══════════════════════════════════════════ */
         .product-card {
             border: none;
             border-radius: var(--rad);
@@ -539,7 +541,7 @@
             gap: .6rem;
         }
 
-        .card-header-custom .hdr-icon {
+        .hdr-icon {
             width: 32px;
             height: 32px;
             background: linear-gradient(135deg, #4e73df, #224abe);
@@ -551,7 +553,7 @@
             font-size: .75rem;
         }
 
-        .card-header-custom .hdr-title {
+        .hdr-title {
             font-size: .9rem;
             font-weight: 700;
             color: var(--dark);
@@ -564,6 +566,7 @@
             font-weight: 500;
         }
 
+        /* FIX #2 — Table styling sesuai sebelumnya */
         #data-products thead tr {
             background: linear-gradient(135deg, #4e73df, #224abe) !important;
         }
@@ -594,18 +597,40 @@
             padding: .75rem;
         }
 
+        /* FIX #2 — class tbl-img sesuai dengan yang dirender controller */
         .tbl-img {
-            width: 46px;
-            height: 46px;
+            width: 48px;
+            height: 48px;
             border-radius: .45rem;
             object-fit: cover;
             border: 2px solid #e3e6f0;
-            transition: transform .2s;
+            transition: transform .2s, box-shadow .2s;
         }
 
         .tbl-img:hover {
             transform: scale(1.08);
             box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+        }
+
+        /* Pill badges */
+        .tbl-pill {
+            display: inline-block;
+            font-size: .72rem;
+            font-weight: 700;
+            padding: .28em .75em;
+            border-radius: 2rem;
+        }
+
+        .tbl-pill-species {
+            background: rgba(78, 115, 223, .1);
+            color: #4e73df;
+            border: 1px solid rgba(78, 115, 223, .2);
+        }
+
+        .tbl-pill-category {
+            background: rgba(54, 185, 204, .1);
+            color: #258391;
+            border: 1px solid rgba(54, 185, 204, .2);
         }
 
         .badge-status {
@@ -625,6 +650,12 @@
             background: rgba(231, 74, 59, .1);
             color: #c0392b;
             border: 1px solid rgba(231, 74, 59, .25);
+        }
+
+        .tbl-price {
+            font-weight: 700;
+            color: #1cc88a;
+            white-space: nowrap;
         }
 
         .stock-pill {
@@ -671,20 +702,10 @@
             cursor: pointer;
         }
 
-        .tbl-btn-view {
-            background: rgba(54, 185, 204, .12);
-            color: var(--ba);
-        }
-
         .tbl-btn-view:hover {
             background: var(--ba);
             color: #fff;
             transform: translateY(-2px);
-        }
-
-        .tbl-btn-edit {
-            background: rgba(246, 194, 62, .12);
-            color: #d4a017;
         }
 
         .tbl-btn-edit:hover {
@@ -693,15 +714,25 @@
             transform: translateY(-2px);
         }
 
-        .tbl-btn-delete {
-            background: rgba(231, 74, 59, .1);
-            color: var(--bd);
-        }
-
         .tbl-btn-delete:hover {
             background: var(--bd);
             color: #fff;
             transform: translateY(-2px);
+        }
+
+        .tbl-btn-view {
+            background: rgba(54, 185, 204, .12);
+            color: var(--ba);
+        }
+
+        .tbl-btn-edit {
+            background: rgba(246, 194, 62, .12);
+            color: #d4a017;
+        }
+
+        .tbl-btn-delete {
+            background: rgba(231, 74, 59, .1);
+            color: var(--bd);
         }
 
         /* Alerts */
@@ -790,9 +821,7 @@
 
 @section('content')
 
-    {{-- ══════════════════════════════════════════
-     PAGE HEADER
-══════════════════════════════════════════ --}}
+    {{-- PAGE HEADER --}}
     <div class="page-header-wrap animate__animated animate__fadeInDown animate__faster">
         <div class="header-inner d-flex flex-wrap align-items-center">
             <div class="mr-auto">
@@ -807,16 +836,13 @@
         </div>
     </div>
 
-    {{-- ══════════════════════════════════════════
-     FLASH — success
-     FIX #1: <strong> literal di SweetAlert.
-     Solusi: controller TIDAK pakai <strong> lagi.
-     Tampilan bold ditangani di sini / di swal html:
-══════════════════════════════════════════ --}}
+    {{-- FLASH MESSAGES
+     FIX #1: controller sudah kirim plain text (tanpa <strong>)
+     Di sini pakai {{ }} biasa — aman dari XSS, tidak ada HTML literal --}}
     @if (session('success'))
         <div class="alert alert-modern alert-success alert-dismissible fade show" role="alert">
             <i class="fas fa-check-circle mr-2" style="color:var(--bsu)"></i>
-            {!! session('success') !!}
+            {{ session('success') }}
             <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
         </div>
     @endif
@@ -836,9 +862,7 @@
         </div>
     @endif
 
-    {{-- ══════════════════════════════════════════
-     ACTION TOOLBAR
-══════════════════════════════════════════ --}}
+    {{-- ACTION TOOLBAR --}}
     <div class="action-toolbar">
         <span class="toolbar-label"><i class="fas fa-tools mr-1"></i> Aksi Data</span>
         <a href="{{ route('dashboard.products.downloadImportTemplate') }}" class="btn-pill btn-warn-pill">
@@ -854,41 +878,40 @@
 
     {{-- ══════════════════════════════════════════
      INLINE PANEL — Create / Edit / Show
-     Satu panel, 3 mode. Mode default = CREATE.
 ══════════════════════════════════════════ --}}
     @canany(['product.create', 'product.edit', 'product.show'])
         <div class="product-panel animate__animated animate__fadeInUp animate__faster" id="productPanel">
 
-            {{-- Panel Header (warna berganti via JS) --}}
+            {{-- Header --}}
             <div class="panel-header panel-header-create" id="panelHeader">
-                <div class="panel-header-icon" id="panelIcon"><i class="fas fa-plus" id="panelIconFa"></i></div>
-                <div>
-                    <div class="panel-header-title" id="panelTitle">Tambah Produk Baru</div>
-                    <div class="panel-header-sub" id="panelSub">Lengkapi semua field bertanda * untuk mengaktifkan tombol
-                        simpan</div>
+                <div class="panel-hdr-icon"><i class="fas fa-plus" id="panelIconFa"></i></div>
+                <div style="flex:1;min-width:0">
+                    <div class="panel-hdr-title" id="panelTitle">Tambah Produk Baru</div>
+                    <div class="panel-hdr-sub" id="panelSub">Lengkapi semua field bertanda * untuk mengaktifkan tombol simpan
+                    </div>
                 </div>
-                {{-- Tombol collapse --}}
-                <button type="button" class="ml-auto btn-pill btn-cancel-pill btn-sm" id="btnCollapsePanel"
-                    style="padding:.3rem .75rem;font-size:.72rem">
-                    <i class="fas fa-chevron-up" id="collapseIcon"></i>
+                <button type="button" id="btnTogglePanel" class="btn-pill btn-cancel-pill ml-2"
+                    style="padding:.3rem .75rem;font-size:.72rem;flex-shrink:0">
+                    <i class="fas fa-chevron-up" id="toggleIcon"></i>
                 </button>
             </div>
 
             {{-- Panel Body --}}
-            <div id="panelBody">
+            <div id="panelBodyWrap">
 
-                {{-- ── MODE: SHOW ──────────────────────────────── --}}
-                <div id="showView" class="d-none panel-body">
+                {{-- ── SHOW VIEW ── --}}
+                <div id="showView" class="d-none panel-body-wrap">
                     <div class="row">
                         <div class="col-md-3 text-center mb-3 mb-md-0">
-                            <img id="showImg" src="" alt="foto" class="img-thumbnail shadow-sm"
-                                style="width:130px;height:130px;object-fit:cover;border-radius:.65rem;border:2.5px solid #36b9cc">
+                            <img id="showImg" src="" alt="foto"
+                                style="width:130px;height:130px;object-fit:cover;border-radius:.65rem;border:2.5px solid #36b9cc;box-shadow:0 4px 16px rgba(54,185,204,.2)">
                             <div class="mt-2">
-                                <span class="badge-status" id="showStatus"></span>
+                                <span class="badge-status" id="showStatusBadge"></span>
                             </div>
+                            <div class="mt-1 small text-muted" id="showUpdatedAt"></div>
                         </div>
                         <div class="col-md-9">
-                            <div class="fs-label show-accent"><i class="fas fa-info-circle"></i> Detail Produk</div>
+                            <div class="fs-label show-clr"><i class="fas fa-info-circle"></i> Detail Produk</div>
                             <div class="detail-row">
                                 <div class="detail-icon" style="background:rgba(78,115,223,.1);color:#4e73df"><i
                                         class="fas fa-tag"></i></div>
@@ -903,7 +926,7 @@
                                         class="fas fa-money-bill-wave"></i></div>
                                 <div>
                                     <div class="detail-label">Harga</div>
-                                    <div class="detail-value font-weight-700" id="showPrice"
+                                    <div class="detail-value font-weight-bold" id="showPrice"
                                         style="color:#1cc88a;font-size:.95rem"></div>
                                 </div>
                             </div>
@@ -913,7 +936,7 @@
                                         class="fas fa-boxes"></i></div>
                                 <div>
                                     <div class="detail-label">Stok</div>
-                                    <div class="detail-value"><span class="stock-pill" id="showStock"></span></div>
+                                    <div class="detail-value"><span id="showStock" class="stock-pill"></span></div>
                                 </div>
                             </div>
                             <div class="detail-divider"></div>
@@ -935,78 +958,78 @@
                                         class="fas fa-align-left"></i></div>
                                 <div>
                                     <div class="detail-label">Deskripsi</div>
-                                    <div class="detail-value small" id="showDetail" style="line-height:1.6"></div>
+                                    <div class="detail-value small" id="showDetail"
+                                        style="line-height:1.6;white-space:pre-line"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="d-flex justify-content-end mt-3 pt-3" style="border-top:1px solid #e3e6f0;gap:.5rem">
-                        <button type="button" class="btn-pill btn-cancel-pill" id="btnShowCancel">
+                        <button type="button" class="btn-pill btn-cancel-pill" id="btnShowClose">
                             <i class="fas fa-times mr-1"></i> Tutup
                         </button>
                         @can('product.edit')
                             <button type="button" class="btn-pill" id="btnShowToEdit"
                                 style="background:linear-gradient(135deg,#f6c23e,#d4a017);color:#fff;box-shadow:0 4px 12px rgba(246,194,62,.35)">
-                                <i class="fas fa-edit"></i> Edit Produk Ini
+                                <i class="fas fa-edit mr-1"></i> Edit Produk Ini
                             </button>
                         @endcan
                     </div>
                 </div>
 
-                {{-- ── MODE: CREATE / EDIT FORM ─────────────────── --}}
+                {{-- ── CREATE / EDIT FORM ── --}}
                 <form id="productForm" action="{{ route('dashboard.products.store') }}" method="POST"
                     enctype="multipart/form-data">
                     @csrf
-                    <span id="methodField"></span>{{-- JS inject @method('PUT') saat edit --}}
-                    <input type="hidden" id="productId" name="_product_id" value="">
+                    <div id="methodSpan"></div>
 
-                    <div class="panel-body">
-                        {{-- Row 1: Nama + Status --}}
+                    <div class="panel-body-wrap">
+
+                        {{-- Informasi Dasar --}}
                         <div class="fs-label"><i class="fas fa-info-circle"></i> Informasi Dasar</div>
                         <div class="row">
                             <div class="col-md-8 mb-3">
                                 <label class="fc-label">Nama Produk <span class="text-danger">*</span></label>
-                                <input type="text" name="name" id="fieldName" class="fc-input req-field"
-                                    placeholder="Contoh: Whiskas Tuna 1kg">
+                                <input type="text" name="name" id="fName" class="fc-input req-field"
+                                    placeholder="Contoh: Whiskas Tuna 1kg" autocomplete="off">
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="fc-label">Status <span class="text-danger">*</span></label>
-                                <select name="status" id="fieldStatus" class="fc-input fc-select req-field">
+                                <select name="status" id="fStatus" class="fc-input fc-select req-field">
                                     <option value="active">✅ Active</option>
                                     <option value="inactive">❌ Inactive</option>
                                 </select>
                             </div>
                         </div>
 
-                        {{-- Row 2: Harga + Stok --}}
+                        {{-- Harga & Stok --}}
                         <div class="fs-label mt-1"><i class="fas fa-tags"></i> Harga & Stok</div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="fc-label">Harga (Rp) <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend"><span class="fc-prefix">Rp</span></div>
-                                    <input type="text" name="price" id="fieldPrice"
-                                        class="fc-input input-rupiah req-field" placeholder="50.000"
-                                        style="border-radius:0 .5rem .5rem 0">
+                                {{-- FIX #3 — fc-input-group menggantikan bootstrap input-group --}}
+                                <div class="fc-input-group">
+                                    <span class="fc-prefix">Rp</span>
+                                    <input type="text" name="price" id="fPrice" class="fc-input req-field"
+                                        placeholder="50.000" autocomplete="off">
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="fc-label">Stok (Pcs) <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend"><span class="fc-prefix"><i
-                                                class="fas fa-boxes"></i></span></div>
-                                    <input type="number" name="stock" id="fieldStock" class="fc-input req-field"
-                                        placeholder="10" min="0" style="border-radius:0 .5rem .5rem 0">
+                                <div class="fc-input-group">
+                                    <span class="fc-prefix"><i class="fas fa-boxes"></i></span>
+                                    <input type="number" name="stock" id="fStock" class="fc-input req-field"
+                                        placeholder="10" min="0" autocomplete="off">
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Row 3: Species + Kategori --}}
+                        {{-- Kategori --}}
                         <div class="fs-label mt-1"><i class="fas fa-sitemap"></i> Kategori</div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="fc-label">Species (Induk) <span class="text-danger">*</span></label>
-                                <select id="fieldSpecies" class="fc-input fc-select req-field">
+                                <select id="fSpecies" class="fc-input fc-select req-field">
                                     <option value="">-- Pilih Species --</option>
                                     @foreach ($categories as $cat)
                                         @if (empty($cat->parent_id))
@@ -1017,7 +1040,7 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="fc-label">Kategori <span class="text-danger">*</span></label>
-                                <select name="category_id" id="fieldCategory" class="fc-input fc-select req-field" disabled>
+                                <select name="category_id" id="fCategory" class="fc-input fc-select req-field" disabled>
                                     <option value="">-- Pilih Species Dulu --</option>
                                 </select>
                                 <span class="small text-muted mt-1 d-block">
@@ -1026,27 +1049,31 @@
                             </div>
                         </div>
 
-                        {{-- Row 4: Foto + Detail (opsional) --}}
-                        <div class="fs-label mt-1"><i class="fas fa-image"></i> Foto & Deskripsi <small
-                                class="text-muted font-weight-normal ml-1">(opsional)</small></div>
+                        {{-- Foto & Deskripsi (opsional) --}}
+                        <div class="fs-label mt-1">
+                            <i class="fas fa-image"></i> Foto & Deskripsi
+                            <small class="text-muted font-weight-normal ml-1"
+                                style="font-size:.65rem;text-transform:none;letter-spacing:0">(opsional)</small>
+                        </div>
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="fc-label">Foto Produk</label>
                                 <div class="img-upload-zone" id="uploadZone"
-                                    onclick="document.getElementById('fieldImage').click()">
+                                    onclick="document.getElementById('fImage').click()">
                                     <i class="fas fa-cloud-upload-alt upload-icon"></i>
                                     <p class="mb-0 mt-1 small" style="color:#5a5c69">Klik untuk pilih foto</p>
                                     <p class="mb-0 small text-muted">JPG, PNG — maks. 2MB</p>
-                                    <input type="file" id="fieldImage" name="image" class="d-none" accept="image/*"
+                                    <input type="file" id="fImage" name="image" class="d-none" accept="image/*"
                                         onchange="handleImageUpload(this)">
                                 </div>
+                                {{-- Preview foto baru --}}
                                 <div class="img-preview-box d-none mt-2" id="imgPreviewBox">
                                     <img id="imgPreview" src="" alt="preview">
                                     <button type="button" class="img-remove-btn" onclick="removeProductImage()">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </div>
-                                {{-- Edit mode: tampilkan foto saat ini --}}
+                                {{-- Foto existing (edit mode) --}}
                                 <div class="d-none mt-2" id="currentImgWrap">
                                     <div class="small text-muted mb-1"><i class="fas fa-image mr-1"></i>Foto saat ini:</div>
                                     <img id="currentImg" src="" alt="current"
@@ -1055,41 +1082,39 @@
                             </div>
                             <div class="col-md-8 mb-3">
                                 <label class="fc-label">Detail / Deskripsi</label>
-                                <textarea name="detail" id="fieldDetail" class="fc-input" rows="5"
+                                <textarea name="detail" id="fDetail" class="fc-input" rows="5"
                                     placeholder="Tulis deskripsi lengkap produk..."></textarea>
                             </div>
                         </div>
 
                         {{-- Footer --}}
-                        <div class="d-flex justify-content-between align-items-center mt-2 pt-3"
-                            style="border-top:1px solid #e3e6f0">
-                            <span class="small text-muted"> 
-                                <i class="fas fa-asterisk text-danger mr-1" style="font-size:.55rem"></i>
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mt-2 pt-3"
+                            style="border-top:1px solid #e3e6f0;gap:.5rem">
+                            <span class="small text-muted">
+                                <i class="fas fa-asterisk text-danger mr-1" style="font-size:.5rem;vertical-align:middle"></i>
                                 Field bertanda * wajib diisi sebelum tombol simpan aktif
                             </span>
-                            <div style="display:flex;gap:.5rem">
-                                <button type="button" class="btn-pill btn-cancel-pill" id="btnFormCancel">
-                                    <i class="fas fa-times mr-1"></i> Reset
+                            <div class="d-flex" style="gap:.5rem">
+                                <button type="button" class="btn-pill btn-cancel-pill" id="btnFormReset">
+                                    <i class="fas fa-undo mr-1"></i> Reset
                                 </button>
                                 @canany(['product.create', 'product.edit'])
                                     <button type="submit" class="btn-pill btn-primary-pill" id="btnSubmit" disabled>
                                         <i class="fas fa-save" id="submitIcon"></i>
-                                        <span id="submitLabel">Simpan Produk</span>
+                                        <span id="submitLabel"> Simpan Produk</span>
                                     </button>
                                 @endcanany
                             </div>
                         </div>
 
-                    </div>{{-- /panel-body --}}
+                    </div>
                 </form>
 
-            </div>{{-- /panelBody --}}
-        </div>{{-- /productPanel --}}
+            </div>
+        </div>
     @endcanany
 
-    {{-- ══════════════════════════════════════════
-     DATATABLE CARD
-══════════════════════════════════════════ --}}
+    {{-- DATATABLE CARD --}}
     <div class="card product-card animate__animated animate__fadeInUp animate__faster">
         <div class="card-header-custom">
             <div class="hdr-icon"><i class="fas fa-th-list"></i></div>
@@ -1118,10 +1143,7 @@
         </div>
     </div>
 
-    {{-- ══════════════════════════════════════════
-     MODAL IMPORT (tetap pakai modal karena
-     hanya upload file, tidak perlu inline)
-══════════════════════════════════════════ --}}
+    {{-- MODAL IMPORT --}}
     <div class="modal fade" id="modalImport" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content"
@@ -1186,151 +1208,130 @@
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap4.min.js"></script>
 
     <script>
-        /* ══════════════════════════════════════════════════════
-       FIX LAYOUT SHIFT — patch Bootstrap _adjustDialog
-       Harus dijalankan SEBELUM document.ready agar
-       intercepted sebelum modal pertama kali terbuka.
-    ══════════════════════════════════════════════════════ */
-        (function patchBootstrapModal() {
-            var interval = setInterval(function() {
-                if (window.jQuery && $.fn.modal && $.fn.modal.Constructor) {
+        /* ══════════════════════════════════════════════
+       PATCH Bootstrap _adjustDialog ASAP
+       Harus sebelum document.ready agar intercept
+       sebelum modal import pertama kali terbuka
+    ══════════════════════════════════════════════ */
+        (function patchModal() {
+            var t = setInterval(function() {
+                if (window.$ && $.fn.modal && $.fn.modal.Constructor) {
                     $.fn.modal.Constructor.prototype._adjustDialog = function() {};
                     $.fn.modal.Constructor.prototype._resetAdjustments = function() {};
-                    clearInterval(interval);
+                    clearInterval(t);
                 }
-            }, 50);
+            }, 30);
+        }());
+
+        /* SweetAlert custom styles */
+        (function() {
+            var s = document.createElement('style');
+            s.textContent = [
+                '.swal2-popup{border-radius:.85rem!important;font-family:inherit!important}',
+                '.swal2-title{font-size:1.1rem!important;color:#2d3748!important}',
+                '.swal2-html-container{font-size:.88rem!important}',
+                '.swal2-confirm,.swal2-cancel{border-radius:.5rem!important;font-size:.82rem!important;font-weight:700!important;padding:.5rem 1.2rem!important}',
+            ].join('');
+            document.head.appendChild(s);
         }());
 
         $(document).ready(function() {
 
-            /* ─────────────────────────────────────────────────────
+            /* ══════════════════════════════════════════
                PANEL STATE
-            ───────────────────────────────────────────────────── */
-            var panelMode = 'create'; // 'create' | 'edit' | 'show'
-            var editingProduct = null; // object dari DataTable row
-            var panelCollapsed = false;
+            ══════════════════════════════════════════ */
+            var mode = 'create'; // 'create' | 'edit' | 'show'
+            var activeProduct = null; // raw data object dari DataTable
+            var collapsed = false;
 
-            // Elemen cache
             var $panel = $('#productPanel');
-            var $panelHeader = $('#panelHeader');
-            var $panelBody = $('#panelBody');
+            var $header = $('#panelHeader');
+            var $bodyWrap = $('#panelBodyWrap');
             var $showView = $('#showView');
-            var $productForm = $('#productForm');
-            var $panelTitle = $('#panelTitle');
-            var $panelSub = $('#panelSub');
-            var $panelIconFa = $('#panelIconFa');
+            var $form = $('#productForm');
             var $btnSubmit = $('#btnSubmit');
-            var $submitLabel = $('#submitLabel');
-            var $submitIcon = $('#submitIcon');
-            var $methodField = $('#methodField');
-            var $productId = $('#productId');
 
-            /* ─────────────────────────────────────────────────────
-               PANEL MODE FUNCTIONS
-            ───────────────────────────────────────────────────── */
-            function switchMode(mode, data) {
-                panelMode = mode;
+            /* ── Switch mode ───────────────────────── */
+            function switchMode(newMode, product) {
+                mode = newMode;
+                activeProduct = product || null;
 
-                // Expand jika sedang collapse
-                if (panelCollapsed) toggleCollapse();
+                if (collapsed) doCollapse(false);
 
-                // Sembunyikan semua dulu
-                $showView.addClass('d-none');
-                $productForm.closest('.panel-body').parent().show();
+                $header.removeClass('panel-header-create panel-header-edit panel-header-show');
 
-                // Hapus semua class header lalu tambah yang sesuai
-                $panelHeader.removeClass('panel-header-create panel-header-edit panel-header-show');
-
-                if (mode === 'show') {
-                    $panelHeader.addClass('panel-header-show');
-                    $panelIconFa.attr('class', 'fas fa-eye');
-                    $panelTitle.text('Detail Produk');
-                    $panelSub.text(data ? data.name : '');
-                    $productForm.addClass('d-none');
+                if (newMode === 'show') {
+                    $header.addClass('panel-header-show');
+                    $('#panelIconFa').attr('class', 'fas fa-eye');
+                    $('#panelTitle').text('Detail Produk');
+                    $('#panelSub').text(product ? product.name_raw : '');
+                    $form.addClass('d-none');
                     $showView.removeClass('d-none');
-                    populateShow(data);
+                    fillShow(product);
 
-                } else if (mode === 'edit') {
-                    $panelHeader.addClass('panel-header-edit');
-                    $panelIconFa.attr('class', 'fas fa-edit');
-                    $panelTitle.text('Edit Produk');
-                    $panelSub.text(data ? data.name : '');
-                    $productForm.removeClass('d-none');
-                    editingProduct = data;
-                    populateForm(data);
-                    $submitLabel.text('Update Produk');
-                    $submitIcon.attr('class', 'fas fa-save');
-                    // Inject method PUT
-                    $methodField.html('<input type="hidden" name="_method" value="PUT">');
-                    // Ganti action URL ke update route
-                    $productForm.attr('action', '/dashboard/products/' + data.id);
-                    $productId.val(data.id);
+                } else if (newMode === 'edit') {
+                    $header.addClass('panel-header-edit');
+                    $('#panelIconFa').attr('class', 'fas fa-edit');
+                    $('#panelTitle').text('Edit Produk');
+                    $('#panelSub').text(product ? product.name_raw : '');
+                    $showView.addClass('d-none');
+                    $form.removeClass('d-none');
+                    fillForm(product);
+                    $('#methodSpan').html('<input type="hidden" name="_method" value="PUT">');
+                    $form.attr('action', '/dashboard/products/' + product.id);
+                    $('#submitIcon').attr('class', 'fas fa-save');
+                    $('#submitLabel').text(' Update Produk');
 
                 } else { // create
-                    $panelHeader.addClass('panel-header-create');
-                    $panelIconFa.attr('class', 'fas fa-plus');
-                    $panelTitle.text('Tambah Produk Baru');
-                    $panelSub.text('Lengkapi semua field bertanda * untuk mengaktifkan tombol simpan');
-                    $productForm.removeClass('d-none');
+                    $header.addClass('panel-header-create');
+                    $('#panelIconFa').attr('class', 'fas fa-plus');
+                    $('#panelTitle').text('Tambah Produk Baru');
+                    $('#panelSub').text('Lengkapi semua field bertanda * untuk mengaktifkan tombol simpan');
+                    $showView.addClass('d-none');
+                    $form.removeClass('d-none');
                     resetForm();
-                    editingProduct = null;
-                    $methodField.html('');
-                    $productForm.attr('action', '{{ route('dashboard.products.store') }}');
-                    $productId.val('');
-                    $submitLabel.text('Simpan Produk');
-                    $submitIcon.attr('class', 'fas fa-save');
+                    $('#methodSpan').html('');
+                    $form.attr('action', '{{ route('dashboard.products.store') }}');
+                    $('#submitIcon').attr('class', 'fas fa-save');
+                    $('#submitLabel').text(' Simpan Produk');
                 }
 
-                // Scroll ke panel
-                $('html, body').animate({
-                    scrollTop: $panel.offset().top - 80
-                }, 300);
+                $('html,body').animate({
+                    scrollTop: $panel.offset().top - 72
+                }, 280);
             }
 
-            /* ─────────────────────────────────────────────────────
-               POPULATE SHOW VIEW
-            ───────────────────────────────────────────────────── */
-            function populateShow(d) {
-                // Foto
-                var imgSrc = d.image_url || '/storage/uploads/products/default-product.jpg';
-                $('#showImg').attr('src', imgSrc);
+            /* ── Fill SHOW view ────────────────────── */
+            function fillShow(d) {
+                $('#showImg').attr('src', d.image_url || '');
 
-                // Status badge
-                var iA = d.status_raw === 'active';
-                $('#showStatus')
-                    .attr('class', 'badge-status ' + (iA ? 'badge-active' : 'badge-inactive'))
-                    .text(iA ? '✅ Active' : '❌ Inactive');
+                var isActive = d.status_raw === 'active';
+                $('#showStatusBadge')
+                    .attr('class', 'badge-status ' + (isActive ? 'badge-active' : 'badge-inactive'))
+                    .text(isActive ? '✅ Active' : '❌ Inactive');
 
-                // Fields
-                $('#showName').text(d.name_raw || d.name || '—');
-                $('#showPrice').text('Rp ' + formatRupiah(String(d.price_raw || 0)));
+                $('#showName').text(d.name_raw || '—');
+                $('#showPrice').text('Rp ' + rupiah(String(d.price_raw || 0)));
                 $('#showSpecies').text(d.species_raw || '—');
                 $('#showCategory').text(d.category_raw || '—');
                 $('#showDetail').text(d.detail || '—');
 
-                // Stok pill
                 var stk = parseInt(d.stock_raw) || 0;
-                var sClass = stk === 0 ? 'stock-zero' : (stk <= 5 ? 'stock-low' : 'stock-ok');
-                var sIcon = stk === 0 ? 'fa-times-circle' : (stk <= 5 ? 'fa-exclamation-circle' :
-                'fa-check-circle');
+                var sc = stk === 0 ? 'stock-zero' : (stk <= 5 ? 'stock-low' : 'stock-ok');
+                var si = stk === 0 ? 'fa-times-circle' : (stk <= 5 ? 'fa-exclamation-circle' : 'fa-check-circle');
                 $('#showStock')
-                    .attr('class', 'stock-pill ' + sClass)
-                    .html('<i class="fas ' + sIcon + '"></i> ' + stk + ' Pcs');
+                    .attr('class', 'stock-pill ' + sc)
+                    .html('<i class="fas ' + si + '"></i> ' + stk + ' Pcs');
             }
 
-            /* ─────────────────────────────────────────────────────
-               POPULATE FORM (edit mode)
-            ───────────────────────────────────────────────────── */
-            function populateForm(d) {
-                $('#fieldName').val(d.name_raw || '');
-                $('#fieldStatus').val(d.status_raw || 'active');
-                $('#fieldDetail').val(d.detail || '');
-                // Harga — format rupiah
-                var priceRaw = String(d.price_raw || 0);
-                $('#fieldPrice').val(formatRupiah(priceRaw));
-                $('#fieldStock').val(d.stock_raw || 0);
+            /* ── Fill FORM (edit) ───────────────────── */
+            function fillForm(d) {
+                $('#fName').val(d.name_raw || '');
+                $('#fStatus').val(d.status_raw || 'active');
+                $('#fDetail').val(d.detail || '');
+                $('#fPrice').val(rupiah(String(d.price_raw || 0)));
+                $('#fStock').val(d.stock_raw || 0);
 
-                // Foto existing
                 if (d.image_url) {
                     $('#currentImg').attr('src', d.image_url);
                     $('#currentImgWrap').removeClass('d-none');
@@ -1338,89 +1339,92 @@
                     $('#currentImgWrap').addClass('d-none');
                 }
 
-                // Species & Category via AJAX
-                var speciesId = d.species_id;
-                var categoryId = d.category_id;
-
-                if (speciesId) {
-                    $('#fieldSpecies').val(speciesId);
-                    fetchSubCategories(speciesId, $('#fieldCategory'), categoryId);
+                if (d.species_id) {
+                    $('#fSpecies').val(d.species_id);
+                    fetchCats(d.species_id, d.category_id);
+                } else {
+                    $('#fSpecies').val('');
+                    $('#fCategory').prop('disabled', true).empty()
+                        .append('<option value="">-- Pilih Species Dulu --</option>');
                 }
 
-                checkFormValidity();
+                checkValid();
             }
 
-            /* ─────────────────────────────────────────────────────
-               RESET FORM
-            ───────────────────────────────────────────────────── */
+            /* ── Reset FORM ─────────────────────────── */
             function resetForm() {
                 document.getElementById('productForm').reset();
-                $('#fieldCategory').prop('disabled', true).empty().append(
-                    '<option value="">-- Pilih Species Dulu --</option>');
+                $('#fCategory').prop('disabled', true).empty()
+                    .append('<option value="">-- Pilih Species Dulu --</option>');
                 $('#imgPreviewBox').addClass('d-none');
                 $('#currentImgWrap').addClass('d-none');
-                removeProductImage();
-                checkFormValidity();
-                // Reset upload zone warna
-                var zone = document.getElementById('uploadZone');
-                if (zone) {
-                    zone.style.borderColor = '';
-                    zone.style.background = '';
-                }
+                document.getElementById('fImage').value = '';
+                resetUploadZone();
+                checkValid();
             }
 
-            /* ─────────────────────────────────────────────────────
-               COLLAPSE PANEL
-            ───────────────────────────────────────────────────── */
-            function toggleCollapse() {
-                panelCollapsed = !panelCollapsed;
-                if (panelCollapsed) {
-                    $panelBody.slideUp(250);
-                    $('#collapseIcon').attr('class', 'fas fa-chevron-down');
+            /* ── Collapse / Expand ──────────────────── */
+            function doCollapse(toCollapse) {
+                collapsed = toCollapse;
+                if (collapsed) {
+                    $bodyWrap.slideUp(220);
+                    $('#toggleIcon').attr('class', 'fas fa-chevron-down');
                 } else {
-                    $panelBody.slideDown(250);
-                    $('#collapseIcon').attr('class', 'fas fa-chevron-up');
+                    $bodyWrap.slideDown(220);
+                    $('#toggleIcon').attr('class', 'fas fa-chevron-up');
                 }
             }
-            $('#btnCollapsePanel').on('click', toggleCollapse);
 
-            /* ─────────────────────────────────────────────────────
-               RESET ke CREATE mode
-            ───────────────────────────────────────────────────── */
-            $('#btnFormCancel, #btnShowCancel').on('click', function() {
+            $('#btnTogglePanel').on('click', function() {
+                doCollapse(!collapsed);
+            });
+
+            /* ── Reset to create ────────────────────── */
+            $('#btnFormReset').on('click', function() {
+                switchMode('create');
+            });
+            $('#btnShowClose').on('click', function() {
                 switchMode('create');
             });
 
-            /* ─────────────────────────────────────────────────────
-               SHOW → EDIT shortcut button
-            ───────────────────────────────────────────────────── */
+            /* ── Show → Edit button ─────────────────── */
             $('#btnShowToEdit').on('click', function() {
-                if (editingProduct) switchMode('edit', editingProduct);
+                if (activeProduct) switchMode('edit', activeProduct);
             });
 
-            /* ─────────────────────────────────────────────────────
-               FORM VALIDITY — disable/enable submit
-            ───────────────────────────────────────────────────── */
-            function checkFormValidity() {
-                var valid = true;
+            /* ══════════════════════════════════════════
+               VALIDITY CHECK — disable/enable submit
+            ══════════════════════════════════════════ */
+            function checkValid() {
+                var ok = true;
                 $('#productForm .req-field').each(function() {
-                    if (!$(this).val() || $(this).val() === '') {
-                        valid = false;
+                    var v = $(this).val();
+                    if (!v || v.trim() === '' || $(this).prop('disabled')) {
+                        if (this.id === 'fCategory' && !$(this).prop('disabled') && !v) {
+                            ok = false;
+                        } else if (this.id !== 'fCategory' && (!v || v.trim() === '')) {
+                            ok = false;
+                        }
                         return false;
                     }
                 });
-                $btnSubmit.prop('disabled', !valid);
+                if ($('#fCategory').prop('disabled') || !$('#fCategory').val()) ok = false;
+
+                $btnSubmit.prop('disabled', !ok);
             }
 
-            $(document).on('input change', '#productForm .req-field', checkFormValidity);
+            $(document).on('input change', '#productForm .req-field', checkValid);
 
-            /* ─────────────────────────────────────────────────────
-               FORM SUBMIT — strip dots dari rupiah
-            ───────────────────────────────────────────────────── */
+            /* ══════════════════════════════════════════
+               FORM SUBMIT
+            ══════════════════════════════════════════ */
             $('#productForm').on('submit', function(e) {
-                // Konfirmasi edit
-                if (panelMode === 'edit') {
+                var rawPrice = $('#fPrice').val().replace(/\./g, '');
+                $('#fPrice').val(rawPrice);
+
+                if (mode === 'edit') {
                     e.preventDefault();
+                    $('#fPrice').val(rawPrice); // pastikan sudah stripped
                     Swal.fire({
                         title: 'Simpan Perubahan?',
                         text: 'Pastikan semua data sudah benar.',
@@ -1432,65 +1436,69 @@
                         cancelButtonText: 'Cek Lagi',
                     }).then(function(r) {
                         if (r.isConfirmed) {
-                            // strip dots
-                            $('#fieldPrice').val($('#fieldPrice').val().replace(/\./g, ''));
+                            Swal.fire({
+                                title: 'Menyimpan...',
+                                allowOutsideClick: false,
+                                didOpen: function() {
+                                    Swal.showLoading();
+                                }
+                            });
                             document.getElementById('productForm').submit();
+                        } else {
+                            $('#fPrice').val(rupiah(rawPrice));
                         }
                     });
-                    return;
                 }
-                // Strip dots untuk create
-                $('#fieldPrice').val($('#fieldPrice').val().replace(/\./g, ''));
             });
 
-            /* ─────────────────────────────────────────────────────
+            /* ══════════════════════════════════════════
                SUB-CATEGORY FETCH
-            ───────────────────────────────────────────────────── */
-            function fetchSubCategories(parentId, $target, preselectId) {
-                if (!parentId) {
-                    $target.prop('disabled', true).empty().append(
-                        '<option value="">-- Pilih Species Dulu --</option>');
-                    checkFormValidity();
+            ══════════════════════════════════════════ */
+            function fetchCats(speciesId, preselectId) {
+                var $cat = $('#fCategory');
+                if (!speciesId) {
+                    $cat.prop('disabled', true).empty().append(
+                    '<option value="">-- Pilih Species Dulu --</option>');
+                    checkValid();
                     return;
                 }
-                $target.prop('disabled', true).empty().append('<option value="">Memuat...</option>');
+                $cat.prop('disabled', true).empty().append('<option value="">Memuat...</option>');
                 $.ajax({
-                    url: '{{ url('dashboard/get-subcategories') }}/' + parentId,
+                    url: '{{ url('dashboard/get-subcategories') }}/' + speciesId,
                     type: 'GET',
                     dataType: 'json',
                     success: function(data) {
-                        $target.empty().append('<option value="">-- Pilih Kategori --</option>');
+                        $cat.empty().append('<option value="">-- Pilih Kategori --</option>');
                         $.each(data, function(k, v) {
-                            $target.append('<option value="' + v.id + '">' + v.name +
-                                '</option>');
+                            $cat.append('<option value="' + v.id + '">' + v.name + '</option>');
                         });
-                        $target.prop('disabled', data.length === 0);
-                        if (preselectId) $target.val(preselectId);
-                        checkFormValidity();
+                        $cat.prop('disabled', data.length === 0);
+                        if (preselectId) $cat.val(preselectId);
+                        checkValid();
                     },
                     error: function() {
                         Swal.fire('Error', 'Gagal memuat kategori.', 'error');
-                        $target.prop('disabled', false).empty().append(
+                        $cat.prop('disabled', false).empty().append(
                             '<option value="">-- Error --</option>');
                     }
                 });
             }
 
-            $('#fieldSpecies').on('change', function() {
-                fetchSubCategories($(this).val(), $('#fieldCategory'), null);
+            $('#fSpecies').on('change', function() {
+                fetchCats($(this).val(), null);
             });
 
-            /* ─────────────────────────────────────────────────────
-               RUPIAH FORMAT
-            ───────────────────────────────────────────────────── */
-            $(document).on('keyup', '#fieldPrice', function() {
-                $(this).val(formatRupiah($(this).val()));
-                checkFormValidity();
+            /* ══════════════════════════════════════════
+               RUPIAH
+            ══════════════════════════════════════════ */
+            $(document).on('keyup', '#fPrice', function() {
+                $(this).val(rupiah($(this).val()));
+                checkValid();
             });
 
-            /* ─────────────────────────────────────────────────────
+            /* ══════════════════════════════════════════
                DELETE CONFIRM
-            ───────────────────────────────────────────────────── */
+            ══════════════════════════════════════════ */
             $(document).on('click', '.btn-delete-product', function() {
                 var form = $(this).closest('form');
                 var name = $(this).data('name') || 'produk ini';
@@ -1518,10 +1526,37 @@
                 });
             });
 
-            /* ─────────────────────────────────────────────────────
+            /* ══════════════════════════════════════════
+               FIX #4 — TOMBOL VIEW & EDIT
+               Controller inject data-product='...' JSON
+               Button class: btn-view-product / btn-edit-product
+            ══════════════════════════════════════════ */
+            $(document).on('click', '.btn-view-product', function() {
+                var raw = $(this).attr('data-product');
+                if (!raw) return;
+                try {
+                    var product = JSON.parse(raw);
+                    switchMode('show', product);
+                } catch (e) {
+                    console.error('parse error view:', e);
+                }
+            });
+
+            $(document).on('click', '.btn-edit-product', function() {
+                var raw = $(this).attr('data-product');
+                if (!raw) return;
+                try {
+                    var product = JSON.parse(raw);
+                    switchMode('edit', product);
+                } catch (e) {
+                    console.error('parse error edit:', e);
+                }
+            });
+
+            /* ══════════════════════════════════════════
                DATATABLE
-            ───────────────────────────────────────────────────── */
-            var table = $('#data-products').DataTable({
+            ══════════════════════════════════════════ */
+            $('#data-products').DataTable({
                 processing: true,
                 serverSide: true,
                 responsive: true,
@@ -1539,7 +1574,7 @@
                     emptyTable: '<div class="text-center py-4"><i class="fas fa-box-open fa-2x text-muted"></i><br>Tidak ada produk</div>',
                 },
                 ajax: {
-                    url: "{{ route('dashboard.products.index') }}",
+                    url: '{{ route('dashboard.products.index') }}',
                     error: function(xhr) {
                         console.error('DT Error:', xhr.responseText);
                     }
@@ -1610,23 +1645,7 @@
                 }
             });
 
-            /* ─────────────────────────────────────────────────────
-               ACTION BUTTONS dari DataTable
-               Tombol View/Edit inject data- attributes di controller
-            ───────────────────────────────────────────────────── */
-            $(document).on('click', '.btn-view-product', function() {
-                var data = $(this).data('product');
-                if (data) switchMode('show', data);
-            });
-
-            $(document).on('click', '.btn-edit-product', function() {
-                var data = $(this).data('product');
-                if (data) switchMode('edit', data);
-            });
-
-            /* ─────────────────────────────────────────────────────
-               IMPORT drag & drop
-            ───────────────────────────────────────────────────── */
+            /* ── Import drag & drop ─────────────────── */
             var dz = document.getElementById('dropZone');
             if (dz) {
                 dz.addEventListener('dragover', function(e) {
@@ -1651,19 +1670,19 @@
                 });
             }
 
-        }); // end document.ready
+        }); // end ready
 
-        /* ══════════════════════════════════════════════════════
+        /* ══════════════════════════════════════════
            GLOBAL HELPERS
-        ══════════════════════════════════════════════════════ */
-        function formatRupiah(angka) {
+        ══════════════════════════════════════════ */
+        function rupiah(angka) {
             var str = String(angka).replace(/[^,\d]/g, '');
-            var split = str.split(',');
-            var sisa = split[0].length % 3;
-            var rupiah = split[0].substr(0, sisa);
-            var ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-            if (ribuan) rupiah += (sisa ? '.' : '') + ribuan.join('.');
-            return split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+            var sp = str.split(',');
+            var sis = sp[0].length % 3;
+            var rp = sp[0].substr(0, sis);
+            var rb = sp[0].substr(sis).match(/\d{3}/gi);
+            if (rb) rp += (sis ? '.' : '') + rb.join('.');
+            return sp[1] !== undefined ? rp + ',' + sp[1] : rp;
         }
 
         function handleImageUpload(input) {
@@ -1683,18 +1702,25 @@
                     zone.style.borderColor = '#1cc88a';
                     zone.style.background = '#f0fff8';
                 }
+                var icon = zone ? zone.querySelector('.upload-icon') : null;
+                if (icon) icon.style.color = '#1cc88a';
             };
             reader.readAsDataURL(file);
         }
 
         function removeProductImage() {
-            document.getElementById('fieldImage').value = '';
+            document.getElementById('fImage').value = '';
             $('#imgPreviewBox').addClass('d-none');
+            resetUploadZone();
+        }
+
+        function resetUploadZone() {
             var zone = document.getElementById('uploadZone');
-            if (zone) {
-                zone.style.borderColor = '';
-                zone.style.background = '';
-            }
+            if (!zone) return;
+            zone.style.borderColor = '';
+            zone.style.background = '';
+            var icon = zone.querySelector('.upload-icon');
+            if (icon) icon.style.color = '';
         }
 
         function handleImportFile(input) {
@@ -1722,13 +1748,5 @@
                 zone.style.background = '';
             }
         }
-
-        /* SweetAlert custom styles */
-        (function() {
-            var s = document.createElement('style');
-            s.textContent =
-                '.swal2-popup{border-radius:.85rem!important;font-family:inherit!important}.swal2-title{font-size:1.1rem!important;color:#2d3748!important}.swal2-html-container{font-size:.88rem!important}.swal2-confirm,.swal2-cancel{border-radius:.5rem!important;font-size:.82rem!important;font-weight:700!important;padding:.5rem 1.2rem!important}';
-            document.head.appendChild(s);
-        }());
     </script>
 @endpush

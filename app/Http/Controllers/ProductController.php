@@ -9,7 +9,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -24,7 +23,7 @@ class ProductController extends Controller
     }
 
     /* ══════════════════════════════════════════
-       INDEX — DataTable server-side
+       INDEX
     ══════════════════════════════════════════ */
     public function index(Request $request)
     {
@@ -34,110 +33,98 @@ class ProductController extends Controller
             return DataTables::eloquent($products)
                 ->addIndexColumn()
 
-                // ── Foto produk ───────────────────────────
+                // ── Foto ─────────────────────────────────
                 ->addColumn('image', function (Product $product) {
                     $path = 'storage/uploads/products/' . $product->image;
                     $url = $product->image && file_exists(public_path($path)) ? asset($path) : asset('storage/uploads/products/default-product.jpg');
 
-                    return '<img src="' . $url . '" class="tbl-product-img" alt="' . e($product->name) . '">';
+                    return '<img src="' . $url . '" class="tbl-img" alt="' . e($product->name) . '">';
                 })
 
-                // ── Species (parent category) ─────────────
+                // ── Species ───────────────────────────────
                 ->addColumn('species', function (Product $product) {
                     $name = optional(optional($product->category)->parent)->name ?? '—';
-                    return '<span style="
-                        display:inline-block;font-size:.72rem;font-weight:700;
-                        padding:.28em .75em;border-radius:2rem;
-                        background:rgba(78,115,223,.1);color:#4e73df;
-                        border:1px solid rgba(78,115,223,.2)">' .
-                        e($name) .
-                        '</span>';
+                    return '<span class="tbl-pill tbl-pill-species">' . e($name) . '</span>';
                 })
 
-                // ── Category (child) ──────────────────────
+                // ── Category ──────────────────────────────
                 ->addColumn('category', function (Product $product) {
                     $name = optional($product->category)->name ?? '—';
-                    return '<span style="
-                        display:inline-block;font-size:.72rem;font-weight:700;
-                        padding:.28em .75em;border-radius:2rem;
-                        background:rgba(54,185,204,.1);color:#258391;
-                        border:1px solid rgba(54,185,204,.2)">' .
-                        e($name) .
-                        '</span>';
+                    return '<span class="tbl-pill tbl-pill-category">' . e($name) . '</span>';
                 })
 
-                // ── Status badge ──────────────────────────
+                // ── Status ────────────────────────────────
                 ->addColumn('status', function (Product $product) {
                     $isActive = $product->status === 'active';
-                    [$cls, $dot] = $isActive ? ['badge-active', '🟢'] : ['badge-inactive', '🔴'];
-
+                    $cls = $isActive ? 'badge-active' : 'badge-inactive';
+                    $dot = $isActive ? '🟢' : '🔴';
                     return '<span class="badge-status ' . $cls . '">' . $dot . ' ' . ucfirst($product->status) . '</span>';
                 })
 
                 // ── Harga ─────────────────────────────────
                 ->addColumn('price', function (Product $product) {
-                    return '<span style="font-weight:700;color:#1cc88a;white-space:nowrap">Rp ' . number_format($product->price ?? 0, 0, ',', '.') . '</span>';
+                    return '<span class="tbl-price">Rp ' . number_format($product->price ?? 0, 0, ',', '.') . '</span>';
                 })
 
-                // ── Stok indicator ────────────────────────
+                // ── Stok ──────────────────────────────────
                 ->addColumn('stock', function (Product $product) {
                     $stock = $product->stock ?? 0;
-
-                    if ($stock === 0) {
-                        $cls = 'stock-zero';
-                        $icon = 'fa-times-circle';
-                    } elseif ($stock <= 5) {
-                        $cls = 'stock-low';
-                        $icon = 'fa-exclamation-circle';
-                    } else {
-                        $cls = 'stock-ok';
-                        $icon = 'fa-check-circle';
-                    }
-
-                    return '<span class="stock-pill ' .
-                        $cls .
-                        '">
-                                <i class="fas ' .
-                        $icon .
-                        '"></i> ' .
-                        $stock .
-                        ' Pcs
-                            </span>';
+                    [$cls, $icon] = match (true) {
+                        $stock === 0 => ['stock-zero', 'fa-times-circle'],
+                        $stock <= 5 => ['stock-low', 'fa-exclamation-circle'],
+                        default => ['stock-ok', 'fa-check-circle'],
+                    };
+                    return '<span class="stock-pill ' . $cls . '"><i class="fas ' . $icon . '"></i> ' . $stock . ' Pcs</span>';
                 })
 
-                // ── Action buttons ────────────────────────
+                // ── Action ────────────────────────────────
                 ->addColumn('action', function (Product $product) {
+                    // Siapkan image URL untuk panel show/edit
+                    $imgPath = 'storage/uploads/products/' . $product->image;
+                    $imgUrl = $product->image && file_exists(public_path($imgPath)) ? asset($imgPath) : asset('storage/uploads/products/default-product.jpg');
+
+                    // Encode semua data produk sebagai JSON untuk dikirim ke JS
+                    $data = htmlspecialchars(
+                        json_encode([
+                            'id' => $product->id,
+                            'name_raw' => $product->name,
+                            'status_raw' => $product->status,
+                            'price_raw' => $product->price,
+                            'stock_raw' => $product->stock,
+                            'detail' => $product->detail,
+                            'species_id' => optional(optional($product->category)->parent)->id,
+                            'species_raw' => optional(optional($product->category)->parent)->name ?? '—',
+                            'category_id' => $product->category_id,
+                            'category_raw' => optional($product->category)->name ?? '—',
+                            'image_url' => $imgUrl,
+                        ]),
+                        ENT_QUOTES,
+                    );
+
                     $btn = '<div class="tbl-actions">';
 
-                    // View
                     if (auth()->user()->can('product.show')) {
                         $btn .=
-                            '<button type="button"
-                                    class="tbl-btn tbl-btn-view"
-                                    data-toggle="modal"
-                                    data-target="#showView' .
-                            $product->id .
-                            '"
+                            '<button type="button" class="tbl-btn tbl-btn-view btn-view-product"
+                                    data-product=\'' .
+                            $data .
+                            '\'
                                     title="Lihat Detail">
                                     <i class="fas fa-eye"></i>
                                  </button>';
                     }
 
-                    // Edit
                     if (auth()->user()->can('product.edit')) {
-                        $btn .= 
-                            '<button type="button"
-                                    class="tbl-btn tbl-btn-edit"
-                                    data-toggle="modal"
-                                    data-target="#productForm' .
-                            $product->id .
-                            '"
+                        $btn .=
+                            '<button type="button" class="tbl-btn tbl-btn-edit btn-edit-product"
+                                    data-product=\'' .
+                            $data .
+                            '\'
                                     title="Edit Produk">
                                     <i class="fas fa-pencil-alt"></i>
                                  </button>';
                     }
 
-                    // Delete
                     if (auth()->user()->can('product.delete')) {
                         $btn .=
                             '<form action="' .
@@ -167,7 +154,6 @@ class ProductController extends Controller
                 ->make(true);
         }
 
-        // Non-AJAX: pass data untuk modal & dropdown
         $categories = Category::with('children')->whereNull('parent_id')->get();
         $products = Product::with(['category.parent'])->get();
 
@@ -184,7 +170,7 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'price' => 'required',
             'stock' => 'required|integer|min:0',
-            'detail' => 'required|string',
+            'detail' => 'nullable|string',
             'status' => 'required|in:active,inactive',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
@@ -198,9 +184,11 @@ class ProductController extends Controller
 
         Product::create($data);
 
+        // PLAIN TEXT — tanpa HTML tag, agar aman di semua konteks (blade & notif browser)
+        $plainName = $request->name;
         return redirect()
             ->route('dashboard.products.index')
-            ->with('success', 'Produk <strong>' . e($request->name) . '</strong> berhasil ditambahkan.');
+            ->with('success', "Produk \"{$plainName}\" berhasil ditambahkan.");
     }
 
     /* ══════════════════════════════════════════
@@ -213,7 +201,7 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'price' => 'required',
             'stock' => 'required|integer|min:0',
-            'detail' => 'required|string',
+            'detail' => 'nullable|string',
             'status' => 'required|in:active,inactive',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
@@ -222,16 +210,16 @@ class ProductController extends Controller
         $data['price'] = (int) str_replace('.', '', $request->price);
 
         if ($request->hasFile('image')) {
-            // Hapus foto lama
             $this->deleteImage($product->image);
             $data['image'] = $this->uploadImage($request->file('image'), $request->name);
         }
 
         $product->update($data);
 
+        $plainName = $product->name;
         return redirect()
             ->route('dashboard.products.index')
-            ->with('success', 'Produk <strong>' . e($product->name) . '</strong> berhasil diperbarui.');
+            ->with('success', "Produk \"{$plainName}\" berhasil diperbarui.");
     }
 
     /* ══════════════════════════════════════════
@@ -268,9 +256,7 @@ class ProductController extends Controller
 
     public function import(Request $request): RedirectResponse
     {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:5120',
-        ]);
+        $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:5120']);
 
         $import = new \App\Imports\ProductsImport();
         $import->import($request->file('file'));
@@ -284,7 +270,7 @@ class ProductController extends Controller
 
         return redirect()
             ->route('dashboard.products.index')
-            ->with('success', "Import berhasil! <strong>{$importedCount}</strong> produk berhasil ditambahkan.");
+            ->with('success', "Import berhasil! {$importedCount} produk berhasil ditambahkan.");
     }
 
     public function export()
@@ -296,36 +282,25 @@ class ProductController extends Controller
     /* ══════════════════════════════════════════
        PRIVATE HELPERS
     ══════════════════════════════════════════ */
-
-    /**
-     * Upload foto produk dan kembalikan filename.
-     */
     private function uploadImage($file, string $productName): string
     {
-        $destinationPath = public_path('storage/uploads/products');
-
-        if (!File::isDirectory($destinationPath)) {
-            File::makeDirectory($destinationPath, 0755, true, true);
+        $dest = public_path('storage/uploads/products');
+        if (!File::isDirectory($dest)) {
+            File::makeDirectory($dest, 0755, true, true);
         }
-
         $filename = time() . '-' . Str::slug($productName) . '.' . $file->getClientOriginalExtension();
-        $file->move($destinationPath, $filename);
-
+        $file->move($dest, $filename);
         return $filename;
     }
 
-    /**
-     * Hapus foto produk dari storage (jika ada).
-     */
     private function deleteImage(?string $image): void
     {
         if (!$image) {
             return;
         }
-
-        $filePath = public_path('storage/uploads/products/' . $image);
-        if (File::exists($filePath)) {
-            File::delete($filePath);
+        $path = public_path('storage/uploads/products/' . $image);
+        if (File::exists($path)) {
+            File::delete($path);
         }
     }
 }

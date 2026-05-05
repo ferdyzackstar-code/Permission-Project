@@ -111,11 +111,11 @@
         .pur-stat-card {
             background: #fff;
             border-radius: var(--pur-radius);
-            padding: 18px 20px;
+            padding: 16px 20px;
             box-shadow: 0 2px 12px rgba(21, 101, 192, .07);
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 14px;
             border-left: 4px solid transparent;
             transition: all .2s;
             height: 100%;
@@ -127,19 +127,19 @@
         }
 
         .pur-stat-card .stat-icon {
-            width: 48px;
-            height: 48px;
+            width: 46px;
+            height: 46px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: #fff;
             flex-shrink: 0;
         }
 
         .pur-stat-card .stat-val {
-            font-size: 1.8rem;
+            font-size: 1.7rem;
             font-weight: 800;
             color: var(--pur-text);
             line-height: 1;
@@ -214,18 +214,19 @@
             padding: 20px 24px;
         }
 
-        /* ── SUPPLIER CARDS — COMPACT RESPONSIVE ────────────────────── */
+        /* ── SUPPLIER CARDS — LEBIH KECIL ────────────────────────────── */
         .supplier-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 10px;
+            /* Mobile: 3 kolom, Desktop: auto-fill min 130px */
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
             margin-bottom: 4px;
         }
 
         .supplier-card {
             border: 1.5px solid var(--pur-border);
-            border-radius: 10px;
-            padding: 12px 10px;
+            border-radius: 8px;
+            padding: 8px 6px;
             cursor: pointer;
             transition: all .2s;
             text-align: center;
@@ -236,36 +237,35 @@
         .supplier-card:hover {
             border-color: var(--pur-primary);
             background: #EEF4FF;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(21, 101, 192, .12);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(21, 101, 192, .12);
         }
 
         .supplier-card.selected {
             border-color: var(--pur-primary);
             background: #E3F2FD;
-            box-shadow: 0 0 0 3px rgba(21, 101, 192, .15);
+            box-shadow: 0 0 0 2px rgba(21, 101, 192, .2);
         }
 
         .supplier-card .sc-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
             background: linear-gradient(135deg, #1565C0, #42A5F5);
             display: flex;
             align-items: center;
             justify-content: center;
             color: #fff;
-            font-size: .85rem;
-            margin: 0 auto 8px;
+            font-size: .72rem;
+            margin: 0 auto 5px;
         }
 
         .supplier-card .sc-name {
-            font-size: .78rem;
+            font-size: .68rem;
             font-weight: 700;
             color: var(--pur-text);
-            line-height: 1.3;
-            margin-bottom: 3px;
-            /* Batas 2 baris */
+            line-height: 1.25;
+            margin-bottom: 2px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -273,7 +273,7 @@
         }
 
         .supplier-card .sc-email {
-            font-size: .68rem;
+            font-size: .6rem;
             color: var(--pur-muted);
             white-space: nowrap;
             overflow: hidden;
@@ -289,31 +289,29 @@
             background: #F8FAFD;
             border: 1.5px solid var(--pur-border);
             border-radius: 10px;
-            padding: 14px 16px;
+            padding: 14px 16px 12px;
             margin-bottom: 12px;
             position: relative;
         }
 
-        /* Qty inline: [ - ] [ input ] [ + ] */
+        /* Qty inline: [ - ] [ input ] [ + ] — sempit */
         .qty-inline {
             display: flex;
             align-items: center;
-            gap: 0;
             border: 1.5px solid var(--pur-border);
             border-radius: 8px;
             overflow: hidden;
             background: #fff;
-            width: fit-content;
+            width: 100%;
         }
 
         .qty-inline .qty-btn {
-            width: 34px;
+            width: 30px;
             height: 36px;
             background: #F0F4F8;
             border: none;
             color: var(--pur-text);
-            font-size: .85rem;
-            font-weight: 700;
+            font-size: .8rem;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -332,13 +330,14 @@
         }
 
         .qty-inline input.qty-input {
-            width: 52px;
+            flex: 1;
+            min-width: 0;
             height: 36px;
             border: none;
             border-left: 1px solid var(--pur-border);
             border-right: 1px solid var(--pur-border);
             text-align: center;
-            font-size: .88rem;
+            font-size: .85rem;
             font-weight: 700;
             color: var(--pur-text);
             outline: none;
@@ -354,13 +353,13 @@
             background: #FFEBEE;
             border: 1.5px solid #FFCDD2;
             color: var(--pur-danger);
-            width: 28px;
-            height: 28px;
+            width: 26px;
+            height: 26px;
             border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: .72rem;
+            font-size: .68rem;
             cursor: pointer;
             transition: all .15s;
         }
@@ -604,13 +603,20 @@
         }
 
         /* ── RESPONSIVE ─────────────────────────────────────────────── */
-        @media (max-width:767px) {
+        @media (min-width: 768px) {
             .supplier-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            }
+        }
+
+        @media (max-width: 767px) {
+            .supplier-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
             }
 
             .pur-form-body {
-                padding: 16px;
+                padding: 14px;
             }
 
             .grand-total-box {
@@ -620,14 +626,9 @@
             }
         }
 
-        @media (max-width:480px) {
+        @media (max-width: 400px) {
             .supplier-grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-            }
-
-            .supplier-card {
-                padding: 10px 8px;
             }
         }
     </style>
@@ -652,7 +653,7 @@
 
         {{-- ── STAT CARDS ──────────────────────────────────────────── --}}
         <div class="row mb-4">
-            <div class="col-6 col-xl-3 mb-3">
+            <div class="col-12 col-md-6 col-xl-3 mb-3">
                 <div class="pur-stat-card blue">
                     <div class="stat-icon bg-blue"><i class="fas fa-boxes"></i></div>
                     <div>
@@ -661,7 +662,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-xl-3 mb-3">
+            <div class="col-12 col-md-6 col-xl-3 mb-3">
                 <div class="pur-stat-card yellow">
                     <div class="stat-icon bg-yellow"><i class="fas fa-truck"></i></div>
                     <div>
@@ -670,7 +671,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-xl-3 mb-3">
+            <div class="col-12 col-md-6 col-xl-3 mb-3">
                 <div class="pur-stat-card green">
                     <div class="stat-icon bg-green"><i class="fas fa-check-circle"></i></div>
                     <div>
@@ -679,7 +680,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-xl-3 mb-3">
+            <div class="col-12 col-md-6 col-xl-3 mb-3">
                 <div class="pur-stat-card red">
                     <div class="stat-icon bg-red"><i class="fas fa-times-circle"></i></div>
                     <div>
@@ -938,33 +939,40 @@
             <button type="button" class="btn-remove-product remove-product">
                 <i class="fas fa-times"></i>
             </button>
-            <div class="row align-items-end g-2">
-                <div class="col-12 col-md-5 mb-2 mb-md-0">
-                    <label class="pur-label">Produk</label>
-                    <select name="product_id[]" class="pur-input pur-select" required>${opts}</select>
-                </div>
-                <div class="col-6 col-md-2 mb-2 mb-md-0">
+
+            {{-- Baris 1: Pilih Produk (full) --}}
+            <div class="mb-2" style="padding-right:36px;">
+                <label class="pur-label">Produk</label>
+                <select name="product_id[]" class="pur-input pur-select" required>${opts}</select>
+            </div>
+
+            {{-- Baris 2: Jumlah (kiri) & Harga Satuan (kanan) dalam satu baris --}}
+            <div class="d-flex align-items-end mb-2" style="gap:12px;">
+                <div style="width:100px; flex-shrink:0;">
                     <label class="pur-label">Jumlah</label>
                     <div class="qty-inline">
                         <button type="button" class="qty-btn minus qty-minus">
-                            <i class="fas fa-minus" style="font-size:.6rem;"></i>
+                            <i class="fas fa-minus" style="font-size:.55rem;"></i>
                         </button>
                         <input type="number" name="quantity[]" class="qty-input" value="${quantity}" min="1" required>
                         <button type="button" class="qty-btn plus qty-plus">
-                            <i class="fas fa-plus" style="font-size:.6rem;"></i>
+                            <i class="fas fa-plus" style="font-size:.55rem;"></i>
                         </button>
                     </div>
                 </div>
-                <div class="col-6 col-md-2 mb-2 mb-md-0">
+                <div style="flex:1; min-width:0;">
                     <label class="pur-label">Harga Satuan</label>
                     <input type="text" name="price[]" class="pur-input price-input"
                            value="${price}" placeholder="0" required>
                 </div>
-                <div class="col-12 col-md-3">
-                    <label class="pur-label">Subtotal</label>
-                    <div class="pur-input subtotal-display" style="background:#EEF4FF; color:#1565C0; font-weight:700; cursor:default;">
-                        Rp 0
-                    </div>
+            </div>
+
+            {{-- Baris 3: Subtotal (full) --}}
+            <div>
+                <label class="pur-label">Subtotal</label>
+                <div class="pur-input subtotal-display"
+                     style="background:#EEF4FF; color:#1565C0; font-weight:700; cursor:default; font-size:.85rem;">
+                    Rp 0
                 </div>
             </div>
         </div>
